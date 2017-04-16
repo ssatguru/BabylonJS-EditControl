@@ -1,0 +1,19 @@
+{
+  "name": "BabylonJS-EditControl",
+  "version": "2.0.0",
+  "keywords": [
+    "babylonjs"
+  ],
+  "author": "satguru",
+  "contributors": [],
+  "dependencies": {},
+  "devDependencies": {
+    "babylonjs": "^3.0.0-alpha",
+    "uglify-js": "^2.8.22"
+  },
+  "scripts": {
+    "compile": "tsc -p src",
+    "min": "uglifyjs dist/EditControl.js -o dist/EditControl.min.js -mc",
+    "dist": "npm run compile && npm run min"
+  }
+}
