@@ -39,10 +39,8 @@ For a demo head on over to [http://ssatguru.appspot.com/BabylonJS-EditControl/we
 <script src="https://cdn.jsdelivr.net/babylonjs/2-5/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
-You can find the "EditControl.js" in the "dist" folder or releases section
-
-[https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)
-
+You can find the "EditControl.js" in the "dist" folder or "releases" section  
+[https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)  
 [https://github.com/ssatguru/BabylonJS-EditControl/releases](https://github.com/ssatguru/BabylonJS-EditControl/releases)
 
 
@@ -65,26 +63,22 @@ see demo.html for a working example
 
 ## API
 1) To Instantiate
-
-In JavaScript
 ```
+// JavaScript
 var EditControl = org.ssatguru.babylonjs.component.EditControl;
 var editControl = new EditControl(mesh,camera, canvas, 0.75);
 ```
-In TypeScript
 ```
+// TypeScript
 import EditControl = org.ssatguru.babylonjs.component.EditControl;
 let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75);
 ```
-This attaches the edit control to a mesh and displays  x,y,z axis.
-
+This attaches the edit control to a mesh and displays  x,y,z axis.  
 Takes three parms
 * mesh - the mesh to attach the editcontrol
 * camera - active camera
 * canvas - the mesh canvas 
 * scale - how small or large the editcontrol should appear
-
-
 2) To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
