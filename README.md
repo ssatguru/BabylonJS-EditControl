@@ -35,13 +35,16 @@ For a demo head on over to [http://ssatguru.appspot.com/BabylonJS-EditControl/we
 
 1) add the following dependencies 
  ```
-<script src="https://code.jquery.com/pep/0.4.1/pep.js"></script>
+<script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
 <script src="https://cdn.jsdelivr.net/babylonjs/2-5/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
-You can find the "EditControl.js" here
+You can find the "EditControl.js" in the "dist" folder or releases section
 
-[https://raw.githubusercontent.com/ssatguru/EditControl.ts/master/public_html/js/EditControl.js](https://raw.githubusercontent.com/ssatguru/EditControl.ts/master/public_html/js/EditControl.js)
+[https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)
+
+[https://github.com/ssatguru/BabylonJS-EditControl/releases](https://github.com/ssatguru/BabylonJS-EditControl/releases)
+
 
 2) a small javascript code snippet to get you up and running
 ```
