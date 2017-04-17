@@ -60,6 +60,7 @@ You can find the "EditControl.js" in the "dist" folder or "releases" section
 ```
 
 see demo.html for a working example
+[https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html](https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html)
 
 ## API
 1) To Instantiate
