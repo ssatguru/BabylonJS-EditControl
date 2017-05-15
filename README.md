@@ -63,7 +63,7 @@ let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75);
 ```
 This positions the edit control at the mesh pivot position and displays  x,y,z axis.  
 Takes three parms
-* mesh - the mesh to attach the editcontrol
+* mesh - the mesh to control using the editcontrol
 * camera - active camera
 * canvas - the mesh canvas 
 * scale - how small or large the editcontrol should appear
