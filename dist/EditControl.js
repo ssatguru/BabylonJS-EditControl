@@ -44,7 +44,7 @@ var org;
                         this.actHist = new ActHist(mesh, 10);
                         mesh.computeWorldMatrix(true);
                         this.theParent = new Mesh("EditControl", this.scene);
-                        this.theParent.position = this.meshPicked.absolutePosition;
+                        this.theParent.position = this.meshPicked.getAbsolutePivotPoint();
                         this.theParent.visibility = 0;
                         this.theParent.isPickable = false;
                         this.createMaterials(this.scene);
@@ -64,7 +64,7 @@ var org;
                     }
                     EditControl.prototype.renderLoopProcess = function () {
                         this.setAxesScale();
-                        this.theParent.position = this.meshPicked.absolutePosition;
+                        this.theParent.position = this.meshPicked.getAbsolutePivotPoint();
                         this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh) {
@@ -102,25 +102,25 @@ var org;
                         var _this = this;
                         evt.preventDefault();
                         this.pDown = true;
-                        if ((evt.button != 0))
+                        if (evt.button != 0)
                             return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
-                            if ((_this.transEnabled)) {
-                                if (((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ)))
+                            if (_this.transEnabled) {
+                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ))
                                     return true;
                             }
                             else if ((_this.rotEnabled)) {
-                                if (((mesh == _this.rX) || (mesh == _this.rY) || (mesh == _this.rZ)))
+                                if ((mesh == _this.rX) || (mesh == _this.rY) || (mesh == _this.rZ))
                                     return true;
                             }
                             else if ((_this.scaleEnabled)) {
-                                if (((mesh == _this.sX) || (mesh == _this.sY) || (mesh == _this.sZ) || (mesh == _this.sAll)))
+                                if ((mesh == _this.sX) || (mesh == _this.sY) || (mesh == _this.sZ) || (mesh == _this.sAll))
                                     return true;
                             }
                             return false;
                         }, null, this.mainCamera);
-                        if ((pickResult.hit)) {
-                            this.setAxisVisiblity(0);
+                        if (pickResult.hit) {
+                            this.setAxesVisiblity(0);
                             this.axisPicked = pickResult.pickedMesh;
                             this.axisPicked.getChildren()[0].visibility = 1;
                             var name = this.axisPicked.name;
@@ -237,7 +237,7 @@ var org;
                         if ((this.editing)) {
                             this.mainCamera.attachControl(this.canvas);
                             this.editing = false;
-                            this.setAxisVisiblity(1);
+                            this.setAxesVisiblity(1);
                             this.hideBaxis();
                             this.restoreColor(this.prevOverMesh);
                             this.prevOverMesh = null;
@@ -346,28 +346,28 @@ var org;
                         var ppm = this.prevPos.subtract(this.meshPicked.position);
                         var diff = newPos.subtract(this.prevPos);
                         var r = diff.length() / ppm.length();
-                        if ((this.axisPicked == this.sX)) {
+                        if (this.axisPicked === this.sX) {
                             var dot = Vector3.Dot(diff, this.localX);
                             if ((dot >= 0))
                                 this.meshPicked.scaling.x *= (1 + r);
                             else
                                 this.meshPicked.scaling.x *= (1 - r);
                         }
-                        else if ((this.axisPicked == this.sY)) {
+                        else if (this.axisPicked === this.sY) {
                             var dot = Vector3.Dot(diff, this.localY);
                             if ((dot >= 0))
                                 this.meshPicked.scaling.y *= (1 + r);
                             else
                                 this.meshPicked.scaling.y *= (1 - r);
                         }
-                        else if ((this.axisPicked == this.sZ)) {
+                        else if (this.axisPicked === this.sZ) {
                             var dot = Vector3.Dot(diff, this.localZ);
                             if ((dot >= 0))
                                 this.meshPicked.scaling.z *= (1 + r);
                             else
                                 this.meshPicked.scaling.z *= (1 - r);
                         }
-                        else if ((this.axisPicked == this.sAll)) {
+                        else if (this.axisPicked === this.sAll) {
                             var dot = Vector3.Dot(diff, this.mainCamera.upVector);
                             r = diff.length() / 5;
                             if ((dot < 0)) {
@@ -381,7 +381,7 @@ var org;
                     EditControl.prototype.doRotation = function (newPos) {
                         var cN = Vector3.TransformNormal(Axis.Z, this.mainCamera.getWorldMatrix());
                         if ((this.axisPicked == this.rX)) {
-                            var angle = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
+                            var angle = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.getAbsolutePivotPoint(), cN);
                             if ((this.snapR)) {
                                 this.snapRX += angle;
                                 angle = 0;
@@ -403,7 +403,7 @@ var org;
                             this.setLocalAxes(this.meshPicked);
                         }
                         else if ((this.axisPicked == this.rY)) {
-                            var angle = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
+                            var angle = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.getAbsolutePivotPoint(), cN);
                             if ((this.snapR)) {
                                 this.snapRY += angle;
                                 angle = 0;
@@ -425,7 +425,7 @@ var org;
                             this.setLocalAxes(this.meshPicked);
                         }
                         else if ((this.axisPicked == this.rZ)) {
-                            var angle = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
+                            var angle = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.getAbsolutePivotPoint(), cN);
                             if ((this.snapR)) {
                                 this.snapRZ += angle;
                                 angle = 0;
@@ -468,18 +468,18 @@ var org;
                         this.bYaxis.visibility = 0;
                         this.bZaxis.visibility = 0;
                     };
-                    EditControl.prototype.setAxisVisiblity = function (v) {
-                        if ((this.transEnabled)) {
+                    EditControl.prototype.setAxesVisiblity = function (v) {
+                        if (this.transEnabled) {
                             this.tEndX.visibility = v;
                             this.tEndY.visibility = v;
                             this.tEndZ.visibility = v;
                         }
-                        if ((this.rotEnabled)) {
+                        if (this.rotEnabled) {
                             this.rEndX.visibility = v;
                             this.rEndY.visibility = v;
                             this.rEndZ.visibility = v;
                         }
-                        if ((this.scaleEnabled)) {
+                        if (this.scaleEnabled) {
                             this.sEndX.visibility = v;
                             this.sEndY.visibility = v;
                             this.sEndZ.visibility = v;
@@ -567,7 +567,6 @@ var org;
                         }
                     };
                     EditControl.prototype.createGuideAxes = function () {
-                        var l = this.axesLen * this.axesScale;
                         this.guideCtl = new Mesh("guideCtl", this.scene);
                         this.bXaxis = Mesh.CreateLines("bxAxis", [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)], this.scene);
                         this.bYaxis = Mesh.CreateLines("byAxis", [new Vector3(0, -100, 0), new Vector3(0, 100, 0)], this.scene);
@@ -585,9 +584,10 @@ var org;
                         this.bYaxis.renderingGroupId = 1;
                         this.bZaxis.renderingGroupId = 1;
                         this.hideBaxis();
-                        this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(l, 0, 0)], this.scene);
-                        this.yaxis = Mesh.CreateLines("yAxis", [new Vector3(0, 0, 0), new Vector3(0, l, 0)], this.scene);
-                        this.zaxis = Mesh.CreateLines("zAxis", [new Vector3(0, 0, 0), new Vector3(0, 0, l)], this.scene);
+                        var al = this.axesLen * this.axesScale;
+                        this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(al, 0, 0)], this.scene);
+                        this.yaxis = Mesh.CreateLines("yAxis", [new Vector3(0, 0, 0), new Vector3(0, al, 0)], this.scene);
+                        this.zaxis = Mesh.CreateLines("zAxis", [new Vector3(0, 0, 0), new Vector3(0, 0, al)], this.scene);
                         this.xaxis.isPickable = false;
                         this.yaxis.isPickable = false;
                         this.zaxis.isPickable = false;
