@@ -35,13 +35,14 @@ For a demo head on over to [http://ssatguru.appspot.com/BabylonJS-EditControl/we
 
 1) add the following dependencies 
  ```
-<script src="https://code.jquery.com/pep/0.4.1/pep.js"></script>
+<script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
 <script src="https://cdn.jsdelivr.net/babylonjs/2-5/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
-You can find the "EditControl.js" here
+You can find the "EditControl.js" in the "dist" folder or "releases" section  
+[https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)  
+[https://github.com/ssatguru/BabylonJS-EditControl/releases](https://github.com/ssatguru/BabylonJS-EditControl/releases)
 
-[https://raw.githubusercontent.com/ssatguru/EditControl.ts/master/public_html/js/EditControl.js](https://raw.githubusercontent.com/ssatguru/EditControl.ts/master/public_html/js/EditControl.js)
 
 2) a small javascript code snippet to get you up and running
 ```
@@ -59,29 +60,26 @@ You can find the "EditControl.js" here
 ```
 
 see demo.html for a working example
+[https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html](https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html)
 
 ## API
 1) To Instantiate
-
-In JavaScript
 ```
+// JavaScript
 var EditControl = org.ssatguru.babylonjs.component.EditControl;
 var editControl = new EditControl(mesh,camera, canvas, 0.75);
 ```
-In TypeScript
 ```
+// TypeScript
 import EditControl = org.ssatguru.babylonjs.component.EditControl;
 let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75);
 ```
-This attaches the edit control to a mesh and displays  x,y,z axis.
-
+This attaches the edit control to a mesh and displays  x,y,z axis.  
 Takes three parms
 * mesh - the mesh to attach the editcontrol
 * camera - active camera
 * canvas - the mesh canvas 
 * scale - how small or large the editcontrol should appear
-
-
 2) To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
