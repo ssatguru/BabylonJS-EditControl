@@ -61,7 +61,7 @@ var editControl = new EditControl(mesh,camera, canvas, 0.75);
 import EditControl = org.ssatguru.babylonjs.component.EditControl;
 let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75);
 ```
-This attaches the edit control to a mesh and displays  x,y,z axis.  
+This positions the edit control at the mesh pivot position and displays  x,y,z axis.  
 Takes three parms
 * mesh - the mesh to attach the editcontrol
 * camera - active camera
