@@ -9,6 +9,7 @@ var org;
                 var Axis = BABYLON.Axis;
                 var Color3 = BABYLON.Color3;
                 var Mesh = BABYLON.Mesh;
+                var MeshBuilder = BABYLON.MeshBuilder;
                 var Quaternion = BABYLON.Quaternion;
                 var Space = BABYLON.Space;
                 var StandardMaterial = BABYLON.StandardMaterial;
@@ -120,7 +121,7 @@ var org;
                             return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
-                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tAll))
+                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tXZ) || (mesh == _this.tZY) || (mesh == _this.tYX) || (mesh == _this.tAll))
                                     return true;
                             }
                             else if ((_this.rotEnabled)) {
@@ -150,6 +151,18 @@ var org;
                                 this.bYaxis.visibility = 1;
                             else if ((name == "Z"))
                                 this.bZaxis.visibility = 1;
+                            else if ((name == "XZ")) {
+                                this.bXaxis.visibility = 1;
+                                this.bZaxis.visibility = 1;
+                            }
+                            else if ((name == "ZY")) {
+                                this.bZaxis.visibility = 1;
+                                this.bYaxis.visibility = 1;
+                            }
+                            else if ((name == "YX")) {
+                                this.bYaxis.visibility = 1;
+                                this.bXaxis.visibility = 1;
+                            }
                             else if ((name == "ALL")) {
                                 this.bXaxis.visibility = 1;
                                 this.bYaxis.visibility = 1;
@@ -177,7 +190,7 @@ var org;
                             return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
-                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tAll))
+                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tXZ) || (mesh == _this.tZY) || (mesh == _this.tYX) || (mesh == _this.tAll))
                                     return true;
                             }
                             else if ((_this.rotEnabled)) {
@@ -198,16 +211,18 @@ var org;
                                     this.restoreColor(this.prevOverMesh);
                                 }
                                 this.prevOverMesh = pickResult.pickedMesh;
-                                console.log(this.prevOverMesh.name);
                                 if (this.rotEnabled) {
+                                    this.savedCol = this.prevOverMesh.getChildren()[0].color;
                                     this.prevOverMesh.getChildren()[0].color = Color3.White();
                                 }
                                 else {
                                     var childs = this.prevOverMesh.getChildren();
                                     if (childs.length > 0) {
+                                        this.savedMat = childs[0].material;
                                         childs[0].material = this.whiteMat;
                                     }
                                     else {
+                                        this.savedMat = this.prevOverMesh.material;
                                         this.prevOverMesh.material = this.whiteMat;
                                     }
                                 }
@@ -231,6 +246,31 @@ var org;
                         }
                     };
                     EditControl.prototype.restoreColor = function (mesh) {
+                        switch (mesh.name) {
+                            case "X":
+                                this.xaxis.color = Color3.Red();
+                                break;
+                            case "Y":
+                                this.yaxis.color = Color3.Green();
+                                break;
+                            case "Z":
+                                this.zaxis.color = Color3.Blue();
+                                break;
+                        }
+                        if (this.rotEnabled) {
+                            mesh.getChildren()[0].color = this.savedCol;
+                        }
+                        else {
+                            var childs = mesh.getChildren();
+                            if (childs.length > 0) {
+                                childs[0].material = this.savedMat;
+                            }
+                            else {
+                                mesh.material = this.savedMat;
+                            }
+                        }
+                    };
+                    EditControl.prototype.restoreColor_old = function (mesh) {
                         var col;
                         var mat;
                         if (mesh.name == "X") {
@@ -300,83 +340,118 @@ var org;
                         else
                             space = Space.WORLD;
                         if (this.axisPicked == this.tX) {
-                            if ((this.local))
+                            if (this.local)
                                 dl = Vector3.Dot(diff, this.localX) / (this.localX.length() * this.mesh.scaling.x);
                             else
                                 dl = diff.x;
-                            if ((this.snapT)) {
+                            if (this.snapT) {
                                 this.snapX += dl;
                                 dl = 0;
                                 var scale = 1;
-                                if ((this.local))
+                                if (this.local)
                                     scale = this.mesh.scaling.x;
-                                if ((Math.abs(this.snapX) > this.transSnap / scale)) {
-                                    if ((this.snapX > 0))
+                                if (Math.abs(this.snapX) > this.transSnap / scale) {
+                                    if (this.snapX > 0)
                                         dl = this.transSnap / scale;
                                     else
                                         dl = -this.transSnap / scale;
                                     this.snapX = 0;
                                 }
                             }
-                            if ((this.local))
+                            if (this.local)
                                 this.mesh.translate(Axis.X, dl, space);
                             else {
                                 this.mesh.position.x = Number(this.mesh.position.x) + Number(dl);
                             }
                         }
-                        else if ((this.axisPicked == this.tY)) {
-                            if ((this.local))
+                        else if (this.axisPicked == this.tY) {
+                            if (this.local)
                                 dl = Vector3.Dot(diff, this.localY) / (this.localY.length() * this.mesh.scaling.y);
                             else
                                 dl = diff.y;
-                            if ((this.snapT)) {
+                            if (this.snapT) {
                                 this.snapY += dl;
                                 dl = 0;
                                 var scale = 1;
-                                if ((this.local))
+                                if (this.local)
                                     scale = this.mesh.scaling.y;
                                 if ((Math.abs(this.snapY) > this.transSnap / scale)) {
-                                    if ((this.snapY > 0))
+                                    if (this.snapY > 0)
                                         dl = this.transSnap / scale;
                                     else
                                         dl = -this.transSnap / scale;
                                     this.snapY = 0;
                                 }
                             }
-                            if ((this.local))
+                            if (this.local)
                                 this.mesh.translate(Axis.Y, dl, space);
                             else {
                                 this.mesh.position.y = Number(this.mesh.position.y) + Number(dl);
                             }
                         }
-                        else if ((this.axisPicked == this.tZ)) {
-                            if ((this.local))
+                        else if (this.axisPicked == this.tZ) {
+                            if (this.local)
                                 dl = Vector3.Dot(diff, this.localZ) / (this.localZ.length() * this.mesh.scaling.z);
                             else
                                 dl = diff.z;
-                            if ((this.snapT)) {
+                            if (this.snapT) {
                                 this.snapZ += dl;
                                 dl = 0;
                                 var scale = 1;
-                                if ((this.local))
+                                if (this.local)
                                     scale = this.mesh.scaling.z;
                                 if ((Math.abs(this.snapZ) > this.transSnap / scale)) {
-                                    if ((this.snapZ > 0))
+                                    if (this.snapZ > 0)
                                         dl = this.transSnap / scale;
                                     else
                                         dl = -this.transSnap / scale;
                                     this.snapZ = 0;
                                 }
                             }
-                            if ((this.local))
+                            if (this.local)
                                 this.mesh.translate(Axis.Z, dl, space);
                             else {
                                 this.mesh.position.z = Number(this.mesh.position.z) + Number(dl);
                             }
                         }
-                        else if ((this.axisPicked == this.tAll)) {
+                        else if (this.axisPicked == this.tXZ) {
+                            var norm = void 0;
+                            if (this.local) {
+                                norm = Vector3.Normalize(this.localY);
+                            }
+                            else {
+                                norm = Axis.Y;
+                            }
+                            this.translateInPlane(this.mesh, diff, norm);
+                        }
+                        else if (this.axisPicked == this.tZY) {
+                            var norm = void 0;
+                            if (this.local) {
+                                norm = Vector3.Normalize(this.localX);
+                            }
+                            else {
+                                norm = Axis.X;
+                            }
+                            this.translateInPlane(this.mesh, diff, norm);
+                        }
+                        else if (this.axisPicked == this.tYX) {
+                            var norm = void 0;
+                            if (this.local) {
+                                norm = Vector3.Normalize(this.localZ);
+                            }
+                            else {
+                                norm = Axis.Z;
+                            }
+                            this.translateInPlane(this.mesh, diff, norm);
+                        }
+                        else if (this.axisPicked == this.tAll) {
                             this.mesh.position.addInPlace(diff);
                         }
+                    };
+                    EditControl.prototype.translateInPlane = function (mesh, trans, normal) {
+                        var nNorm = normal.scale(Vector3.Dot(trans, normal));
+                        var p = trans.subtract(nNorm);
+                        mesh.position.addInPlace(p);
                     };
                     EditControl.prototype.doScaling = function (newPos) {
                         var ppm = this.prevPos.subtract(this.mesh.position);
@@ -581,6 +656,9 @@ var org;
                             this.tEndX.visibility = v;
                             this.tEndY.visibility = v;
                             this.tEndZ.visibility = v;
+                            this.tEndXZ.visibility = v;
+                            this.tEndZY.visibility = v;
+                            this.tEndYX.visibility = v;
                             this.tEndAll.visibility = v;
                         }
                         if (this.rotEnabled) {
@@ -608,6 +686,9 @@ var org;
                             this.tEndX.visibility = 1;
                             this.tEndY.visibility = 1;
                             this.tEndZ.visibility = 1;
+                            this.tEndXZ.visibility = 1;
+                            this.tEndZY.visibility = 1;
+                            this.tEndYX.visibility = 1;
                             this.tEndAll.visibility = 1;
                             this.transEnabled = true;
                             this.disableRotation();
@@ -619,6 +700,9 @@ var org;
                             this.tEndX.visibility = 0;
                             this.tEndY.visibility = 0;
                             this.tEndZ.visibility = 0;
+                            this.tEndXZ.visibility = 0;
+                            this.tEndZY.visibility = 0;
+                            this.tEndYX.visibility = 0;
                             this.tEndAll.visibility = 0;
                             this.transEnabled = false;
                         }
@@ -723,37 +807,63 @@ var org;
                         this.pickPlane.renderingGroupId = 1;
                     };
                     EditControl.prototype.createTransAxes = function () {
-                        var r = 0.04;
+                        var r = 0.04 * this.axesScale;
                         var l = this.axesLen * this.axesScale;
                         this.tCtl = new Mesh("tarnsCtl", this.scene);
                         this.tX = this.extrudeBox(r / 2, l);
                         this.tX.name = "X";
                         this.tY = this.tX.clone("Y");
                         this.tZ = this.tX.clone("Z");
+                        this.tXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this.scene);
+                        this.tZY = this.tXZ.clone("ZY");
+                        this.tYX = this.tXZ.clone("YX");
+                        this.tXZ.rotation.x = 1.57;
+                        this.tZY.rotation.y = 1.57;
+                        this.tXZ.position.x = r;
+                        this.tXZ.position.z = r;
+                        this.tZY.position.z = r;
+                        this.tZY.position.y = r;
+                        this.tYX.position.y = r;
+                        this.tYX.position.x = r;
                         this.tAll = Mesh.CreateBox("ALL", r * 2, this.scene);
                         this.tX.parent = this.tCtl;
                         this.tY.parent = this.tCtl;
                         this.tZ.parent = this.tCtl;
+                        this.tXZ.parent = this.tCtl;
+                        this.tZY.parent = this.tCtl;
+                        this.tYX.parent = this.tCtl;
                         this.tAll.parent = this.tCtl;
                         this.tX.rotation.y = 1.57;
                         this.tY.rotation.x -= 1.57;
                         this.tX.visibility = 0;
                         this.tY.visibility = 0;
                         this.tZ.visibility = 0;
+                        this.tXZ.visibility = 0;
+                        this.tZY.visibility = 0;
+                        this.tYX.visibility = 0;
                         this.tAll.visibility = 0;
                         this.tX.renderingGroupId = 1;
                         this.tY.renderingGroupId = 1;
                         this.tZ.renderingGroupId = 1;
+                        this.tXZ.renderingGroupId = 1;
+                        this.tZY.renderingGroupId = 1;
+                        this.tYX.renderingGroupId = 1;
                         this.tAll.renderingGroupId = 1;
                         this.tX.isPickable = false;
                         this.tY.isPickable = false;
                         this.tZ.isPickable = false;
+                        this.tXZ.isPickable = false;
+                        this.tZY.isPickable = false;
+                        this.tYX.isPickable = false;
                         this.tAll.isPickable = false;
-                        var cl = l * this.axesScale / 4;
-                        var cr = r * this.axesScale;
+                        var cl = l / 4;
+                        var cr = r;
                         this.tEndX = Mesh.CreateCylinder("tEndX", cl, 0, cr, 6, 1, this.scene);
                         this.tEndY = this.tEndX.clone("tEndY");
                         this.tEndZ = this.tEndX.clone("tEndZ");
+                        this.tEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 2, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
+                        this.tEndZY = this.tEndXZ.clone("ZY");
+                        this.tEndYX = this.tEndXZ.clone("YX");
                         this.tEndAll = Mesh.CreateBox("tEndAll", cr, this.scene);
                         this.tEndX.rotation.x = 1.57;
                         this.tEndY.rotation.x = 1.57;
@@ -761,6 +871,9 @@ var org;
                         this.tEndX.parent = this.tX;
                         this.tEndY.parent = this.tY;
                         this.tEndZ.parent = this.tZ;
+                        this.tEndXZ.parent = this.tXZ;
+                        this.tEndZY.parent = this.tZY;
+                        this.tEndYX.parent = this.tYX;
                         this.tEndAll.parent = this.tAll;
                         this.tEndX.position.z = l - cl / 2;
                         this.tEndY.position.z = l - cl / 2;
@@ -768,14 +881,23 @@ var org;
                         this.tEndX.material = this.redMat;
                         this.tEndY.material = this.greenMat;
                         this.tEndZ.material = this.blueMat;
+                        this.tEndXZ.material = this.redMat;
+                        this.tEndZY.material = this.blueMat;
+                        this.tEndYX.material = this.greenMat;
                         this.tEndAll.material = this.yellowMat;
                         this.tEndX.renderingGroupId = 1;
                         this.tEndY.renderingGroupId = 1;
                         this.tEndZ.renderingGroupId = 1;
+                        this.tEndXZ.renderingGroupId = 1;
+                        this.tEndZY.renderingGroupId = 1;
+                        this.tEndYX.renderingGroupId = 1;
                         this.tEndAll.renderingGroupId = 1;
                         this.tEndX.isPickable = false;
                         this.tEndY.isPickable = false;
                         this.tEndZ.isPickable = false;
+                        this.tEndXZ.isPickable = false;
+                        this.tEndZY.isPickable = false;
+                        this.tEndYX.isPickable = false;
                         this.tEndAll.isPickable = false;
                     };
                     EditControl.prototype.createRotAxes = function () {
@@ -997,6 +1119,9 @@ var org;
                         this.blueMat = EditControl.getStandardMaterial("blueMat", Color3.Blue(), scene);
                         this.whiteMat = EditControl.getStandardMaterial("whiteMat", Color3.White(), scene);
                         this.yellowMat = EditControl.getStandardMaterial("whiteMat", Color3.Yellow(), scene);
+                        this.redBlueMat = EditControl.getStandardMaterial("redBlueMat", new Color3(1, 0, 1), scene);
+                        this.blueGreenMat = EditControl.getStandardMaterial("blueGreenMat", new Color3(0, 1, 1), scene);
+                        this.greenRedMat = EditControl.getStandardMaterial("redBlueMat", new Color3(1, 1, 0), scene);
                     };
                     EditControl.prototype.disposeMaterials = function () {
                         this.redMat.dispose();
@@ -1004,6 +1129,9 @@ var org;
                         this.blueMat.dispose();
                         this.whiteMat.dispose();
                         this.yellowMat.dispose();
+                        this.redBlueMat.dispose();
+                        this.blueGreenMat.dispose();
+                        this.greenRedMat.dispose();
                     };
                     EditControl.getStandardMaterial = function (name, col, scene) {
                         var mat = new StandardMaterial(name, scene);

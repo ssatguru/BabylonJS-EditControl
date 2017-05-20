@@ -1,6 +1,8 @@
 declare namespace org.ssatguru.babylonjs.component {
     import AbstractMesh = BABYLON.AbstractMesh;
     import Camera = BABYLON.Camera;
+    import Color3 = BABYLON.Color3;
+    import Material = BABYLON.Material;
     import Mesh = BABYLON.Mesh;
     import Vector3 = BABYLON.Vector3;
     class EditControl {
@@ -42,8 +44,11 @@ declare namespace org.ssatguru.babylonjs.component {
         private prevOverMesh;
         private pointerIsOver;
         isPointerOver(): boolean;
+        savedMat: Material;
+        savedCol: Color3;
         private onPointerOver();
         private restoreColor(mesh);
+        private restoreColor_old(mesh);
         editing: boolean;
         private onPointerUp(evt);
         private prevPos;
@@ -55,6 +60,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private snapRZ;
         private onPointerMove(evt);
         private doTranslation(newPos);
+        private translateInPlane(mesh, trans, normal);
         snapS: boolean;
         snapSX: number;
         snapSY: number;
@@ -95,10 +101,16 @@ declare namespace org.ssatguru.babylonjs.component {
         private tX;
         private tY;
         private tZ;
+        private tXZ;
+        private tZY;
+        private tYX;
         private tAll;
         private tEndX;
         private tEndY;
         private tEndZ;
+        private tEndXZ;
+        private tEndZY;
+        private tEndYX;
         private tEndAll;
         private createTransAxes();
         private rCtl;
@@ -141,6 +153,9 @@ declare namespace org.ssatguru.babylonjs.component {
         cameraNormal: Vector3;
         private setAxesScale();
         static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number;
+        private redBlueMat;
+        private blueGreenMat;
+        private greenRedMat;
         private createMaterials(scene);
         private disposeMaterials();
         private static getStandardMaterial(name, col, scene);

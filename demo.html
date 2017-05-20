@@ -57,6 +57,7 @@
             <button id="scale">scale</button>
             <input type="checkbox" id="snaptrans">snap translation 
             <input type="checkbox" id="snaprot">snap rotation
+            <input type="checkbox" id="snapscale">snap scale
             <button id="undo">undo</button>
             <button id="redo">redo</button>
             <button id="help" style="float: right;">Help</button>
@@ -85,8 +86,10 @@
             var localButton = document.getElementById("local");
             var snapTButton = document.getElementById("snaptrans");
             var snapRButton = document.getElementById("snaprot");
+            var snapSButton = document.getElementById("snapscale");
             snapTButton.checked = false;
             snapRButton.checked = false;
+            snapSButton.checked = false;
             var undoButton = document.getElementById("undo");
             var redoButton = document.getElementById("redo");
             var focusButton = document.getElementById("focus");
@@ -129,6 +132,9 @@
             };
             snapRButton.onclick = function () {
                 editControl.setRotSnap(snapRButton.checked);
+            };
+            snapSButton.onclick = function () {
+                editControl.setScaleSnap(snapSButton.checked);
             };
             undoButton.onclick = function () {
                 editControl.undo();
@@ -192,8 +198,10 @@
                 editControl.enableTranslation();
                 //set rotational snap valie in radians
                 editControl.setRotSnapValue(3.14 / 18);
-                //set transalation sna value in meters
+                //set transalation snap value in meters
                 editControl.setTransSnapValue(0.5);
+                //set scale snap value in scale ratio
+                editControl.setScaleSnapValue(0.25);
 
                 return scene;
             };
