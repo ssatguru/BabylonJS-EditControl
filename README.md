@@ -7,10 +7,11 @@ This EditControl is similar to those widgets.
 You can embed this in your Babylonjs application to provide those same capabilities.  
 It currently has the following features  
 * Translate 
-* Snap Translate
+* Translate Snap
 * Rotate 
-* Snap Rotate
+* Rotate Snap
 * Scale 
+* Scale Snap
 * Local or Global  Translation and Rotation. (Scaling only in local axis)
 * Create multiple instances in the same scene with each instance attached to a different mesh
 * Scale size of control
@@ -106,19 +107,25 @@ editControl.setLocal(boolean true/false);
 ```
 editControl.isLocal();
 ```
-7) To turn on/off translation or rotation snapping
+7) To turn on/off translation, rotation or scale snapping
 ```
 editControl.setTransSnap(boolean true/false);
 ```
 ```
 editControl.setRotSnap(boolean true/false);
 ```
-8) To set translation or Rotation snap values
+```
+editControl.setScaleSnap(boolean true/false);
+```
+8) To set translation, rotation or scale snap values
 ```
 editControl.setTransSnapValue(number n in meters);
 ```
 ```
 editControl.setRotSnapValue(number n in radians);
+```
+```
+editControl.setScaleSnapValue(number n in radians);
 ```
 9) To undo or redo
 ```
