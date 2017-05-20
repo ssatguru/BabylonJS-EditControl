@@ -14,6 +14,7 @@ namespace org.ssatguru.babylonjs.component {
     import Matrix = BABYLON.Matrix;
 
     import Mesh = BABYLON.Mesh;
+    import Node = BABYLON.Node;
 
     import PickingInfo = BABYLON.PickingInfo;
 
@@ -158,22 +159,32 @@ namespace org.ssatguru.babylonjs.component {
             evt.preventDefault();
             this.pDown = true;
             if ((<PointerEvent>evt).button != 0) return;
+            
             var pickResult: PickingInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => {
                 if (this.transEnabled) {
-                    if ((mesh == this.tX) || (mesh == this.tY) || (mesh == this.tZ)) return true;
+                    if ((mesh == this.tX) || (mesh == this.tY) || (mesh == this.tZ) || (mesh == this.tAll)) return true;
                 } else if ((this.rotEnabled)) {
-                    if ((mesh == this.rX) || (mesh == this.rY) || (mesh == this.rZ)) return true;
+                    if ((mesh == this.rX) || (mesh == this.rY) || (mesh == this.rZ) || (mesh == this.rAll)) return true;
                 } else if ((this.scaleEnabled)) {
                     if ((mesh == this.sX) || (mesh == this.sY) || (mesh == this.sZ) || (mesh == this.sAll)) return true;
                 }
                 return false;
             }, null, this.mainCamera);
+            
             if (pickResult.hit) {
                 this.setAxesVisiblity(0);
                 this.axisPicked = <Mesh>pickResult.pickedMesh;
-                (<Mesh>this.axisPicked.getChildren()[0]).visibility = 1;
+                let childs:Node[] = this.axisPicked.getChildren();
+                if (childs.length >0){
+                    (<Mesh>childs[0]).visibility = 1;
+                }else{
+                    this.axisPicked.visibility = 1;
+                }
                 var name: string = this.axisPicked.name;
-                if ((name == "X")) this.bXaxis.visibility = 1; else if ((name == "Y")) this.bYaxis.visibility = 1; else if ((name == "Z")) this.bZaxis.visibility = 1; else if ((name == "ALL")) {
+                if ((name == "X")) this.bXaxis.visibility = 1; 
+                else if ((name == "Y")) this.bYaxis.visibility = 1; 
+                else if ((name == "Z")) this.bZaxis.visibility = 1; 
+                else if ((name == "ALL")) {
                     this.bXaxis.visibility = 1;
                     this.bYaxis.visibility = 1;
                     this.bZaxis.visibility = 1;
@@ -206,9 +217,9 @@ namespace org.ssatguru.babylonjs.component {
             if (this.pDown) return;
             var pickResult: PickingInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => {
                 if (this.transEnabled) {
-                    if ((mesh == this.tX) || (mesh == this.tY) || (mesh == this.tZ)) return true;
+                    if ((mesh == this.tX) || (mesh == this.tY) || (mesh == this.tZ) || (mesh == this.tAll)) return true;
                 } else if ((this.rotEnabled)) {
-                    if ((mesh == this.rX) || (mesh == this.rY) || (mesh == this.rZ)) return true;
+                    if ((mesh == this.rX) || (mesh == this.rY) || (mesh == this.rZ) || (mesh == this.rAll)) return true;
                 } else if (this.scaleEnabled) {
                     if ((mesh == this.sX) || (mesh == this.sY) || (mesh == this.sZ) || (mesh == this.sAll)) return true;
                 }
@@ -222,10 +233,16 @@ namespace org.ssatguru.babylonjs.component {
                         this.restoreColor(this.prevOverMesh);
                     }
                     this.prevOverMesh = <Mesh>pickResult.pickedMesh;
+                    console.log(this.prevOverMesh.name);
                     if (this.rotEnabled) {
                         (<LinesMesh>this.prevOverMesh.getChildren()[0]).color = Color3.White();
                     } else {
-                        (<Mesh>this.prevOverMesh.getChildren()[0]).material = this.whiteMat;
+                        let childs: Node[] = this.prevOverMesh.getChildren();
+                        if (childs.length>0){
+                            (<Mesh>childs[0]).material = this.whiteMat;
+                        }else{
+                            this.prevOverMesh.material = this.whiteMat;
+                        }
                     }
                     if (this.prevOverMesh.name == "X") {
                         this.xaxis.color = Color3.White();
@@ -247,15 +264,15 @@ namespace org.ssatguru.babylonjs.component {
         private restoreColor(mesh: Mesh) {
             var col: Color3;
             var mat: Material;
-            if ((mesh.name == "X")) {
+            if (mesh.name == "X") {
                 col = Color3.Red();
                 mat = this.redMat;
                 this.xaxis.color = Color3.Red();
-            } else if ((this.prevOverMesh.name == "Y")) {
+            } else if (mesh.name == "Y") {
                 col = Color3.Green();
                 mat = this.greenMat;
                 this.yaxis.color = Color3.Green();
-            } else if ((this.prevOverMesh.name == "Z")) {
+            } else if (mesh.name == "Z") {
                 col = Color3.Blue();
                 mat = this.blueMat;
                 this.zaxis.color = Color3.Blue();
@@ -263,10 +280,15 @@ namespace org.ssatguru.babylonjs.component {
                 col = Color3.Yellow();
                 mat = this.yellowMat;
             }
-            if ((this.rotEnabled)) {
-                (<LinesMesh>this.prevOverMesh.getChildren()[0]).color = col;
+            if (this.rotEnabled) {
+                (<LinesMesh>mesh.getChildren()[0]).color = col;
             } else {
-                (<Mesh>this.prevOverMesh.getChildren()[0]).material = mat;
+                let childs:Node[] = mesh.getChildren();
+                if (childs.length > 0){
+                    (<Mesh>childs[0]).material = mat;
+                }else{
+                    mesh.material = mat;
+                }
             }
         }
 
@@ -362,6 +384,8 @@ namespace org.ssatguru.babylonjs.component {
                     //this.meshPicked.position.z+=dl;
                     this.mesh.position.z = Number(this.mesh.position.z) + Number(dl);
                 }
+            } else if ((this.axisPicked == this.tAll)) {
+                this.mesh.position.addInPlace(diff);
             }
         }
 
@@ -448,54 +472,54 @@ namespace org.ssatguru.babylonjs.component {
 
         private doRotation(newPos: Vector3) {
             var cN: Vector3 = Vector3.TransformNormal(Axis.Z, this.mainCamera.getWorldMatrix());
-            if ((this.axisPicked == this.rX)) {
-                //var angle: number = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
-                var angle: number = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
-                if ((this.snapR)) {
+            //var angle: number = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
+            var angle: number = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
+            
+            if (this.axisPicked == this.rX) {
+                if (this.snapR) {
                     this.snapRX += angle;
                     angle = 0;
-                    if ((Math.abs(this.snapRX) >= this.rotSnap)) {
+                    if (Math.abs(this.snapRX) >= this.rotSnap) {
                         if ((this.snapRX > 0)) angle = this.rotSnap; else angle = -this.rotSnap;
                         this.snapRX = 0;
                     }
                 }
-                if ((this.local)) {
-                    if ((Vector3.Dot(this.localX, cN) < 0)) angle = -1 * angle;
+                if (this.local) {
+                    if (Vector3.Dot(this.localX, cN) < 0) angle = -1 * angle;
                     this.mesh.rotate(Axis.X, angle, Space.LOCAL);
                 } else this.mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
                 this.setLocalAxes(this.mesh);
-            } else if ((this.axisPicked == this.rY)) {
-                //var angle: number = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
-                var angle: number = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
-                if ((this.snapR)) {
+            } else if (this.axisPicked == this.rY) {
+                if (this.snapR) {
                     this.snapRY += angle;
                     angle = 0;
-                    if ((Math.abs(this.snapRY) >= this.rotSnap)) {
+                    if (Math.abs(this.snapRY) >= this.rotSnap) {
                         if ((this.snapRY > 0)) angle = this.rotSnap; else angle = -this.rotSnap;
                         this.snapRY = 0;
                     }
                 }
-                if ((this.local)) {
-                    if ((Vector3.Dot(this.localY, cN) < 0)) angle = -1 * angle;
+                if (this.local) {
+                    if (Vector3.Dot(this.localY, cN) < 0) angle = -1 * angle;
                     this.mesh.rotate(Axis.Y, angle, Space.LOCAL);
                 } else this.mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
                 this.setLocalAxes(this.mesh);
-            } else if ((this.axisPicked == this.rZ)) {
-                //var angle: number = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
-                var angle: number = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
-                if ((this.snapR)) {
+            } else if (this.axisPicked == this.rZ) {
+                if (this.snapR) {
                     this.snapRZ += angle;
                     angle = 0;
-                    if ((Math.abs(this.snapRZ) >= this.rotSnap)) {
-                        if ((this.snapRZ > 0)) angle = this.rotSnap; else angle = -this.rotSnap;
+                    if (Math.abs(this.snapRZ) >= this.rotSnap) {
+                        if (this.snapRZ > 0) angle = this.rotSnap; else angle = -this.rotSnap;
                         this.snapRZ = 0;
                     }
                 }
-                if ((this.local)) {
-                    if ((Vector3.Dot(this.localZ, cN) < 0)) angle = -1 * angle;
+                if (this.local) {
+                    if (Vector3.Dot(this.localZ, cN) < 0) angle = -1 * angle;
                     this.mesh.rotate(Axis.Z, angle, Space.LOCAL);
                 } else this.mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
                 this.setLocalAxes(this.mesh);
+            }else if (this.axisPicked == this.rAll) {
+                this.mesh.rotate(this.mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
+                 this.setLocalAxes(this.mesh);
             }
             if ((this.eulerian)) {
                 this.mesh.rotation = this.mesh.rotationQuaternion.toEulerAngles();
@@ -525,11 +549,13 @@ namespace org.ssatguru.babylonjs.component {
                 this.tEndX.visibility = v;
                 this.tEndY.visibility = v;
                 this.tEndZ.visibility = v;
+                this.tEndAll.visibility = v;
             }
             if (this.rotEnabled) {
                 this.rEndX.visibility = v;
                 this.rEndY.visibility = v;
                 this.rEndZ.visibility = v;
+                this.rEndAll.visibility = v;
             }
             if (this.scaleEnabled) {
                 this.sEndX.visibility = v;
@@ -554,6 +580,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.tEndX.visibility = 1;
                 this.tEndY.visibility = 1;
                 this.tEndZ.visibility = 1;
+                this.tEndAll.visibility = 1;
                 this.transEnabled = true;
                 this.disableRotation();
                 this.disableScaling();
@@ -565,6 +592,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.tEndX.visibility = 0;
                 this.tEndY.visibility = 0;
                 this.tEndZ.visibility = 0;
+                this.tEndAll.visibility = 0;
                 this.transEnabled = false;
             }
         }
@@ -588,6 +616,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.rEndX.visibility = 1;
                 this.rEndY.visibility = 1;
                 this.rEndZ.visibility = 1;
+                this.rEndAll.visibility = 1;
                 this.rotEnabled = true;
                 this.disableTranslation();
                 this.disableScaling();
@@ -599,6 +628,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.rEndX.visibility = 0;
                 this.rEndY.visibility = 0;
                 this.rEndZ.visibility = 0;
+                this.rEndAll.visibility = 0;
                 this.rotEnabled = false;
             }
         }
@@ -712,17 +742,15 @@ namespace org.ssatguru.babylonjs.component {
         private tCtl: Mesh;
 
         private tX: Mesh;
-
         private tY: Mesh;
-
         private tZ: Mesh;
+        private tAll: Mesh;
 
         private tEndX: Mesh;
-
         private tEndY: Mesh;
-
         private tEndZ: Mesh;
-
+        private tEndAll: Mesh;
+        
         private createTransAxes() {
             var r: number = 0.04;
             var l: number = this.axesLen * this.axesScale;
@@ -733,25 +761,32 @@ namespace org.ssatguru.babylonjs.component {
             this.tX.name = "X";
             this.tY = this.tX.clone("Y");
             this.tZ = this.tX.clone("Z");
-            this.tX.material = this.redMat;
-            this.tY.material = this.greenMat;
-            this.tZ.material = this.blueMat;
+            this.tAll = Mesh.CreateBox("ALL",r * 2, this.scene);
+            
+         
             this.tX.parent = this.tCtl;
             this.tY.parent = this.tCtl;
             this.tZ.parent = this.tCtl;
+            this.tAll.parent = this.tCtl;
+            
             this.tX.rotation.y = 1.57;
             this.tY.rotation.x -= 1.57;
+            
             this.tX.visibility = 0;
             this.tY.visibility = 0;
             this.tZ.visibility = 0;
+            this.tAll.visibility = 0;
+            
             this.tX.renderingGroupId = 1;
             this.tY.renderingGroupId = 1;
             this.tZ.renderingGroupId = 1;
+            this.tAll.renderingGroupId = 1;
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function 
             this.tX.isPickable = false;
             this.tY.isPickable = false;
             this.tZ.isPickable = false;
+            this.tAll.isPickable = false;
 
             //non pickable but visible cones at end of axes lines
             var cl: number = l * this.axesScale / 4;
@@ -759,24 +794,35 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndX = Mesh.CreateCylinder("tEndX", cl, 0, cr, 6, 1, this.scene);
             this.tEndY = this.tEndX.clone("tEndY");
             this.tEndZ = this.tEndX.clone("tEndZ");
+            this.tEndAll = Mesh.CreateBox("tEndAll", cr, this.scene);
+            
             this.tEndX.rotation.x = 1.57;
             this.tEndY.rotation.x = 1.57;
             this.tEndZ.rotation.x = 1.57;
+            
             this.tEndX.parent = this.tX;
             this.tEndY.parent = this.tY;
             this.tEndZ.parent = this.tZ;
+            this.tEndAll.parent = this.tAll;
+            
             this.tEndX.position.z = l - cl / 2;
             this.tEndY.position.z = l - cl / 2;
             this.tEndZ.position.z = l - cl / 2;
+            
             this.tEndX.material = this.redMat;
             this.tEndY.material = this.greenMat;
             this.tEndZ.material = this.blueMat;
+            this.tEndAll.material = this.yellowMat;
+            
             this.tEndX.renderingGroupId = 1;
             this.tEndY.renderingGroupId = 1;
             this.tEndZ.renderingGroupId = 1;
+            this.tEndAll.renderingGroupId = 1;
+            
             this.tEndX.isPickable = false;
             this.tEndY.isPickable = false;
             this.tEndZ.isPickable = false;
+            this.tEndAll.isPickable = false;
         }
 
         private rCtl: Mesh;
@@ -784,10 +830,12 @@ namespace org.ssatguru.babylonjs.component {
         private rX: Mesh;
         private rY: Mesh;
         private rZ: Mesh;
+        private rAll:Mesh;
         
         private rEndX: LinesMesh;
         private rEndY: LinesMesh;
         private rEndZ: LinesMesh;
+        private rEndAll: LinesMesh;
 
         private createRotAxes() {
             var r: number = 0.04;
@@ -798,48 +846,64 @@ namespace org.ssatguru.babylonjs.component {
             this.rX.name="X";
             this.rY = this.rX.clone("Y");
             this.rZ = this.rX.clone("Z");
+            this.rAll = this.createTube(d/1.75,360);
+            this.rAll.name = "ALL"
             
-            this.rX.material = this.redMat;
-            this.rY.material = this.greenMat;
-            this.rZ.material = this.blueMat;
+//            this.rX.material = this.redMat;
+//            this.rY.material = this.greenMat;
+//            this.rZ.material = this.blueMat;
+//            this.rAll.material = this.yellowMat;
+            
             this.rX.parent = this.rCtl;
             this.rY.parent = this.rCtl;
             this.rZ.parent = this.rCtl;
+            this.rAll.parent = this.pickPlane;
+            
             this.rX.rotation.z = 1.57;
             this.rZ.rotation.x = -1.57;
-            
+            this.rAll.rotation.x=1.57;
             this.rX.visibility = 0;
             this.rY.visibility = 0;
             this.rZ.visibility = 0;
+             this.rAll.visibility = 0;
             
             this.rX.renderingGroupId = 1;
             this.rY.renderingGroupId = 1;
             this.rZ.renderingGroupId = 1;
+            this.rAll.renderingGroupId = 1;
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function 
             this.rX.isPickable = false;
             this.rY.isPickable = false;
             this.rZ.isPickable = false;
+            this.rAll.isPickable = false;
 
             //non pickable but visible circles
             var cl: number = d;
             this.rEndX = this.createCircle(cl / 2,90);
             this.rEndY = this.rEndX.clone("");
             this.rEndZ = this.rEndX.clone("");
+            this.rEndAll = this.createCircle(cl / 1.75,360);
+            
             this.rEndX.parent = this.rX;
             this.rEndY.parent = this.rY;
             this.rEndZ.parent = this.rZ;
-            
+            this.rEndAll.parent = this.rAll;
 
             this.rEndX.color = Color3.Red();
             this.rEndY.color = Color3.Green();
             this.rEndZ.color = Color3.Blue();
+            this.rEndAll.color = Color3.Yellow();
+            
             this.rEndX.renderingGroupId = 1;
             this.rEndY.renderingGroupId = 1;
             this.rEndZ.renderingGroupId = 1;
+            this.rEndAll.renderingGroupId = 1;
+            
             this.rEndX.isPickable = false;
             this.rEndY.isPickable = false;
             this.rEndZ.isPickable = false;
+            this.rEndAll.isPickable = false;
         }
         
         private extrudeBox(w: number, l: number): Mesh {
@@ -886,13 +950,9 @@ namespace org.ssatguru.babylonjs.component {
         
 
         private sCtl: Mesh;
-
         private sX: Mesh;
-
         private sY: Mesh;
-
         private sZ: Mesh;
-
         private sAll: Mesh;
 
         private sEndX: Mesh;

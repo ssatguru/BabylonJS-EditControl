@@ -120,11 +120,11 @@ var org;
                             return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
-                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ))
+                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tAll))
                                     return true;
                             }
                             else if ((_this.rotEnabled)) {
-                                if ((mesh == _this.rX) || (mesh == _this.rY) || (mesh == _this.rZ))
+                                if ((mesh == _this.rX) || (mesh == _this.rY) || (mesh == _this.rZ) || (mesh == _this.rAll))
                                     return true;
                             }
                             else if ((_this.scaleEnabled)) {
@@ -136,7 +136,13 @@ var org;
                         if (pickResult.hit) {
                             this.setAxesVisiblity(0);
                             this.axisPicked = pickResult.pickedMesh;
-                            this.axisPicked.getChildren()[0].visibility = 1;
+                            var childs = this.axisPicked.getChildren();
+                            if (childs.length > 0) {
+                                childs[0].visibility = 1;
+                            }
+                            else {
+                                this.axisPicked.visibility = 1;
+                            }
                             var name = this.axisPicked.name;
                             if ((name == "X"))
                                 this.bXaxis.visibility = 1;
@@ -171,11 +177,11 @@ var org;
                             return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
-                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ))
+                                if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tAll))
                                     return true;
                             }
                             else if ((_this.rotEnabled)) {
-                                if ((mesh == _this.rX) || (mesh == _this.rY) || (mesh == _this.rZ))
+                                if ((mesh == _this.rX) || (mesh == _this.rY) || (mesh == _this.rZ) || (mesh == _this.rAll))
                                     return true;
                             }
                             else if (_this.scaleEnabled) {
@@ -192,11 +198,18 @@ var org;
                                     this.restoreColor(this.prevOverMesh);
                                 }
                                 this.prevOverMesh = pickResult.pickedMesh;
+                                console.log(this.prevOverMesh.name);
                                 if (this.rotEnabled) {
                                     this.prevOverMesh.getChildren()[0].color = Color3.White();
                                 }
                                 else {
-                                    this.prevOverMesh.getChildren()[0].material = this.whiteMat;
+                                    var childs = this.prevOverMesh.getChildren();
+                                    if (childs.length > 0) {
+                                        childs[0].material = this.whiteMat;
+                                    }
+                                    else {
+                                        this.prevOverMesh.material = this.whiteMat;
+                                    }
                                 }
                                 if (this.prevOverMesh.name == "X") {
                                     this.xaxis.color = Color3.White();
@@ -220,17 +233,17 @@ var org;
                     EditControl.prototype.restoreColor = function (mesh) {
                         var col;
                         var mat;
-                        if ((mesh.name == "X")) {
+                        if (mesh.name == "X") {
                             col = Color3.Red();
                             mat = this.redMat;
                             this.xaxis.color = Color3.Red();
                         }
-                        else if ((this.prevOverMesh.name == "Y")) {
+                        else if (mesh.name == "Y") {
                             col = Color3.Green();
                             mat = this.greenMat;
                             this.yaxis.color = Color3.Green();
                         }
-                        else if ((this.prevOverMesh.name == "Z")) {
+                        else if (mesh.name == "Z") {
                             col = Color3.Blue();
                             mat = this.blueMat;
                             this.zaxis.color = Color3.Blue();
@@ -239,11 +252,17 @@ var org;
                             col = Color3.Yellow();
                             mat = this.yellowMat;
                         }
-                        if ((this.rotEnabled)) {
-                            this.prevOverMesh.getChildren()[0].color = col;
+                        if (this.rotEnabled) {
+                            mesh.getChildren()[0].color = col;
                         }
                         else {
-                            this.prevOverMesh.getChildren()[0].material = mat;
+                            var childs = mesh.getChildren();
+                            if (childs.length > 0) {
+                                childs[0].material = mat;
+                            }
+                            else {
+                                mesh.material = mat;
+                            }
                         }
                     };
                     EditControl.prototype.onPointerUp = function (evt) {
@@ -355,6 +374,9 @@ var org;
                                 this.mesh.position.z = Number(this.mesh.position.z) + Number(dl);
                             }
                         }
+                        else if ((this.axisPicked == this.tAll)) {
+                            this.mesh.position.addInPlace(diff);
+                        }
                     };
                     EditControl.prototype.doScaling = function (newPos) {
                         var ppm = this.prevPos.subtract(this.mesh.position);
@@ -464,12 +486,12 @@ var org;
                     };
                     EditControl.prototype.doRotation = function (newPos) {
                         var cN = Vector3.TransformNormal(Axis.Z, this.mainCamera.getWorldMatrix());
-                        if ((this.axisPicked == this.rX)) {
-                            var angle = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
-                            if ((this.snapR)) {
+                        var angle = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
+                        if (this.axisPicked == this.rX) {
+                            if (this.snapR) {
                                 this.snapRX += angle;
                                 angle = 0;
-                                if ((Math.abs(this.snapRX) >= this.rotSnap)) {
+                                if (Math.abs(this.snapRX) >= this.rotSnap) {
                                     if ((this.snapRX > 0))
                                         angle = this.rotSnap;
                                     else
@@ -477,8 +499,8 @@ var org;
                                     this.snapRX = 0;
                                 }
                             }
-                            if ((this.local)) {
-                                if ((Vector3.Dot(this.localX, cN) < 0))
+                            if (this.local) {
+                                if (Vector3.Dot(this.localX, cN) < 0)
                                     angle = -1 * angle;
                                 this.mesh.rotate(Axis.X, angle, Space.LOCAL);
                             }
@@ -486,12 +508,11 @@ var org;
                                 this.mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
                             this.setLocalAxes(this.mesh);
                         }
-                        else if ((this.axisPicked == this.rY)) {
-                            var angle = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
-                            if ((this.snapR)) {
+                        else if (this.axisPicked == this.rY) {
+                            if (this.snapR) {
                                 this.snapRY += angle;
                                 angle = 0;
-                                if ((Math.abs(this.snapRY) >= this.rotSnap)) {
+                                if (Math.abs(this.snapRY) >= this.rotSnap) {
                                     if ((this.snapRY > 0))
                                         angle = this.rotSnap;
                                     else
@@ -499,8 +520,8 @@ var org;
                                     this.snapRY = 0;
                                 }
                             }
-                            if ((this.local)) {
-                                if ((Vector3.Dot(this.localY, cN) < 0))
+                            if (this.local) {
+                                if (Vector3.Dot(this.localY, cN) < 0)
                                     angle = -1 * angle;
                                 this.mesh.rotate(Axis.Y, angle, Space.LOCAL);
                             }
@@ -508,26 +529,29 @@ var org;
                                 this.mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
                             this.setLocalAxes(this.mesh);
                         }
-                        else if ((this.axisPicked == this.rZ)) {
-                            var angle = EditControl.getAngle(this.prevPos, newPos, this.mesh.getAbsolutePivotPoint(), cN);
-                            if ((this.snapR)) {
+                        else if (this.axisPicked == this.rZ) {
+                            if (this.snapR) {
                                 this.snapRZ += angle;
                                 angle = 0;
-                                if ((Math.abs(this.snapRZ) >= this.rotSnap)) {
-                                    if ((this.snapRZ > 0))
+                                if (Math.abs(this.snapRZ) >= this.rotSnap) {
+                                    if (this.snapRZ > 0)
                                         angle = this.rotSnap;
                                     else
                                         angle = -this.rotSnap;
                                     this.snapRZ = 0;
                                 }
                             }
-                            if ((this.local)) {
-                                if ((Vector3.Dot(this.localZ, cN) < 0))
+                            if (this.local) {
+                                if (Vector3.Dot(this.localZ, cN) < 0)
                                     angle = -1 * angle;
                                 this.mesh.rotate(Axis.Z, angle, Space.LOCAL);
                             }
                             else
                                 this.mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
+                            this.setLocalAxes(this.mesh);
+                        }
+                        else if (this.axisPicked == this.rAll) {
+                            this.mesh.rotate(this.mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
                             this.setLocalAxes(this.mesh);
                         }
                         if ((this.eulerian)) {
@@ -557,11 +581,13 @@ var org;
                             this.tEndX.visibility = v;
                             this.tEndY.visibility = v;
                             this.tEndZ.visibility = v;
+                            this.tEndAll.visibility = v;
                         }
                         if (this.rotEnabled) {
                             this.rEndX.visibility = v;
                             this.rEndY.visibility = v;
                             this.rEndZ.visibility = v;
+                            this.rEndAll.visibility = v;
                         }
                         if (this.scaleEnabled) {
                             this.sEndX.visibility = v;
@@ -582,6 +608,7 @@ var org;
                             this.tEndX.visibility = 1;
                             this.tEndY.visibility = 1;
                             this.tEndZ.visibility = 1;
+                            this.tEndAll.visibility = 1;
                             this.transEnabled = true;
                             this.disableRotation();
                             this.disableScaling();
@@ -592,6 +619,7 @@ var org;
                             this.tEndX.visibility = 0;
                             this.tEndY.visibility = 0;
                             this.tEndZ.visibility = 0;
+                            this.tEndAll.visibility = 0;
                             this.transEnabled = false;
                         }
                     };
@@ -610,6 +638,7 @@ var org;
                             this.rEndX.visibility = 1;
                             this.rEndY.visibility = 1;
                             this.rEndZ.visibility = 1;
+                            this.rEndAll.visibility = 1;
                             this.rotEnabled = true;
                             this.disableTranslation();
                             this.disableScaling();
@@ -620,6 +649,7 @@ var org;
                             this.rEndX.visibility = 0;
                             this.rEndY.visibility = 0;
                             this.rEndZ.visibility = 0;
+                            this.rEndAll.visibility = 0;
                             this.rotEnabled = false;
                         }
                     };
@@ -700,46 +730,53 @@ var org;
                         this.tX.name = "X";
                         this.tY = this.tX.clone("Y");
                         this.tZ = this.tX.clone("Z");
-                        this.tX.material = this.redMat;
-                        this.tY.material = this.greenMat;
-                        this.tZ.material = this.blueMat;
+                        this.tAll = Mesh.CreateBox("ALL", r * 2, this.scene);
                         this.tX.parent = this.tCtl;
                         this.tY.parent = this.tCtl;
                         this.tZ.parent = this.tCtl;
+                        this.tAll.parent = this.tCtl;
                         this.tX.rotation.y = 1.57;
                         this.tY.rotation.x -= 1.57;
                         this.tX.visibility = 0;
                         this.tY.visibility = 0;
                         this.tZ.visibility = 0;
+                        this.tAll.visibility = 0;
                         this.tX.renderingGroupId = 1;
                         this.tY.renderingGroupId = 1;
                         this.tZ.renderingGroupId = 1;
+                        this.tAll.renderingGroupId = 1;
                         this.tX.isPickable = false;
                         this.tY.isPickable = false;
                         this.tZ.isPickable = false;
+                        this.tAll.isPickable = false;
                         var cl = l * this.axesScale / 4;
                         var cr = r * this.axesScale;
                         this.tEndX = Mesh.CreateCylinder("tEndX", cl, 0, cr, 6, 1, this.scene);
                         this.tEndY = this.tEndX.clone("tEndY");
                         this.tEndZ = this.tEndX.clone("tEndZ");
+                        this.tEndAll = Mesh.CreateBox("tEndAll", cr, this.scene);
                         this.tEndX.rotation.x = 1.57;
                         this.tEndY.rotation.x = 1.57;
                         this.tEndZ.rotation.x = 1.57;
                         this.tEndX.parent = this.tX;
                         this.tEndY.parent = this.tY;
                         this.tEndZ.parent = this.tZ;
+                        this.tEndAll.parent = this.tAll;
                         this.tEndX.position.z = l - cl / 2;
                         this.tEndY.position.z = l - cl / 2;
                         this.tEndZ.position.z = l - cl / 2;
                         this.tEndX.material = this.redMat;
                         this.tEndY.material = this.greenMat;
                         this.tEndZ.material = this.blueMat;
+                        this.tEndAll.material = this.yellowMat;
                         this.tEndX.renderingGroupId = 1;
                         this.tEndY.renderingGroupId = 1;
                         this.tEndZ.renderingGroupId = 1;
+                        this.tEndAll.renderingGroupId = 1;
                         this.tEndX.isPickable = false;
                         this.tEndY.isPickable = false;
                         this.tEndZ.isPickable = false;
+                        this.tEndAll.isPickable = false;
                     };
                     EditControl.prototype.createRotAxes = function () {
                         var r = 0.04;
@@ -749,39 +786,48 @@ var org;
                         this.rX.name = "X";
                         this.rY = this.rX.clone("Y");
                         this.rZ = this.rX.clone("Z");
-                        this.rX.material = this.redMat;
-                        this.rY.material = this.greenMat;
-                        this.rZ.material = this.blueMat;
+                        this.rAll = this.createTube(d / 1.75, 360);
+                        this.rAll.name = "ALL";
                         this.rX.parent = this.rCtl;
                         this.rY.parent = this.rCtl;
                         this.rZ.parent = this.rCtl;
+                        this.rAll.parent = this.pickPlane;
                         this.rX.rotation.z = 1.57;
                         this.rZ.rotation.x = -1.57;
+                        this.rAll.rotation.x = 1.57;
                         this.rX.visibility = 0;
                         this.rY.visibility = 0;
                         this.rZ.visibility = 0;
+                        this.rAll.visibility = 0;
                         this.rX.renderingGroupId = 1;
                         this.rY.renderingGroupId = 1;
                         this.rZ.renderingGroupId = 1;
+                        this.rAll.renderingGroupId = 1;
                         this.rX.isPickable = false;
                         this.rY.isPickable = false;
                         this.rZ.isPickable = false;
+                        this.rAll.isPickable = false;
                         var cl = d;
                         this.rEndX = this.createCircle(cl / 2, 90);
                         this.rEndY = this.rEndX.clone("");
                         this.rEndZ = this.rEndX.clone("");
+                        this.rEndAll = this.createCircle(cl / 1.75, 360);
                         this.rEndX.parent = this.rX;
                         this.rEndY.parent = this.rY;
                         this.rEndZ.parent = this.rZ;
+                        this.rEndAll.parent = this.rAll;
                         this.rEndX.color = Color3.Red();
                         this.rEndY.color = Color3.Green();
                         this.rEndZ.color = Color3.Blue();
+                        this.rEndAll.color = Color3.Yellow();
                         this.rEndX.renderingGroupId = 1;
                         this.rEndY.renderingGroupId = 1;
                         this.rEndZ.renderingGroupId = 1;
+                        this.rEndAll.renderingGroupId = 1;
                         this.rEndX.isPickable = false;
                         this.rEndY.isPickable = false;
                         this.rEndZ.isPickable = false;
+                        this.rEndAll.isPickable = false;
                     };
                     EditControl.prototype.extrudeBox = function (w, l) {
                         var shape = [new Vector3(w, w, 0), new Vector3(-w, w, 0), new Vector3(-w, -w, 0), new Vector3(w, -w, 0), new Vector3(w, w, 0)];
