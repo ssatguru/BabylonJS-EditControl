@@ -1,6 +1,6 @@
 {
   "name": "BabylonJS-EditControl",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "keywords": [
     "babylonjs"
   ],
@@ -14,6 +14,6 @@
   "scripts": {
     "compile": "tsc -p src",
     "min": "uglifyjs dist/EditControl.js -o dist/EditControl.min.js -mc",
-    "dist": "npm run compile && npm run min"
+    "build": "npm run compile && npm run min"
   }
 }

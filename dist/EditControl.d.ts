@@ -4,7 +4,7 @@ declare namespace org.ssatguru.babylonjs.component {
     import Mesh = BABYLON.Mesh;
     import Vector3 = BABYLON.Vector3;
     class EditControl {
-        private meshPicked;
+        private mesh;
         private canvas;
         private scene;
         private mainCamera;
@@ -55,7 +55,14 @@ declare namespace org.ssatguru.babylonjs.component {
         private snapRZ;
         private onPointerMove(evt);
         private doTranslation(newPos);
+        snapS: boolean;
+        snapSX: number;
+        snapSY: number;
+        snapSZ: number;
+        snapSA: number;
+        scaleSnap: number;
         private doScaling(newPos);
+        private doScaling_old(newPos);
         eulerian: boolean;
         private doRotation(newPos);
         private getPosOnPickPlane();
@@ -101,7 +108,8 @@ declare namespace org.ssatguru.babylonjs.component {
         private rEndZ;
         private createRotAxes();
         private extrudeBox(w, l);
-        private createCircle(r);
+        private createCircle(r, t?);
+        private createTube(r, t?);
         private sCtl;
         private sX;
         private sY;
@@ -115,14 +123,18 @@ declare namespace org.ssatguru.babylonjs.component {
         private localX;
         private localY;
         private localZ;
-        private localRot;
         private setLocalAxes(mesh);
         setLocal(l: boolean): void;
         isLocal(): boolean;
         setTransSnap(s: boolean): void;
         setRotSnap(s: boolean): void;
+        setScaleSnap(s: boolean): void;
         setTransSnapValue(t: number): void;
         setRotSnapValue(r: number): void;
+        setScaleSnapValue(r: number): void;
+        distFromCamera: number;
+        toParent: Vector3;
+        cameraNormal: Vector3;
         private setAxesScale();
         static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number;
         private createMaterials(scene);
