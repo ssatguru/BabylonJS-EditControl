@@ -982,14 +982,13 @@ namespace org.ssatguru.babylonjs.component {
             //non pickable but visible cones at end of axes lines
             //cyl len
             //var cl: number = (l * this.axesScale) / 4;
-            var cl: number = l / 4;
+            var cl: number = l / 5;
             //cyl radius
-            //var cr: number = r * this.axesScale;
             var cr: number = r;
             this.tEndX = Mesh.CreateCylinder("tEndX", cl, 0, cr, 6, 1, this.scene);
             this.tEndY = this.tEndX.clone("tEndY");
             this.tEndZ = this.tEndX.clone("tEndZ");
-            this.tEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 2, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
+            this.tEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 1.75, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
             this.tEndZY = this.tEndXZ.clone("ZY");
             this.tEndYX = this.tEndXZ.clone("YX");
             this.tEndAll = Mesh.CreateBox("tEndAll", cr, this.scene);
@@ -1048,7 +1047,6 @@ namespace org.ssatguru.babylonjs.component {
         private rEndAll: LinesMesh;
 
         private createRotAxes() {
-            var r: number = 0.04;
             var d: number = this.axesLen * this.axesScale * 2;
             this.rCtl = new Mesh("rotCtl", this.scene);
             //pickable invisible torus around the rotation circles
@@ -1058,11 +1056,6 @@ namespace org.ssatguru.babylonjs.component {
             this.rZ = this.rX.clone("Z");
             this.rAll = this.createTube(d / 1.75, 360);
             this.rAll.name = "ALL";
-
-            //            this.rX.material = t            his.redMat;
-            //            this.rY.material = thi            s.greenMat;
-            //            this.rZ.material = th            is.blueMat;
-            //            this.rAll.material = this.yellowMat;
 
             this.rX.parent = this.rCtl;
             this.rY.parent = this.rCtl;
@@ -1178,7 +1171,7 @@ namespace org.ssatguru.babylonjs.component {
 
 
         private createScaleAxes() {
-            var r: number = 0.04;
+            var r: number = 0.04 * this.axesScale;
             var l: number = this.axesLen * this.axesScale;
             this.sCtl = new Mesh("sCtl", this.scene);
 
@@ -1249,12 +1242,12 @@ namespace org.ssatguru.babylonjs.component {
             this.sAll.isPickable = false;
 
             //non pickable visible boxes at end of axes 
-            var cr: number = r * this.axesScale;
+            var cr: number = r ;
             this.sEndX = Mesh.CreateBox("", cr, this.scene);
             this.sEndY = this.sEndX.clone("");
             this.sEndZ = this.sEndX.clone("");
             this.sEndAll = this.sEndX.clone("");
-            this.sEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 2, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
+            this.sEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 1.75, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
             this.sEndZY = this.sEndXZ.clone("ZY");
             this.sEndYX = this.sEndXZ.clone("YX");
 
