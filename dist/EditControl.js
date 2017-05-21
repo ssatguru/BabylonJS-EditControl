@@ -34,6 +34,7 @@ var org;
                         this.snapTY = 0;
                         this.snapTZ = 0;
                         this.snapTV = new Vector3(0, 0, 0);
+                        this.transBy = new Vector3(0, 0, 0);
                         this.snapS = false;
                         this.snapSX = 0;
                         this.snapSY = 0;
@@ -41,6 +42,7 @@ var org;
                         this.snapSA = 0;
                         this.snapSV = new Vector3(0, 0, 0);
                         this.scaleSnap = 0.25;
+                        this.scale = new Vector3(0, 0, 0);
                         this.eulerian = false;
                         this.snapRA = 0;
                         this.transEnabled = false;
@@ -334,174 +336,103 @@ var org;
                             this.doRotation(newPos);
                         this.prevPos = newPos;
                     };
+                    ;
                     EditControl.prototype.doTranslation = function (newPos) {
                         var diff = newPos.subtract(this.prevPos);
-                        var dl = diff.length();
-                        var space;
-                        if (this.local)
-                            space = Space.LOCAL;
-                        else
-                            space = Space.WORLD;
-                        if (this.axisPicked == this.tX) {
+                        if (diff.x == 0 && diff.y == 0 && diff.z == 0)
+                            return;
+                        this.transBy.x = 0;
+                        this.transBy.y = 0;
+                        this.transBy.z = 0;
+                        if ((this.axisPicked == this.tX) || (this.axisPicked == this.tXZ) || (this.axisPicked == this.tYX) || (this.axisPicked == this.tAll)) {
                             if (this.local)
-                                dl = Vector3.Dot(diff, this.localX) / (this.localX.length() * this.mesh.scaling.x);
+                                this.transBy.x = Vector3.Dot(diff, this.localX) / (this.localX.length() * this.mesh.scaling.x);
                             else
-                                dl = diff.x;
-                            if (this.snapT) {
-                                this.snapTX += dl;
-                                dl = 0;
-                                var scale = 1;
-                                if (this.local)
-                                    scale = this.mesh.scaling.x;
-                                if (Math.abs(this.snapTX) > this.transSnap / scale) {
-                                    if (this.snapTX > 0)
-                                        dl = this.transSnap / scale;
-                                    else
-                                        dl = -this.transSnap / scale;
-                                    this.snapTX = 0;
-                                }
-                            }
-                            if (this.local)
-                                this.mesh.translate(Axis.X, dl, space);
-                            else {
-                                this.mesh.position.x = Number(this.mesh.position.x) + Number(dl);
-                            }
+                                this.transBy.x = diff.x;
                         }
-                        else if (this.axisPicked == this.tY) {
+                        if ((this.axisPicked == this.tY) || (this.axisPicked == this.tZY) || (this.axisPicked == this.tYX) || (this.axisPicked == this.tAll)) {
                             if (this.local)
-                                dl = Vector3.Dot(diff, this.localY) / (this.localY.length() * this.mesh.scaling.y);
+                                this.transBy.y = Vector3.Dot(diff, this.localY) / (this.localY.length() * this.mesh.scaling.y);
                             else
-                                dl = diff.y;
-                            if (this.snapT) {
-                                this.snapTY += dl;
-                                dl = 0;
-                                var scale = 1;
-                                if (this.local)
-                                    scale = this.mesh.scaling.y;
-                                if ((Math.abs(this.snapTY) > this.transSnap / scale)) {
-                                    if (this.snapTY > 0)
-                                        dl = this.transSnap / scale;
-                                    else
-                                        dl = -this.transSnap / scale;
-                                    this.snapTY = 0;
-                                }
-                            }
-                            if (this.local)
-                                this.mesh.translate(Axis.Y, dl, space);
-                            else {
-                                this.mesh.position.y = Number(this.mesh.position.y) + Number(dl);
-                            }
+                                this.transBy.y = diff.y;
                         }
-                        else if (this.axisPicked == this.tZ) {
+                        if ((this.axisPicked == this.tZ) || (this.axisPicked == this.tXZ) || (this.axisPicked == this.tZY) || (this.axisPicked == this.tAll)) {
                             if (this.local)
-                                dl = Vector3.Dot(diff, this.localZ) / (this.localZ.length() * this.mesh.scaling.z);
+                                this.transBy.z = Vector3.Dot(diff, this.localZ) / (this.localZ.length() * this.mesh.scaling.z);
                             else
-                                dl = diff.z;
-                            if (this.snapT) {
-                                this.snapTZ += dl;
-                                dl = 0;
-                                var scale = 1;
-                                if (this.local)
-                                    scale = this.mesh.scaling.z;
-                                if ((Math.abs(this.snapTZ) > this.transSnap / scale)) {
-                                    if (this.snapTZ > 0)
-                                        dl = this.transSnap / scale;
-                                    else
-                                        dl = -this.transSnap / scale;
-                                    this.snapTZ = 0;
-                                }
-                            }
-                            if (this.local)
-                                this.mesh.translate(Axis.Z, dl, space);
-                            else {
-                                this.mesh.position.z = Number(this.mesh.position.z) + Number(dl);
-                            }
+                                this.transBy.z = diff.z;
                         }
-                        else if (this.axisPicked == this.tXZ) {
-                            var norm = void 0;
-                            if (this.local) {
-                                norm = Vector3.Normalize(this.localY);
-                            }
-                            else {
-                                norm = Axis.Y;
-                            }
-                            this.translateInPlane(this.mesh, diff, norm);
-                        }
-                        else if (this.axisPicked == this.tZY) {
-                            var norm = void 0;
-                            if (this.local) {
-                                norm = Vector3.Normalize(this.localX);
-                            }
-                            else {
-                                norm = Axis.X;
-                            }
-                            this.translateInPlane(this.mesh, diff, norm);
-                        }
-                        else if (this.axisPicked == this.tYX) {
-                            var norm = void 0;
-                            if (this.local) {
-                                norm = Vector3.Normalize(this.localZ);
-                            }
-                            else {
-                                norm = Axis.Z;
-                            }
-                            this.translateInPlane(this.mesh, diff, norm);
-                        }
-                        else if (this.axisPicked == this.tAll) {
-                            this.translateInPlane(this.mesh, diff, null);
-                        }
+                        this.transWithSnap(this.mesh, this.transBy, this.local);
+                        this.mesh.computeWorldMatrix(true);
                     };
-                    EditControl.prototype.translateInPlane = function (mesh, trans, normal) {
-                        var p;
-                        if (normal !== null) {
-                            var nNorm = normal.scale(Vector3.Dot(trans, normal));
-                            p = trans.subtract(nNorm);
+                    EditControl.prototype.transWithSnap = function (mesh, trans, local) {
+                        var tSnap = new Vector3(this.transSnap, this.transSnap, this.transSnap);
+                        if (local) {
+                            tSnap = tSnap.multiplyByFloats(1 / mesh.scaling.x, 1 / mesh.scaling.y, 1 / mesh.scaling.z);
                         }
-                        else {
-                            p = trans;
-                        }
-                        var snapit = false;
                         if (this.snapT) {
-                            this.snapTV.addInPlace(p);
-                            if (Math.abs(this.snapTV.x) > this.transSnap) {
-                                if (p.x > 0)
-                                    p.x = this.transSnap;
+                            var snapit = false;
+                            this.snapTV.addInPlace(trans);
+                            if (Math.abs(this.snapTV.x) > tSnap.x) {
+                                if (trans.x > 0)
+                                    trans.x = tSnap.x;
                                 else
-                                    p.x = -this.transSnap;
+                                    trans.x = -tSnap.x;
                                 snapit = true;
                             }
-                            if (Math.abs(this.snapTV.y) > this.transSnap) {
-                                if (p.y > 0)
-                                    p.y = this.transSnap;
+                            if (Math.abs(this.snapTV.y) > tSnap.y) {
+                                if (trans.y > 0)
+                                    trans.y = tSnap.y;
                                 else
-                                    p.y = -this.transSnap;
+                                    trans.y = -tSnap.y;
                                 snapit = true;
                             }
-                            if (Math.abs(this.snapTV.z) > this.transSnap) {
-                                if (p.z > 0)
-                                    p.z = this.transSnap;
+                            if (Math.abs(this.snapTV.z) > tSnap.z) {
+                                if (trans.z > 0)
+                                    trans.z = tSnap.z;
                                 else
-                                    p.z = -this.transSnap;
+                                    trans.z = -tSnap.z;
                                 snapit = true;
                             }
                             if (!snapit)
                                 return;
-                            if ((Math.abs(p.x) !== this.transSnap) && (p.x !== 0))
-                                p.x = 0;
-                            if ((Math.abs(p.y) !== this.transSnap) && (p.y !== 0))
-                                p.y = 0;
-                            if ((Math.abs(p.z) !== this.transSnap) && (p.z !== 0))
-                                p.z = 0;
+                            if ((Math.abs(trans.x) !== tSnap.x) && (trans.x !== 0))
+                                trans.x = 0;
+                            if ((Math.abs(trans.y) !== tSnap.y) && (trans.y !== 0))
+                                trans.y = 0;
+                            if ((Math.abs(trans.z) !== tSnap.z) && (trans.z !== 0))
+                                trans.z = 0;
                             Vector3.FromFloatsToRef(0, 0, 0, this.snapTV);
                             snapit = false;
                         }
-                        mesh.position.addInPlace(p);
+                        if (local) {
+                            this.mesh.locallyTranslate(trans);
+                        }
+                        else {
+                            this.mesh.position.addInPlace(trans);
+                        }
                     };
-                    EditControl.prototype.scaleInPlane = function (mesh, trans, normal) {
-                        var nNorm = normal.scale(Vector3.Dot(trans, normal));
-                        var snapit = false;
-                        var p = trans.subtract(nNorm);
+                    EditControl.prototype.doScaling = function (newPos) {
+                        var diff = newPos.subtract(this.prevPos);
+                        if (diff.x == 0 && diff.y == 0 && diff.z == 0)
+                            return;
+                        this.scale.x = 0;
+                        this.scale.y = 0;
+                        this.scale.z = 0;
+                        if ((this.axisPicked === this.sX) || (this.axisPicked === this.sXZ) || (this.axisPicked === this.sYX) || (this.axisPicked === this.sAll)) {
+                            this.scale.x = Vector3.Dot(diff, this.localX) / this.localX.length();
+                        }
+                        if ((this.axisPicked === this.sY) || (this.axisPicked === this.sYX) || (this.axisPicked === this.sZY) || (this.axisPicked === this.sAll)) {
+                            this.scale.y = Vector3.Dot(diff, this.localY) / this.localY.length();
+                        }
+                        if ((this.axisPicked === this.sZ) || (this.axisPicked === this.sXZ) || (this.axisPicked === this.sZY) || (this.axisPicked === this.sAll)) {
+                            this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
+                        }
+                        this.scaleWithSnap(this.mesh, this.scale);
+                    };
+                    EditControl.prototype.scaleWithSnap = function (mesh, p) {
                         if (this.snapS) {
+                            var snapit = false;
                             this.snapSV.addInPlace(p);
                             if (Math.abs(this.snapSV.x) > this.scaleSnap) {
                                 if (p.x > 0)
@@ -536,105 +467,6 @@ var org;
                             snapit = false;
                         }
                         mesh.scaling.addInPlace(p);
-                    };
-                    EditControl.prototype.doScaling = function (newPos) {
-                        var diff = newPos.subtract(this.prevPos);
-                        if (this.axisPicked === this.sX) {
-                            var r = Vector3.Dot(diff, this.localX) / this.localX.length();
-                            if (this.snapS) {
-                                this.snapSX += r;
-                                if (Math.abs(this.snapSX) > this.scaleSnap) {
-                                    if (r > 0)
-                                        r = this.scaleSnap;
-                                    else
-                                        r = -this.scaleSnap;
-                                    this.snapSX = 0;
-                                }
-                                else
-                                    return;
-                            }
-                            this.mesh.scaling.x += r;
-                        }
-                        else if (this.axisPicked === this.sY) {
-                            var r = Vector3.Dot(diff, this.localY) / this.localY.length();
-                            if (this.snapS) {
-                                this.snapSY += r;
-                                if (Math.abs(this.snapSY) > this.scaleSnap) {
-                                    if (r > 0)
-                                        r = this.scaleSnap;
-                                    else
-                                        r = -this.scaleSnap;
-                                    this.snapSY = 0;
-                                }
-                                else
-                                    return;
-                            }
-                            this.mesh.scaling.y += r;
-                        }
-                        else if (this.axisPicked === this.sZ) {
-                            var r = Vector3.Dot(diff, this.localZ) / this.localZ.length();
-                            if (this.snapS) {
-                                this.snapSZ += r;
-                                if (Math.abs(this.snapSZ) > this.scaleSnap) {
-                                    if (r > 0)
-                                        r = this.scaleSnap;
-                                    else
-                                        r = -this.scaleSnap;
-                                    this.snapSZ = 0;
-                                }
-                                else
-                                    return;
-                            }
-                            this.mesh.scaling.z += r;
-                        }
-                        else if (this.axisPicked == this.sXZ) {
-                            var norm = void 0;
-                            if (this.local) {
-                                norm = Vector3.Normalize(this.localY);
-                            }
-                            else {
-                                norm = Axis.Y;
-                            }
-                            this.scaleInPlane(this.mesh, diff, norm);
-                        }
-                        else if (this.axisPicked == this.sZY) {
-                            var norm = void 0;
-                            if (this.local) {
-                                norm = Vector3.Normalize(this.localX);
-                            }
-                            else {
-                                norm = Axis.X;
-                            }
-                            this.scaleInPlane(this.mesh, diff, norm);
-                        }
-                        else if (this.axisPicked == this.sYX) {
-                            var norm = void 0;
-                            if (this.local) {
-                                norm = Vector3.Normalize(this.localZ);
-                            }
-                            else {
-                                norm = Axis.Z;
-                            }
-                            this.scaleInPlane(this.mesh, diff, norm);
-                        }
-                        else if (this.axisPicked === this.sAll) {
-                            var r = Vector3.Dot(diff, this.mainCamera.upVector);
-                            if (this.snapS) {
-                                this.snapSA += r;
-                                if (Math.abs(this.snapSA) > this.scaleSnap) {
-                                    if (r > 0)
-                                        r = this.scaleSnap;
-                                    else
-                                        r = -this.scaleSnap;
-                                    this.snapSA = 0;
-                                }
-                                else
-                                    return;
-                            }
-                            this.mesh.scaling.x += r;
-                            this.mesh.scaling.y += r;
-                            this.mesh.scaling.z += r;
-                        }
                     };
                     EditControl.prototype.doRotation = function (newPos) {
                         var cN = Vector3.TransformNormal(Axis.Z, this.mainCamera.getWorldMatrix());
@@ -1002,7 +834,6 @@ var org;
                         this.tEndAll.isPickable = false;
                     };
                     EditControl.prototype.createRotAxes = function () {
-                        var r = 0.04;
                         var d = this.axesLen * this.axesScale * 2;
                         this.rCtl = new Mesh("rotCtl", this.scene);
                         this.rX = this.createTube(d / 2, 90);

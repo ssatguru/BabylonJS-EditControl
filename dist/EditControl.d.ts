@@ -60,9 +60,9 @@ declare namespace org.ssatguru.babylonjs.component {
         private snapTY;
         private snapTZ;
         private snapTV;
+        private transBy;
         private doTranslation(newPos);
-        private translateInPlane(mesh, trans, normal);
-        private scaleInPlane(mesh, trans, normal);
+        private transWithSnap(mesh, trans, local);
         snapS: boolean;
         snapSX: number;
         snapSY: number;
@@ -70,7 +70,9 @@ declare namespace org.ssatguru.babylonjs.component {
         snapSA: number;
         snapSV: Vector3;
         scaleSnap: number;
+        scale: Vector3;
         private doScaling(newPos);
+        private scaleWithSnap(mesh, p);
         eulerian: boolean;
         snapRA: number;
         private doRotation(newPos);
