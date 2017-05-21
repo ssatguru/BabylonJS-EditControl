@@ -42,6 +42,7 @@ var org;
                         this.snapSV = new Vector3(0, 0, 0);
                         this.scaleSnap = 0.25;
                         this.eulerian = false;
+                        this.snapRA = 0;
                         this.transEnabled = false;
                         this.rotEnabled = false;
                         this.scaleEnabled = false;
@@ -650,14 +651,15 @@ var org;
                                     this.snapRX = 0;
                                 }
                             }
-                            if (this.local) {
-                                if (Vector3.Dot(this.localX, cN) < 0)
-                                    angle = -1 * angle;
-                                this.mesh.rotate(Axis.X, angle, Space.LOCAL);
+                            if (angle !== 0) {
+                                if (this.local) {
+                                    if (Vector3.Dot(this.localX, cN) < 0)
+                                        angle = -1 * angle;
+                                    this.mesh.rotate(Axis.X, angle, Space.LOCAL);
+                                }
+                                else
+                                    this.mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
                             }
-                            else
-                                this.mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
-                            this.setLocalAxes(this.mesh);
                         }
                         else if (this.axisPicked == this.rY) {
                             if (this.snapR) {
@@ -671,14 +673,15 @@ var org;
                                     this.snapRY = 0;
                                 }
                             }
-                            if (this.local) {
-                                if (Vector3.Dot(this.localY, cN) < 0)
-                                    angle = -1 * angle;
-                                this.mesh.rotate(Axis.Y, angle, Space.LOCAL);
+                            if (angle !== 0) {
+                                if (this.local) {
+                                    if (Vector3.Dot(this.localY, cN) < 0)
+                                        angle = -1 * angle;
+                                    this.mesh.rotate(Axis.Y, angle, Space.LOCAL);
+                                }
+                                else
+                                    this.mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
                             }
-                            else
-                                this.mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
-                            this.setLocalAxes(this.mesh);
                         }
                         else if (this.axisPicked == this.rZ) {
                             if (this.snapR) {
@@ -692,19 +695,32 @@ var org;
                                     this.snapRZ = 0;
                                 }
                             }
-                            if (this.local) {
-                                if (Vector3.Dot(this.localZ, cN) < 0)
-                                    angle = -1 * angle;
-                                this.mesh.rotate(Axis.Z, angle, Space.LOCAL);
+                            if (angle !== 0) {
+                                if (this.local) {
+                                    if (Vector3.Dot(this.localZ, cN) < 0)
+                                        angle = -1 * angle;
+                                    this.mesh.rotate(Axis.Z, angle, Space.LOCAL);
+                                }
+                                else
+                                    this.mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
                             }
-                            else
-                                this.mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
-                            this.setLocalAxes(this.mesh);
                         }
                         else if (this.axisPicked == this.rAll) {
-                            this.mesh.rotate(this.mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
-                            this.setLocalAxes(this.mesh);
+                            if (this.snapR) {
+                                this.snapRA += angle;
+                                angle = 0;
+                                if (Math.abs(this.snapRA) >= this.rotSnap) {
+                                    if (this.snapRA > 0)
+                                        angle = this.rotSnap;
+                                    else
+                                        angle = -this.rotSnap;
+                                    this.snapRA = 0;
+                                }
+                            }
+                            if (angle !== 0)
+                                this.mesh.rotate(this.mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
                         }
+                        this.setLocalAxes(this.mesh);
                         if ((this.eulerian)) {
                             this.mesh.rotation = this.mesh.rotationQuaternion.toEulerAngles();
                             this.mesh.rotationQuaternion = null;

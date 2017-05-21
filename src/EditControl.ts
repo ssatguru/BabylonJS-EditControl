@@ -443,13 +443,13 @@ namespace org.ssatguru.babylonjs.component {
          * the plane is identified by its normal,
          */
         private translateInPlane(mesh: Mesh, trans: Vector3, normal: Vector3) {
-            let p:Vector3;
+            let p: Vector3;
             if (normal !== null) {
                 //project the translation onto this normal
                 let nNorm: Vector3 = normal.scale(Vector3.Dot(trans, normal));
                 //get the projection of diff on XZ
                 p = trans.subtract(nNorm);
-            }else{
+            } else {
                 p = trans;
             }
             let snapit: boolean = false;
@@ -593,7 +593,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         eulerian: boolean = false;
-
+        snapRA: number = 0;
         private doRotation(newPos: Vector3) {
             var cN: Vector3 = Vector3.TransformNormal(Axis.Z, this.mainCamera.getWorldMatrix());
             //var angle: number = EditControl.getAngle(this.prevPos, newPos, this.meshPicked.absolutePosition, cN);
@@ -608,11 +608,12 @@ namespace org.ssatguru.babylonjs.component {
                         this.snapRX = 0;
                     }
                 }
-                if (this.local) {
-                    if (Vector3.Dot(this.localX, cN) < 0) angle = -1 * angle;
-                    this.mesh.rotate(Axis.X, angle, Space.LOCAL);
-                } else this.mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
-                this.setLocalAxes(this.mesh);
+                if (angle !== 0) {
+                    if (this.local) {
+                        if (Vector3.Dot(this.localX, cN) < 0) angle = -1 * angle;
+                        this.mesh.rotate(Axis.X, angle, Space.LOCAL);
+                    } else this.mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
+                }
             } else if (this.axisPicked == this.rY) {
                 if (this.snapR) {
                     this.snapRY += angle;
@@ -622,11 +623,12 @@ namespace org.ssatguru.babylonjs.component {
                         this.snapRY = 0;
                     }
                 }
-                if (this.local) {
-                    if (Vector3.Dot(this.localY, cN) < 0) angle = -1 * angle;
-                    this.mesh.rotate(Axis.Y, angle, Space.LOCAL);
-                } else this.mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
-                this.setLocalAxes(this.mesh);
+                if (angle !== 0) {
+                    if (this.local) {
+                        if (Vector3.Dot(this.localY, cN) < 0) angle = -1 * angle;
+                        this.mesh.rotate(Axis.Y, angle, Space.LOCAL);
+                    } else this.mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
+                }
             } else if (this.axisPicked == this.rZ) {
                 if (this.snapR) {
                     this.snapRZ += angle;
@@ -636,15 +638,25 @@ namespace org.ssatguru.babylonjs.component {
                         this.snapRZ = 0;
                     }
                 }
-                if (this.local) {
-                    if (Vector3.Dot(this.localZ, cN) < 0) angle = -1 * angle;
-                    this.mesh.rotate(Axis.Z, angle, Space.LOCAL);
-                } else this.mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
-                this.setLocalAxes(this.mesh);
+                if (angle !== 0) {
+                    if (this.local) {
+                        if (Vector3.Dot(this.localZ, cN) < 0) angle = -1 * angle;
+                        this.mesh.rotate(Axis.Z, angle, Space.LOCAL);
+                    } else this.mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
+                }
             } else if (this.axisPicked == this.rAll) {
-                this.mesh.rotate(this.mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
-                this.setLocalAxes(this.mesh);
+                if (this.snapR) {
+                    this.snapRA += angle;
+                    angle = 0;
+                    if (Math.abs(this.snapRA) >= this.rotSnap) {
+                        if (this.snapRA > 0) angle = this.rotSnap; else angle = -this.rotSnap;
+                        this.snapRA = 0;
+                    }
+                }
+                if (angle !== 0)
+                    this.mesh.rotate(this.mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
             }
+            this.setLocalAxes(this.mesh);
             if ((this.eulerian)) {
                 this.mesh.rotation = this.mesh.rotationQuaternion.toEulerAngles();
                 this.mesh.rotationQuaternion = null;

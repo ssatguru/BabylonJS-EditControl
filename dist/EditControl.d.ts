@@ -72,6 +72,7 @@ declare namespace org.ssatguru.babylonjs.component {
         scaleSnap: number;
         private doScaling(newPos);
         eulerian: boolean;
+        snapRA: number;
         private doRotation(newPos);
         private getPosOnPickPlane();
         private hideBaxis();
