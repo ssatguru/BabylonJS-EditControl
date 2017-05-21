@@ -27,17 +27,19 @@ var org;
                         this.pDown = false;
                         this.pointerIsOver = false;
                         this.editing = false;
-                        this.snapX = 0;
-                        this.snapY = 0;
-                        this.snapZ = 0;
                         this.snapRX = 0;
                         this.snapRY = 0;
                         this.snapRZ = 0;
+                        this.snapTX = 0;
+                        this.snapTY = 0;
+                        this.snapTZ = 0;
+                        this.snapTV = new Vector3(0, 0, 0);
                         this.snapS = false;
                         this.snapSX = 0;
                         this.snapSY = 0;
                         this.snapSZ = 0;
                         this.snapSA = 0;
+                        this.snapSV = new Vector3(0, 0, 0);
                         this.scaleSnap = 0.25;
                         this.eulerian = false;
                         this.transEnabled = false;
@@ -129,7 +131,7 @@ var org;
                                     return true;
                             }
                             else if ((_this.scaleEnabled)) {
-                                if ((mesh == _this.sX) || (mesh == _this.sY) || (mesh == _this.sZ) || (mesh == _this.sAll))
+                                if ((mesh == _this.sX) || (mesh == _this.sY) || (mesh == _this.sZ) || (mesh == _this.sXZ) || (mesh == _this.sZY) || (mesh == _this.sYX) || (mesh == _this.sAll))
                                     return true;
                             }
                             return false;
@@ -198,7 +200,7 @@ var org;
                                     return true;
                             }
                             else if (_this.scaleEnabled) {
-                                if ((mesh == _this.sX) || (mesh == _this.sY) || (mesh == _this.sZ) || (mesh == _this.sAll))
+                                if ((mesh == _this.sX) || (mesh == _this.sY) || (mesh == _this.sZ) || (mesh == _this.sXZ) || (mesh == _this.sZY) || (mesh == _this.sYX) || (mesh == _this.sAll))
                                     return true;
                             }
                             return false;
@@ -345,17 +347,17 @@ var org;
                             else
                                 dl = diff.x;
                             if (this.snapT) {
-                                this.snapX += dl;
+                                this.snapTX += dl;
                                 dl = 0;
                                 var scale = 1;
                                 if (this.local)
                                     scale = this.mesh.scaling.x;
-                                if (Math.abs(this.snapX) > this.transSnap / scale) {
-                                    if (this.snapX > 0)
+                                if (Math.abs(this.snapTX) > this.transSnap / scale) {
+                                    if (this.snapTX > 0)
                                         dl = this.transSnap / scale;
                                     else
                                         dl = -this.transSnap / scale;
-                                    this.snapX = 0;
+                                    this.snapTX = 0;
                                 }
                             }
                             if (this.local)
@@ -370,17 +372,17 @@ var org;
                             else
                                 dl = diff.y;
                             if (this.snapT) {
-                                this.snapY += dl;
+                                this.snapTY += dl;
                                 dl = 0;
                                 var scale = 1;
                                 if (this.local)
                                     scale = this.mesh.scaling.y;
-                                if ((Math.abs(this.snapY) > this.transSnap / scale)) {
-                                    if (this.snapY > 0)
+                                if ((Math.abs(this.snapTY) > this.transSnap / scale)) {
+                                    if (this.snapTY > 0)
                                         dl = this.transSnap / scale;
                                     else
                                         dl = -this.transSnap / scale;
-                                    this.snapY = 0;
+                                    this.snapTY = 0;
                                 }
                             }
                             if (this.local)
@@ -395,17 +397,17 @@ var org;
                             else
                                 dl = diff.z;
                             if (this.snapT) {
-                                this.snapZ += dl;
+                                this.snapTZ += dl;
                                 dl = 0;
                                 var scale = 1;
                                 if (this.local)
                                     scale = this.mesh.scaling.z;
-                                if ((Math.abs(this.snapZ) > this.transSnap / scale)) {
-                                    if (this.snapZ > 0)
+                                if ((Math.abs(this.snapTZ) > this.transSnap / scale)) {
+                                    if (this.snapTZ > 0)
                                         dl = this.transSnap / scale;
                                     else
                                         dl = -this.transSnap / scale;
-                                    this.snapZ = 0;
+                                    this.snapTZ = 0;
                                 }
                             }
                             if (this.local)
@@ -445,16 +447,96 @@ var org;
                             this.translateInPlane(this.mesh, diff, norm);
                         }
                         else if (this.axisPicked == this.tAll) {
-                            this.mesh.position.addInPlace(diff);
+                            this.translateInPlane(this.mesh, diff, null);
                         }
                     };
                     EditControl.prototype.translateInPlane = function (mesh, trans, normal) {
-                        var nNorm = normal.scale(Vector3.Dot(trans, normal));
-                        var p = trans.subtract(nNorm);
+                        var p;
+                        if (normal !== null) {
+                            var nNorm = normal.scale(Vector3.Dot(trans, normal));
+                            p = trans.subtract(nNorm);
+                        }
+                        else {
+                            p = trans;
+                        }
+                        var snapit = false;
+                        if (this.snapT) {
+                            this.snapTV.addInPlace(p);
+                            if (Math.abs(this.snapTV.x) > this.transSnap) {
+                                if (p.x > 0)
+                                    p.x = this.transSnap;
+                                else
+                                    p.x = -this.transSnap;
+                                snapit = true;
+                            }
+                            if (Math.abs(this.snapTV.y) > this.transSnap) {
+                                if (p.y > 0)
+                                    p.y = this.transSnap;
+                                else
+                                    p.y = -this.transSnap;
+                                snapit = true;
+                            }
+                            if (Math.abs(this.snapTV.z) > this.transSnap) {
+                                if (p.z > 0)
+                                    p.z = this.transSnap;
+                                else
+                                    p.z = -this.transSnap;
+                                snapit = true;
+                            }
+                            if (!snapit)
+                                return;
+                            if ((Math.abs(p.x) !== this.transSnap) && (p.x !== 0))
+                                p.x = 0;
+                            if ((Math.abs(p.y) !== this.transSnap) && (p.y !== 0))
+                                p.y = 0;
+                            if ((Math.abs(p.z) !== this.transSnap) && (p.z !== 0))
+                                p.z = 0;
+                            Vector3.FromFloatsToRef(0, 0, 0, this.snapTV);
+                            snapit = false;
+                        }
                         mesh.position.addInPlace(p);
                     };
+                    EditControl.prototype.scaleInPlane = function (mesh, trans, normal) {
+                        var nNorm = normal.scale(Vector3.Dot(trans, normal));
+                        var snapit = false;
+                        var p = trans.subtract(nNorm);
+                        if (this.snapS) {
+                            this.snapSV.addInPlace(p);
+                            if (Math.abs(this.snapSV.x) > this.scaleSnap) {
+                                if (p.x > 0)
+                                    p.x = this.scaleSnap;
+                                else
+                                    p.x = -this.scaleSnap;
+                                snapit = true;
+                            }
+                            if (Math.abs(this.snapSV.y) > this.scaleSnap) {
+                                if (p.y > 0)
+                                    p.y = this.scaleSnap;
+                                else
+                                    p.y = -this.scaleSnap;
+                                snapit = true;
+                            }
+                            if (Math.abs(this.snapSV.z) > this.scaleSnap) {
+                                if (p.z > 0)
+                                    p.z = this.scaleSnap;
+                                else
+                                    p.z = -this.scaleSnap;
+                                snapit = true;
+                            }
+                            if (!snapit)
+                                return;
+                            if ((Math.abs(p.x) !== this.scaleSnap) && (p.x !== 0))
+                                p.x = 0;
+                            if ((Math.abs(p.y) !== this.scaleSnap) && (p.y !== 0))
+                                p.y = 0;
+                            if ((Math.abs(p.z) !== this.scaleSnap) && (p.z !== 0))
+                                p.z = 0;
+                            Vector3.FromFloatsToRef(0, 0, 0, this.snapSV);
+                            snapit = false;
+                        }
+                        mesh.scaling.addInPlace(p);
+                    };
                     EditControl.prototype.doScaling = function (newPos) {
-                        var ppm = this.prevPos.subtract(this.mesh.position);
                         var diff = newPos.subtract(this.prevPos);
                         if (this.axisPicked === this.sX) {
                             var r = Vector3.Dot(diff, this.localX) / this.localX.length();
@@ -504,6 +586,36 @@ var org;
                             }
                             this.mesh.scaling.z += r;
                         }
+                        else if (this.axisPicked == this.sXZ) {
+                            var norm = void 0;
+                            if (this.local) {
+                                norm = Vector3.Normalize(this.localY);
+                            }
+                            else {
+                                norm = Axis.Y;
+                            }
+                            this.scaleInPlane(this.mesh, diff, norm);
+                        }
+                        else if (this.axisPicked == this.sZY) {
+                            var norm = void 0;
+                            if (this.local) {
+                                norm = Vector3.Normalize(this.localX);
+                            }
+                            else {
+                                norm = Axis.X;
+                            }
+                            this.scaleInPlane(this.mesh, diff, norm);
+                        }
+                        else if (this.axisPicked == this.sYX) {
+                            var norm = void 0;
+                            if (this.local) {
+                                norm = Vector3.Normalize(this.localZ);
+                            }
+                            else {
+                                norm = Axis.Z;
+                            }
+                            this.scaleInPlane(this.mesh, diff, norm);
+                        }
                         else if (this.axisPicked === this.sAll) {
                             var r = Vector3.Dot(diff, this.mainCamera.upVector);
                             if (this.snapS) {
@@ -521,42 +633,6 @@ var org;
                             this.mesh.scaling.x += r;
                             this.mesh.scaling.y += r;
                             this.mesh.scaling.z += r;
-                        }
-                    };
-                    EditControl.prototype.doScaling_old = function (newPos) {
-                        var ppm = this.prevPos.subtract(this.mesh.position);
-                        var diff = newPos.subtract(this.prevPos);
-                        var r = diff.length() / ppm.length();
-                        if (this.axisPicked === this.sX) {
-                            var dot = Vector3.Dot(diff, this.localX);
-                            if ((dot >= 0))
-                                this.mesh.scaling.x *= (1 + r);
-                            else
-                                this.mesh.scaling.x *= (1 - r);
-                        }
-                        else if (this.axisPicked === this.sY) {
-                            var dot = Vector3.Dot(diff, this.localY);
-                            if ((dot >= 0))
-                                this.mesh.scaling.y *= (1 + r);
-                            else
-                                this.mesh.scaling.y *= (1 - r);
-                        }
-                        else if (this.axisPicked === this.sZ) {
-                            var dot = Vector3.Dot(diff, this.localZ);
-                            if ((dot >= 0))
-                                this.mesh.scaling.z *= (1 + r);
-                            else
-                                this.mesh.scaling.z *= (1 - r);
-                        }
-                        else if (this.axisPicked === this.sAll) {
-                            var dot = Vector3.Dot(diff, this.mainCamera.upVector);
-                            r = diff.length() / 5;
-                            if ((dot < 0)) {
-                                r = -1 * r;
-                            }
-                            this.mesh.scaling.x *= (1 + r);
-                            this.mesh.scaling.y *= (1 + r);
-                            this.mesh.scaling.z *= (1 + r);
                         }
                     };
                     EditControl.prototype.doRotation = function (newPos) {
@@ -671,6 +747,9 @@ var org;
                             this.sEndX.visibility = v;
                             this.sEndY.visibility = v;
                             this.sEndZ.visibility = v;
+                            this.sEndXZ.visibility = v;
+                            this.sEndZY.visibility = v;
+                            this.sEndYX.visibility = v;
                             this.sEndAll.visibility = v;
                         }
                     };
@@ -749,6 +828,9 @@ var org;
                             this.sEndX.visibility = 1;
                             this.sEndY.visibility = 1;
                             this.sEndZ.visibility = 1;
+                            this.sEndXZ.visibility = 1;
+                            this.sEndZY.visibility = 1;
+                            this.sEndYX.visibility = 1;
                             this.sEndAll.visibility = 1;
                             this.scaleEnabled = true;
                             this.disableTranslation();
@@ -760,6 +842,9 @@ var org;
                             this.sEndX.visibility = 0;
                             this.sEndY.visibility = 0;
                             this.sEndZ.visibility = 0;
+                            this.sEndXZ.visibility = 0;
+                            this.sEndZY.visibility = 0;
+                            this.sEndYX.visibility = 0;
                             this.sEndAll.visibility = 0;
                             this.scaleEnabled = false;
                         }
@@ -1005,11 +1090,22 @@ var org;
                         var r = 0.04;
                         var l = this.axesLen * this.axesScale;
                         this.sCtl = new Mesh("sCtl", this.scene);
-                        this.sAll = Mesh.CreateBox("ALL", r * 2, this.scene);
                         this.sX = this.extrudeBox(r / 2, l);
                         this.sX.name = "X";
                         this.sY = this.sX.clone("Y");
                         this.sZ = this.sX.clone("Z");
+                        this.sXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this.scene);
+                        this.sZY = this.sXZ.clone("ZY");
+                        this.sYX = this.sXZ.clone("YX");
+                        this.sXZ.rotation.x = 1.57;
+                        this.sZY.rotation.y = 1.57;
+                        this.sXZ.position.x = r;
+                        this.sXZ.position.z = r;
+                        this.sZY.position.z = r;
+                        this.sZY.position.y = r;
+                        this.sYX.position.y = r;
+                        this.sYX.position.x = r;
+                        this.sAll = Mesh.CreateBox("ALL", r * 2, this.scene);
                         this.sX.material = this.redMat;
                         this.sY.material = this.greenMat;
                         this.sZ.material = this.blueMat;
@@ -1018,28 +1114,46 @@ var org;
                         this.sY.parent = this.sCtl;
                         this.sZ.parent = this.sCtl;
                         this.sAll.parent = this.sCtl;
+                        this.sXZ.parent = this.sCtl;
+                        this.sZY.parent = this.sCtl;
+                        this.sYX.parent = this.sCtl;
                         this.sX.rotation.y = 1.57;
                         this.sY.rotation.x -= 1.57;
                         this.sX.visibility = 0;
                         this.sY.visibility = 0;
                         this.sZ.visibility = 0;
+                        this.sXZ.visibility = 0;
+                        this.sZY.visibility = 0;
+                        this.sYX.visibility = 0;
                         this.sAll.visibility = 0;
                         this.sX.renderingGroupId = 1;
                         this.sY.renderingGroupId = 1;
                         this.sZ.renderingGroupId = 1;
+                        this.sXZ.renderingGroupId = 1;
+                        this.sZY.renderingGroupId = 1;
+                        this.sYX.renderingGroupId = 1;
                         this.sAll.renderingGroupId = 1;
                         this.sX.isPickable = false;
                         this.sY.isPickable = false;
                         this.sZ.isPickable = false;
+                        this.sXZ.isPickable = false;
+                        this.sZY.isPickable = false;
+                        this.sYX.isPickable = false;
                         this.sAll.isPickable = false;
                         var cr = r * this.axesScale;
                         this.sEndX = Mesh.CreateBox("", cr, this.scene);
                         this.sEndY = this.sEndX.clone("");
                         this.sEndZ = this.sEndX.clone("");
                         this.sEndAll = this.sEndX.clone("");
+                        this.sEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 2, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
+                        this.sEndZY = this.sEndXZ.clone("ZY");
+                        this.sEndYX = this.sEndXZ.clone("YX");
                         this.sEndX.parent = this.sX;
                         this.sEndY.parent = this.sY;
                         this.sEndZ.parent = this.sZ;
+                        this.sEndXZ.parent = this.sXZ;
+                        this.sEndZY.parent = this.sZY;
+                        this.sEndYX.parent = this.sYX;
                         this.sEndAll.parent = this.sAll;
                         this.sEndX.position.z = l - cr / 2;
                         this.sEndY.position.z = l - cr / 2;
@@ -1047,14 +1161,23 @@ var org;
                         this.sEndX.material = this.redMat;
                         this.sEndY.material = this.greenMat;
                         this.sEndZ.material = this.blueMat;
+                        this.sEndXZ.material = this.redMat;
+                        this.sEndZY.material = this.blueMat;
+                        this.sEndYX.material = this.greenMat;
                         this.sEndAll.material = this.yellowMat;
                         this.sEndX.renderingGroupId = 1;
                         this.sEndY.renderingGroupId = 1;
                         this.sEndZ.renderingGroupId = 1;
+                        this.sEndXZ.renderingGroupId = 1;
+                        this.sEndZY.renderingGroupId = 1;
+                        this.sEndYX.renderingGroupId = 1;
                         this.sEndAll.renderingGroupId = 1;
                         this.sEndX.isPickable = false;
                         this.sEndY.isPickable = false;
                         this.sEndZ.isPickable = false;
+                        this.sEndXZ.isPickable = false;
+                        this.sEndZY.isPickable = false;
+                        this.sEndYX.isPickable = false;
                         this.sEndAll.isPickable = false;
                     };
                     ;
@@ -1119,9 +1242,6 @@ var org;
                         this.blueMat = EditControl.getStandardMaterial("blueMat", Color3.Blue(), scene);
                         this.whiteMat = EditControl.getStandardMaterial("whiteMat", Color3.White(), scene);
                         this.yellowMat = EditControl.getStandardMaterial("whiteMat", Color3.Yellow(), scene);
-                        this.redBlueMat = EditControl.getStandardMaterial("redBlueMat", new Color3(1, 0, 1), scene);
-                        this.blueGreenMat = EditControl.getStandardMaterial("blueGreenMat", new Color3(0, 1, 1), scene);
-                        this.greenRedMat = EditControl.getStandardMaterial("redBlueMat", new Color3(1, 1, 0), scene);
                     };
                     EditControl.prototype.disposeMaterials = function () {
                         this.redMat.dispose();
@@ -1129,9 +1249,6 @@ var org;
                         this.blueMat.dispose();
                         this.whiteMat.dispose();
                         this.yellowMat.dispose();
-                        this.redBlueMat.dispose();
-                        this.blueGreenMat.dispose();
-                        this.greenRedMat.dispose();
                     };
                     EditControl.getStandardMaterial = function (name, col, scene) {
                         var mat = new StandardMaterial(name, scene);

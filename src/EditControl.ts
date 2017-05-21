@@ -154,7 +154,7 @@ namespace org.ssatguru.babylonjs.component {
                 } else if ((this.rotEnabled)) {
                     if ((mesh == this.rX) || (mesh == this.rY) || (mesh == this.rZ) || (mesh == this.rAll)) return true;
                 } else if ((this.scaleEnabled)) {
-                    if ((mesh == this.sX) || (mesh == this.sY) || (mesh == this.sZ) || (mesh == this.sAll)) return true;
+                    if ((mesh == this.sX) || (mesh == this.sY) || (mesh == this.sZ) || (mesh == this.sXZ) || (mesh == this.sZY) || (mesh == this.sYX) || (mesh == this.sAll)) return true;
                 }
                 return false;
             }, null, this.mainCamera);
@@ -219,7 +219,7 @@ namespace org.ssatguru.babylonjs.component {
                 } else if ((this.rotEnabled)) {
                     if ((mesh == this.rX) || (mesh == this.rY) || (mesh == this.rZ) || (mesh == this.rAll)) return true;
                 } else if (this.scaleEnabled) {
-                    if ((mesh == this.sX) || (mesh == this.sY) || (mesh == this.sZ) || (mesh == this.sAll)) return true;
+                    if ((mesh == this.sX) || (mesh == this.sY) || (mesh == this.sZ) || (mesh == this.sXZ) || (mesh == this.sZY) || (mesh == this.sYX) || (mesh == this.sAll)) return true;
                 }
                 return false;
             }, null, this.mainCamera);
@@ -332,16 +332,9 @@ namespace org.ssatguru.babylonjs.component {
 
         private prevPos: Vector3;
 
-        private snapX: number = 0;
-
-        private snapY: number = 0;
-
-        private snapZ: number = 0;
 
         private snapRX: number = 0;
-
         private snapRY: number = 0;
-
         private snapRZ: number = 0;
 
         private onPointerMove(evt: Event) {
@@ -354,6 +347,11 @@ namespace org.ssatguru.babylonjs.component {
             this.prevPos = newPos;
         }
 
+        private snapTX: number = 0;
+        private snapTY: number = 0;
+        private snapTZ: number = 0;
+        private snapTV: Vector3 = new Vector3(0, 0, 0);
+
         private doTranslation(newPos: Vector3) {
             var diff: Vector3 = newPos.subtract(this.prevPos);
             var dl: number = diff.length();
@@ -362,13 +360,13 @@ namespace org.ssatguru.babylonjs.component {
             if (this.axisPicked == this.tX) {
                 if (this.local) dl = Vector3.Dot(diff, this.localX) / (this.localX.length() * this.mesh.scaling.x); else dl = diff.x;
                 if (this.snapT) {
-                    this.snapX += dl;
+                    this.snapTX += dl;
                     dl = 0;
                     var scale: number = 1;
                     if (this.local) scale = this.mesh.scaling.x;
-                    if (Math.abs(this.snapX) > this.transSnap / scale) {
-                        if (this.snapX > 0) dl = this.transSnap / scale; else dl = -this.transSnap / scale;
-                        this.snapX = 0;
+                    if (Math.abs(this.snapTX) > this.transSnap / scale) {
+                        if (this.snapTX > 0) dl = this.transSnap / scale; else dl = -this.transSnap / scale;
+                        this.snapTX = 0;
                     }
                 }
                 if (this.local) this.mesh.translate(Axis.X, dl, space); else {
@@ -378,13 +376,13 @@ namespace org.ssatguru.babylonjs.component {
             } else if (this.axisPicked == this.tY) {
                 if (this.local) dl = Vector3.Dot(diff, this.localY) / (this.localY.length() * this.mesh.scaling.y); else dl = diff.y;
                 if (this.snapT) {
-                    this.snapY += dl;
+                    this.snapTY += dl;
                     dl = 0;
                     var scale: number = 1;
                     if (this.local) scale = this.mesh.scaling.y;
-                    if ((Math.abs(this.snapY) > this.transSnap / scale)) {
-                        if (this.snapY > 0) dl = this.transSnap / scale; else dl = -this.transSnap / scale;
-                        this.snapY = 0;
+                    if ((Math.abs(this.snapTY) > this.transSnap / scale)) {
+                        if (this.snapTY > 0) dl = this.transSnap / scale; else dl = -this.transSnap / scale;
+                        this.snapTY = 0;
                     }
                 }
                 if (this.local) this.mesh.translate(Axis.Y, dl, space); else {
@@ -394,13 +392,13 @@ namespace org.ssatguru.babylonjs.component {
             } else if (this.axisPicked == this.tZ) {
                 if (this.local) dl = Vector3.Dot(diff, this.localZ) / (this.localZ.length() * this.mesh.scaling.z); else dl = diff.z;
                 if (this.snapT) {
-                    this.snapZ += dl;
+                    this.snapTZ += dl;
                     dl = 0;
                     var scale: number = 1;
                     if (this.local) scale = this.mesh.scaling.z;
-                    if ((Math.abs(this.snapZ) > this.transSnap / scale)) {
-                        if (this.snapZ > 0) dl = this.transSnap / scale; else dl = -this.transSnap / scale;
-                        this.snapZ = 0;
+                    if ((Math.abs(this.snapTZ) > this.transSnap / scale)) {
+                        if (this.snapTZ > 0) dl = this.transSnap / scale; else dl = -this.transSnap / scale;
+                        this.snapTZ = 0;
                     }
                 }
                 if (this.local) this.mesh.translate(Axis.Z, dl, space); else {
@@ -435,20 +433,80 @@ namespace org.ssatguru.babylonjs.component {
                 this.translateInPlane(this.mesh, diff, norm);
 
             } else if (this.axisPicked == this.tAll) {
-                this.mesh.position.addInPlace(diff);
+                this.translateInPlane(this.mesh, diff, null);
+                //this.mesh.position.addInPlace(diff);
             }
         }
 
         /**
-         * projects a vector on a plane and then translates the mesh along the projected vector
-         * the plane is identified by its normal
+         * projects a vector on a plane and then translates the mesh along the projected vector.
+         * the plane is identified by its normal,
          */
         private translateInPlane(mesh: Mesh, trans: Vector3, normal: Vector3) {
+            let p:Vector3;
+            if (normal !== null) {
+                //project the translation onto this normal
+                let nNorm: Vector3 = normal.scale(Vector3.Dot(trans, normal));
+                //get the projection of diff on XZ
+                p = trans.subtract(nNorm);
+            }else{
+                p = trans;
+            }
+            let snapit: boolean = false;
+            if (this.snapT) {
+                this.snapTV.addInPlace(p);
+                if (Math.abs(this.snapTV.x) > this.transSnap) {
+                    if (p.x > 0) p.x = this.transSnap; else p.x = -this.transSnap;
+                    snapit = true;
+                }
+                if (Math.abs(this.snapTV.y) > this.transSnap) {
+                    if (p.y > 0) p.y = this.transSnap; else p.y = -this.transSnap;
+                    snapit = true;
+                }
+                if (Math.abs(this.snapTV.z) > this.transSnap) {
+                    if (p.z > 0) p.z = this.transSnap; else p.z = -this.transSnap;
+                    snapit = true;
+                }
+                if (!snapit) return;
+                if ((Math.abs(p.x) !== this.transSnap) && (p.x !== 0)) p.x = 0;
+                if ((Math.abs(p.y) !== this.transSnap) && (p.y !== 0)) p.y = 0;
+                if ((Math.abs(p.z) !== this.transSnap) && (p.z !== 0)) p.z = 0;
+                Vector3.FromFloatsToRef(0, 0, 0, this.snapTV);
+                snapit = false;
+            }
+            mesh.position.addInPlace(p);
+        }
+
+        private scaleInPlane(mesh: Mesh, trans: Vector3, normal: Vector3) {
             //project the translation onto this normal
             let nNorm: Vector3 = normal.scale(Vector3.Dot(trans, normal));
             //get the projection of diff on XZ
+            let snapit: boolean = false;
             let p: Vector3 = trans.subtract(nNorm);
-            mesh.position.addInPlace(p);
+            if (this.snapS) {
+                this.snapSV.addInPlace(p);
+                if (Math.abs(this.snapSV.x) > this.scaleSnap) {
+                    if (p.x > 0) p.x = this.scaleSnap; else p.x = -this.scaleSnap;
+                    snapit = true;
+                }
+                if (Math.abs(this.snapSV.y) > this.scaleSnap) {
+                    if (p.y > 0) p.y = this.scaleSnap; else p.y = -this.scaleSnap;
+                    snapit = true;
+                }
+                if (Math.abs(this.snapSV.z) > this.scaleSnap) {
+                    if (p.z > 0) p.z = this.scaleSnap; else p.z = -this.scaleSnap;
+                    snapit = true;
+                }
+                if (!snapit) return;
+                if ((Math.abs(p.x) !== this.scaleSnap) && (p.x !== 0)) p.x = 0;
+                if ((Math.abs(p.y) !== this.scaleSnap) && (p.y !== 0)) p.y = 0;
+                if ((Math.abs(p.z) !== this.scaleSnap) && (p.z !== 0)) p.z = 0;
+                Vector3.FromFloatsToRef(0, 0, 0, this.snapSV);
+                snapit = false;
+            }
+
+            mesh.scaling.addInPlace(p);
+
         }
 
         snapS: boolean = false;
@@ -456,10 +514,11 @@ namespace org.ssatguru.babylonjs.component {
         snapSY: number = 0;
         snapSZ: number = 0;
         snapSA: number = 0;
+        snapSV: Vector3 = new Vector3(0, 0, 0);
         scaleSnap: number = 0.25;
 
         private doScaling(newPos: Vector3) {
-            var ppm: Vector3 = this.prevPos.subtract(this.mesh.position);
+            //var ppm: Vector3 = this.prevPos.subtract(this.mesh.position);
             var diff: Vector3 = newPos.subtract(this.prevPos);
             if (this.axisPicked === this.sX) {
                 var r: number = Vector3.Dot(diff, this.localX) / this.localX.length();
@@ -491,7 +550,34 @@ namespace org.ssatguru.babylonjs.component {
                     } else return;
                 }
                 this.mesh.scaling.z += r;
-            } else if (this.axisPicked === this.sAll) {
+            } else if (this.axisPicked == this.sXZ) {
+                let norm: Vector3
+                if (this.local) {
+                    norm = Vector3.Normalize(this.localY);
+                } else {
+                    norm = Axis.Y;
+                }
+                this.scaleInPlane(this.mesh, diff, norm);
+
+            } else if (this.axisPicked == this.sZY) {
+                let norm: Vector3
+                if (this.local) {
+                    norm = Vector3.Normalize(this.localX);
+                } else {
+                    norm = Axis.X;
+                }
+                this.scaleInPlane(this.mesh, diff, norm);
+
+            } else if (this.axisPicked == this.sYX) {
+                let norm: Vector3
+                if (this.local) {
+                    norm = Vector3.Normalize(this.localZ);
+                } else {
+                    norm = Axis.Z;
+                }
+                this.scaleInPlane(this.mesh, diff, norm);
+            }
+            else if (this.axisPicked === this.sAll) {
                 var r: number = Vector3.Dot(diff, this.mainCamera.upVector);
                 if (this.snapS) {
                     this.snapSA += r;
@@ -503,30 +589,6 @@ namespace org.ssatguru.babylonjs.component {
                 this.mesh.scaling.x += r;
                 this.mesh.scaling.y += r;
                 this.mesh.scaling.z += r;
-            }
-        }
-        private doScaling_old(newPos: Vector3) {
-            var ppm: Vector3 = this.prevPos.subtract(this.mesh.position);
-            var diff: Vector3 = newPos.subtract(this.prevPos);
-            var r: number = diff.length() / ppm.length();
-            if (this.axisPicked === this.sX) {
-                var dot: number = Vector3.Dot(diff, this.localX);
-                if ((dot >= 0)) this.mesh.scaling.x *= (1 + r); else this.mesh.scaling.x *= (1 - r);
-            } else if (this.axisPicked === this.sY) {
-                var dot: number = Vector3.Dot(diff, this.localY);
-                if ((dot >= 0)) this.mesh.scaling.y *= (1 + r); else this.mesh.scaling.y *= (1 - r);
-            } else if (this.axisPicked === this.sZ) {
-                var dot: number = Vector3.Dot(diff, this.localZ);
-                if ((dot >= 0)) this.mesh.scaling.z *= (1 + r); else this.mesh.scaling.z *= (1 - r);
-            } else if (this.axisPicked === this.sAll) {
-                var dot: number = Vector3.Dot(diff, this.mainCamera.upVector);
-                r = diff.length() / 5;
-                if ((dot < 0)) {
-                    r = -1 * r;
-                }
-                this.mesh.scaling.x *= (1 + r);
-                this.mesh.scaling.y *= (1 + r);
-                this.mesh.scaling.z *= (1 + r);
             }
         }
 
@@ -626,6 +688,9 @@ namespace org.ssatguru.babylonjs.component {
                 this.sEndX.visibility = v;
                 this.sEndY.visibility = v;
                 this.sEndZ.visibility = v;
+                this.sEndXZ.visibility = v;
+                this.sEndZY.visibility = v;
+                this.sEndYX.visibility = v;
                 this.sEndAll.visibility = v;
             }
         }
@@ -719,6 +784,9 @@ namespace org.ssatguru.babylonjs.component {
                 this.sEndX.visibility = 1;
                 this.sEndY.visibility = 1;
                 this.sEndZ.visibility = 1;
+                this.sEndXZ.visibility = 1;
+                this.sEndZY.visibility = 1;
+                this.sEndYX.visibility = 1;
                 this.sEndAll.visibility = 1;
                 this.scaleEnabled = true;
                 this.disableTranslation();
@@ -731,6 +799,9 @@ namespace org.ssatguru.babylonjs.component {
                 this.sEndX.visibility = 0;
                 this.sEndY.visibility = 0;
                 this.sEndZ.visibility = 0;
+                this.sEndXZ.visibility = 0;
+                this.sEndZY.visibility = 0;
+                this.sEndYX.visibility = 0;
                 this.sEndAll.visibility = 0;
                 this.scaleEnabled = false;
             }
@@ -930,9 +1001,6 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndX.material = this.redMat;
             this.tEndY.material = this.greenMat;
             this.tEndZ.material = this.blueMat;
-            //            this.tEndXZ.material = this.redBlueMat;
-            //            this.tEndZY.material = this.blueGreenMat;
-            //            this.tEndYX.material = this.greenRedMat;
             this.tEndXZ.material = this.redMat;
             this.tEndZY.material = this.blueMat;
             this.tEndYX.material = this.greenMat;
@@ -1083,15 +1151,19 @@ namespace org.ssatguru.babylonjs.component {
         private sX: Mesh;
         private sY: Mesh;
         private sZ: Mesh;
+        private sXZ: Mesh;
+        private sZY: Mesh;
+        private sYX: Mesh;
         private sAll: Mesh;
 
         private sEndX: Mesh;
-
         private sEndY: Mesh;
-
         private sEndZ: Mesh;
-
+        private sEndXZ: Mesh;
+        private sEndZY: Mesh;
+        private sEndYX: Mesh;
         private sEndAll: Mesh;
+
 
         private createScaleAxes() {
             var r: number = 0.04;
@@ -1099,34 +1171,69 @@ namespace org.ssatguru.babylonjs.component {
             this.sCtl = new Mesh("sCtl", this.scene);
 
             //pickable , invisible part
-            this.sAll = Mesh.CreateBox("ALL", r * 2, this.scene);
+
             this.sX = this.extrudeBox(r / 2, l);
             this.sX.name = "X";
             this.sY = this.sX.clone("Y");
             this.sZ = this.sX.clone("Z");
+
+            this.sXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this.scene);
+            this.sZY = this.sXZ.clone("ZY");
+            this.sYX = this.sXZ.clone("YX");
+
+            this.sXZ.rotation.x = 1.57;
+            this.sZY.rotation.y = 1.57;
+
+            this.sXZ.position.x = r;
+            this.sXZ.position.z = r;
+
+            this.sZY.position.z = r;
+            this.sZY.position.y = r;
+
+            this.sYX.position.y = r;
+            this.sYX.position.x = r;
+
+            this.sAll = Mesh.CreateBox("ALL", r * 2, this.scene);
+
             this.sX.material = this.redMat;
             this.sY.material = this.greenMat;
             this.sZ.material = this.blueMat;
             this.sAll.material = this.yellowMat;
+
             this.sX.parent = this.sCtl;
             this.sY.parent = this.sCtl;
             this.sZ.parent = this.sCtl;
             this.sAll.parent = this.sCtl;
+            this.sXZ.parent = this.sCtl;
+            this.sZY.parent = this.sCtl;
+            this.sYX.parent = this.sCtl;
+
             this.sX.rotation.y = 1.57;
             this.sY.rotation.x -= 1.57;
             this.sX.visibility = 0;
             this.sY.visibility = 0;
             this.sZ.visibility = 0;
+            this.sXZ.visibility = 0;
+            this.sZY.visibility = 0;
+            this.sYX.visibility = 0;
             this.sAll.visibility = 0;
+
             this.sX.renderingGroupId = 1;
             this.sY.renderingGroupId = 1;
             this.sZ.renderingGroupId = 1;
+            this.sXZ.renderingGroupId = 1;
+            this.sZY.renderingGroupId = 1;
+            this.sYX.renderingGroupId = 1;
             this.sAll.renderingGroupId = 1;
+
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function 
             this.sX.isPickable = false;
             this.sY.isPickable = false;
             this.sZ.isPickable = false;
+            this.sXZ.isPickable = false;
+            this.sZY.isPickable = false;
+            this.sYX.isPickable = false;
             this.sAll.isPickable = false;
 
             //non pickable visible boxes at end of axes 
@@ -1135,24 +1242,43 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndY = this.sEndX.clone("");
             this.sEndZ = this.sEndX.clone("");
             this.sEndAll = this.sEndX.clone("");
+            this.sEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 2, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
+            this.sEndZY = this.sEndXZ.clone("ZY");
+            this.sEndYX = this.sEndXZ.clone("YX");
+
             this.sEndX.parent = this.sX;
             this.sEndY.parent = this.sY;
             this.sEndZ.parent = this.sZ;
+            this.sEndXZ.parent = this.sXZ;
+            this.sEndZY.parent = this.sZY;
+            this.sEndYX.parent = this.sYX;
             this.sEndAll.parent = this.sAll;
+
             this.sEndX.position.z = l - cr / 2;
             this.sEndY.position.z = l - cr / 2;
             this.sEndZ.position.z = l - cr / 2;
             this.sEndX.material = this.redMat;
             this.sEndY.material = this.greenMat;
             this.sEndZ.material = this.blueMat;
+            this.sEndXZ.material = this.redMat;
+            this.sEndZY.material = this.blueMat;
+            this.sEndYX.material = this.greenMat;
             this.sEndAll.material = this.yellowMat;
+
             this.sEndX.renderingGroupId = 1;
             this.sEndY.renderingGroupId = 1;
             this.sEndZ.renderingGroupId = 1;
+            this.sEndXZ.renderingGroupId = 1;
+            this.sEndZY.renderingGroupId = 1;
+            this.sEndYX.renderingGroupId = 1;
             this.sEndAll.renderingGroupId = 1;
+
             this.sEndX.isPickable = false;
             this.sEndY.isPickable = false;
             this.sEndZ.isPickable = false;
+            this.sEndXZ.isPickable = false;
+            this.sEndZY.isPickable = false;
+            this.sEndYX.isPickable = false;
             this.sEndAll.isPickable = false;
         }
 
