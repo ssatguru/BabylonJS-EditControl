@@ -156,6 +156,7 @@ declare namespace org.ssatguru.babylonjs.component {
         setTransSnap(s: boolean): void;
         setRotSnap(s: boolean): void;
         setScaleSnap(s: boolean): void;
+        tSnap: Vector3;
         setTransSnapValue(t: number): void;
         setRotSnapValue(r: number): void;
         setScaleSnapValue(r: number): void;

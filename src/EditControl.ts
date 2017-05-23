@@ -187,6 +187,7 @@ namespace org.ssatguru.babylonjs.component {
                     this.bZaxis.visibility = 1;
                 }
                 this.editing = true;
+                //lets find out where we are on the pickplane
                 this.prevPos = this.getPosOnPickPlane();
                 window.setTimeout(((cam, can) => { return this.detachControl(cam, can) }), 0, this.mainCamera, this.canvas);
             }
@@ -331,27 +332,25 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private prevPos: Vector3;
-        
+
         private snapRX: number = 0;
         private snapRY: number = 0;
         private snapRZ: number = 0;
 
         private onPointerMove(evt: Event) {
-            if ((!this.pDown || !this.editing)) return;
+            if (!this.pDown || !this.editing) return;
             var newPos: Vector3 = this.getPosOnPickPlane();
-            if ((newPos == null)) return;
-            if ((this.transEnabled)) this.doTranslation(newPos);
-            if ((this.scaleEnabled && this.local)) this.doScaling(newPos);
-            if ((this.rotEnabled)) this.doRotation(newPos);
+            if (newPos == null) return;
+            if (this.transEnabled) this.doTranslation(newPos);
+            if (this.scaleEnabled && this.local) this.doScaling(newPos);
+            if (this.rotEnabled) this.doRotation(newPos);
             this.prevPos = newPos;
         }
 
-        private snapTX: number = 0;
-        private snapTY: number = 0;
-        private snapTZ: number = 0;
+      
         private snapTV: Vector3 = new Vector3(0, 0, 0);
         private transBy: Vector3 = new Vector3(0, 0, 0);;
-        
+
         private doTranslation(newPos: Vector3) {
             var diff: Vector3 = newPos.subtract(this.prevPos);
             if (diff.x == 0 && diff.y == 0 && diff.z == 0) return;
@@ -368,39 +367,55 @@ namespace org.ssatguru.babylonjs.component {
                 if (this.local) this.transBy.z = Vector3.Dot(diff, this.localZ) / (this.localZ.length() * this.mesh.scaling.z);
                 else this.transBy.z = diff.z;
             }
-            this.transWithSnap(this.mesh,this.transBy,this.local);
+            this.transWithSnap(this.mesh, this.transBy, this.local);
             this.mesh.computeWorldMatrix(true);
         }
-        
-         private transWithSnap(mesh: Mesh, trans: Vector3,local:boolean) {
-            let tSnap:Vector3 = new Vector3(this.transSnap,this.transSnap,this.transSnap);
-            if (local){
-                tSnap=tSnap.multiplyByFloats(1/mesh.scaling.x, 1/mesh.scaling.y,1/mesh.scaling.z);
-            }
+
+        private transWithSnap(mesh: Mesh, trans: Vector3, local: boolean) {
             
+
             if (this.snapT) {
                 let snapit: boolean = false;
                 this.snapTV.addInPlace(trans);
-                if (Math.abs(this.snapTV.x) > tSnap.x) {
-                    if (trans.x > 0) trans.x = tSnap.x; else trans.x = -tSnap.x;
+                if (Math.abs(this.snapTV.x) > (this.tSnap.x/mesh.scaling.x)) {
+                    if (this.snapTV.x > 0) trans.x = this.tSnap.x; else trans.x = -this.tSnap.x;
+                    trans.x=trans.x/mesh.scaling.x;
                     snapit = true;
                 }
-                if (Math.abs(this.snapTV.y) > tSnap.y) {
-                    if (trans.y > 0) trans.y = tSnap.y; else trans.y = -tSnap.y;
+                if (Math.abs(this.snapTV.y) > (this.tSnap.y/ mesh.scaling.y)) {
+                    if (this.snapTV.y > 0) trans.y = this.tSnap.y; else trans.y = -this.tSnap.y;
+                    trans.y=trans.y/mesh.scaling.x;
                     snapit = true;
                 }
-                if (Math.abs(this.snapTV.z) > tSnap.z) {
-                    if (trans.z > 0) trans.z = tSnap.z; else trans.z = -tSnap.z;
+                if (Math.abs(this.snapTV.z) > (this.tSnap.z/ mesh.scaling.z)) {
+                    if (this.snapTV.z > 0) trans.z = this.tSnap.z; else trans.z = -this.tSnap.z;
+                    trans.z=trans.z/mesh.scaling.z;
                     snapit = true;
                 }
-                if (!snapit) return;
-                if ((Math.abs(trans.x) !== tSnap.x) && (trans.x !== 0)) trans.x = 0;
-                if ((Math.abs(trans.y) !== tSnap.y) && (trans.y !== 0)) trans.y = 0;
-                if ((Math.abs(trans.z) !== tSnap.z) && (trans.z !== 0)) trans.z = 0;
+                if (!snapit) {
+//                    if (this.snapTV.length() > this.transSnap) {
+//                        if (trans.x !== 0) {
+//                            if (this.snapTV.x > 0) trans.x = tSnap.x; else trans.x = -tSnap.x;
+//                        }
+//                        if (trans.y !== 0) {
+//                            if (this.snapTV.y > 0) trans.y = tSnap.y; else trans.y = -tSnap.y;
+//                        }
+//                        if (trans.z !== 0) {
+//                            if (this.snapTV.z > 0) trans.z = tSnap.z; else trans.z = -tSnap.z;
+//                        }
+//                    } else {
+//                        return;
+//                    }
+                    return;
+                } else {
+                    if (Math.abs(trans.x) !== this.tSnap.x) trans.x = 0;
+                    if (Math.abs(trans.y) !== this.tSnap.y) trans.y = 0;
+                    if (Math.abs(trans.z) !== this.tSnap.z) trans.z = 0;
+                }
                 Vector3.FromFloatsToRef(0, 0, 0, this.snapTV);
                 snapit = false;
             }
-            
+
             if (local) {
                 this.mesh.locallyTranslate(trans);
             } else {
@@ -1196,7 +1211,9 @@ namespace org.ssatguru.babylonjs.component {
             this.snapS = s;
         }
 
+        tSnap:Vector3;
         public setTransSnapValue(t: number) {
+            this.tSnap = new Vector3(t,t,t);
             this.transSnap = t;
         }
 

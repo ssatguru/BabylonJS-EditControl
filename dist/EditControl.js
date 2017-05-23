@@ -323,16 +323,16 @@ var org;
                         }
                     };
                     EditControl.prototype.onPointerMove = function (evt) {
-                        if ((!this.pDown || !this.editing))
+                        if (!this.pDown || !this.editing)
                             return;
                         var newPos = this.getPosOnPickPlane();
-                        if ((newPos == null))
+                        if (newPos == null)
                             return;
-                        if ((this.transEnabled))
+                        if (this.transEnabled)
                             this.doTranslation(newPos);
-                        if ((this.scaleEnabled && this.local))
+                        if (this.scaleEnabled && this.local)
                             this.doScaling(newPos);
-                        if ((this.rotEnabled))
+                        if (this.rotEnabled)
                             this.doRotation(newPos);
                         this.prevPos = newPos;
                     };
@@ -366,42 +366,44 @@ var org;
                         this.mesh.computeWorldMatrix(true);
                     };
                     EditControl.prototype.transWithSnap = function (mesh, trans, local) {
-                        var tSnap = new Vector3(this.transSnap, this.transSnap, this.transSnap);
-                        if (local) {
-                            tSnap = tSnap.multiplyByFloats(1 / mesh.scaling.x, 1 / mesh.scaling.y, 1 / mesh.scaling.z);
-                        }
                         if (this.snapT) {
                             var snapit = false;
                             this.snapTV.addInPlace(trans);
-                            if (Math.abs(this.snapTV.x) > tSnap.x) {
-                                if (trans.x > 0)
-                                    trans.x = tSnap.x;
+                            if (Math.abs(this.snapTV.x) > (this.tSnap.x / mesh.scaling.x)) {
+                                if (this.snapTV.x > 0)
+                                    trans.x = this.tSnap.x;
                                 else
-                                    trans.x = -tSnap.x;
+                                    trans.x = -this.tSnap.x;
+                                trans.x = trans.x / mesh.scaling.x;
                                 snapit = true;
                             }
-                            if (Math.abs(this.snapTV.y) > tSnap.y) {
-                                if (trans.y > 0)
-                                    trans.y = tSnap.y;
+                            if (Math.abs(this.snapTV.y) > (this.tSnap.y / mesh.scaling.y)) {
+                                if (this.snapTV.y > 0)
+                                    trans.y = this.tSnap.y;
                                 else
-                                    trans.y = -tSnap.y;
+                                    trans.y = -this.tSnap.y;
+                                trans.y = trans.y / mesh.scaling.x;
                                 snapit = true;
                             }
-                            if (Math.abs(this.snapTV.z) > tSnap.z) {
-                                if (trans.z > 0)
-                                    trans.z = tSnap.z;
+                            if (Math.abs(this.snapTV.z) > (this.tSnap.z / mesh.scaling.z)) {
+                                if (this.snapTV.z > 0)
+                                    trans.z = this.tSnap.z;
                                 else
-                                    trans.z = -tSnap.z;
+                                    trans.z = -this.tSnap.z;
+                                trans.z = trans.z / mesh.scaling.z;
                                 snapit = true;
                             }
-                            if (!snapit)
+                            if (!snapit) {
                                 return;
-                            if ((Math.abs(trans.x) !== tSnap.x) && (trans.x !== 0))
-                                trans.x = 0;
-                            if ((Math.abs(trans.y) !== tSnap.y) && (trans.y !== 0))
-                                trans.y = 0;
-                            if ((Math.abs(trans.z) !== tSnap.z) && (trans.z !== 0))
-                                trans.z = 0;
+                            }
+                            else {
+                                if (Math.abs(trans.x) !== this.tSnap.x)
+                                    trans.x = 0;
+                                if (Math.abs(trans.y) !== this.tSnap.y)
+                                    trans.y = 0;
+                                if (Math.abs(trans.z) !== this.tSnap.z)
+                                    trans.z = 0;
+                            }
                             Vector3.FromFloatsToRef(0, 0, 0, this.snapTV);
                             snapit = false;
                         }
@@ -1057,6 +1059,7 @@ var org;
                         this.snapS = s;
                     };
                     EditControl.prototype.setTransSnapValue = function (t) {
+                        this.tSnap = new Vector3(t, t, t);
                         this.transSnap = t;
                     };
                     EditControl.prototype.setRotSnapValue = function (r) {
