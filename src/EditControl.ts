@@ -20,46 +20,28 @@ namespace org.ssatguru.babylonjs.component {
         private mesh: Mesh;
 
         private canvas: HTMLCanvasElement;
-
         private scene: Scene;
-
         private mainCamera: Camera;
-
         private theParent: Mesh;
-
         private local: boolean = true;
-
         private snapT: boolean = false;
-
         private snapR: boolean = false;
-
         private transSnap: number = 1;
-
         private rotSnap: number = Math.PI / 18;
-
         private axesLen: number = 0.4;
-
         private axesScale: number = 1;
-
         private redMat: StandardMaterial;
-
         private greenMat: StandardMaterial;
-
         private blueMat: StandardMaterial;
-
         private whiteMat: StandardMaterial;
-
         private yellowMat: StandardMaterial;
-
         private actHist: ActHist;
-
         private renderer: () => void;
-
         private pointerdown: EventListener;
-
         private pointerup: EventListener;
-
         private pointermove: EventListener;
+        //axes visibility
+        private visibility:number=0.7;
 
         public constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number) {
             this.mesh = mesh;
@@ -114,15 +96,12 @@ namespace org.ssatguru.babylonjs.component {
             this.actHist.undo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
-
-
         }
 
         public redo() {
             this.actHist.redo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
-
         }
 
         public detach() {
@@ -160,13 +139,13 @@ namespace org.ssatguru.babylonjs.component {
             }, null, this.mainCamera);
 
             if (pickResult.hit) {
-                this.setAxesVisiblity(0);
+                //this.setAxesVisiblity(0);
                 this.axisPicked = <Mesh>pickResult.pickedMesh;
                 let childs: Node[] = this.axisPicked.getChildren();
                 if (childs.length > 0) {
-                    (<Mesh>childs[0]).visibility = 1;
+                    (<Mesh>childs[0]).visibility = this.visibility;
                 } else {
-                    this.axisPicked.visibility = 1;
+                    this.axisPicked.visibility = this.visibility;
                 }
                 var name: string = this.axisPicked.name;
                 if ((name == "X")) this.bXaxis.visibility = 1;
@@ -286,36 +265,7 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
         }
-        private restoreColor_old(mesh: Mesh) {
-            var col: Color3;
-            var mat: Material;
-            if (mesh.name == "X") {
-                col = Color3.Red();
-                mat = this.redMat;
-                this.xaxis.color = Color3.Red();
-            } else if (mesh.name == "Y") {
-                col = Color3.Green();
-                mat = this.greenMat;
-                this.yaxis.color = Color3.Green();
-            } else if (mesh.name == "Z") {
-                col = Color3.Blue();
-                mat = this.blueMat;
-                this.zaxis.color = Color3.Blue();
-            } else {
-                col = Color3.Yellow();
-                mat = this.yellowMat;
-            }
-            if (this.rotEnabled) {
-                (<LinesMesh>mesh.getChildren()[0]).color = col;
-            } else {
-                let childs: Node[] = mesh.getChildren();
-                if (childs.length > 0) {
-                    (<Mesh>childs[0]).material = mat;
-                } else {
-                    mesh.material = mat;
-                }
-            }
-        }
+        
         editing: boolean = false;
 
         private onPointerUp(evt: Event) {
@@ -323,7 +273,7 @@ namespace org.ssatguru.babylonjs.component {
             if ((this.editing)) {
                 this.mainCamera.attachControl(this.canvas);
                 this.editing = false;
-                this.setAxesVisiblity(1);
+                //this.setAxesVisiblity(1);
                 this.hideBaxis();
                 this.restoreColor(this.prevOverMesh);
                 this.prevOverMesh = null;
@@ -347,7 +297,7 @@ namespace org.ssatguru.babylonjs.component {
             this.prevPos = newPos;
         }
 
-      
+
         private snapTV: Vector3 = new Vector3(0, 0, 0);
         private transBy: Vector3 = new Vector3(0, 0, 0);;
 
@@ -372,40 +322,38 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private transWithSnap(mesh: Mesh, trans: Vector3, local: boolean) {
-            
-
             if (this.snapT) {
                 let snapit: boolean = false;
                 this.snapTV.addInPlace(trans);
-                if (Math.abs(this.snapTV.x) > (this.tSnap.x/mesh.scaling.x)) {
+                if (Math.abs(this.snapTV.x) > (this.tSnap.x / mesh.scaling.x)) {
                     if (this.snapTV.x > 0) trans.x = this.tSnap.x; else trans.x = -this.tSnap.x;
-                    trans.x=trans.x/mesh.scaling.x;
+                    trans.x = trans.x / mesh.scaling.x;
                     snapit = true;
                 }
-                if (Math.abs(this.snapTV.y) > (this.tSnap.y/ mesh.scaling.y)) {
+                if (Math.abs(this.snapTV.y) > (this.tSnap.y / mesh.scaling.y)) {
                     if (this.snapTV.y > 0) trans.y = this.tSnap.y; else trans.y = -this.tSnap.y;
-                    trans.y=trans.y/mesh.scaling.x;
+                    trans.y = trans.y / mesh.scaling.x;
                     snapit = true;
                 }
-                if (Math.abs(this.snapTV.z) > (this.tSnap.z/ mesh.scaling.z)) {
+                if (Math.abs(this.snapTV.z) > (this.tSnap.z / mesh.scaling.z)) {
                     if (this.snapTV.z > 0) trans.z = this.tSnap.z; else trans.z = -this.tSnap.z;
-                    trans.z=trans.z/mesh.scaling.z;
+                    trans.z = trans.z / mesh.scaling.z;
                     snapit = true;
                 }
                 if (!snapit) {
-//                    if (this.snapTV.length() > this.transSnap) {
-//                        if (trans.x !== 0) {
-//                            if (this.snapTV.x > 0) trans.x = tSnap.x; else trans.x = -tSnap.x;
-//                        }
-//                        if (trans.y !== 0) {
-//                            if (this.snapTV.y > 0) trans.y = tSnap.y; else trans.y = -tSnap.y;
-//                        }
-//                        if (trans.z !== 0) {
-//                            if (this.snapTV.z > 0) trans.z = tSnap.z; else trans.z = -tSnap.z;
-//                        }
-//                    } else {
-//                        return;
-//                    }
+                    //                    if (this.snapTV.length() > this.transSnap) {
+                    //                        if (trans.x !== 0) {
+                    //                            if (this.snapTV.x > 0) trans.x = tSnap.x; else trans.x = -tSnap.x;
+                    //                        }
+                    //                        if (trans.y !== 0) {
+                    //                            if (this.snapTV.y > 0) trans.y = tSnap.y; else trans.y = -tSnap.y;
+                    //                        }
+                    //                        if (trans.z !== 0) {
+                    //                            if (this.snapTV.z > 0) trans.z = tSnap.z; else trans.z = -tSnap.z;
+                    //                        }
+                    //                    } else {
+                    //                        return;
+                    //                    }
                     return;
                 } else {
                     if (Math.abs(trans.x) !== this.tSnap.x) trans.x = 0;
@@ -562,7 +510,7 @@ namespace org.ssatguru.babylonjs.component {
             this.bYaxis.visibility = 0;
             this.bZaxis.visibility = 0;
         }
-
+        /*
         private setAxesVisiblity(v: number) {
             if (this.transEnabled) {
                 this.tEndX.visibility = v;
@@ -589,7 +537,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.sEndAll.visibility = v;
             }
         }
-
+        */
         private transEnabled: boolean = false;
 
         public isTranslationEnabled(): boolean {
@@ -602,13 +550,13 @@ namespace org.ssatguru.babylonjs.component {
                 this.tCtl.parent = this.theParent;
             }
             if ((!this.transEnabled)) {
-                this.tEndX.visibility = 1;
-                this.tEndY.visibility = 1;
-                this.tEndZ.visibility = 1;
-                this.tEndXZ.visibility = 1;
-                this.tEndZY.visibility = 1;
-                this.tEndYX.visibility = 1;
-                this.tEndAll.visibility = 1;
+                this.tEndX.visibility =  this.visibility;
+                this.tEndY.visibility =  this.visibility;
+                this.tEndZ.visibility =  this.visibility;
+                this.tEndXZ.visibility =  this.visibility;
+                this.tEndZY.visibility =  this.visibility;
+                this.tEndYX.visibility =  this.visibility;
+                this.tEndAll.visibility =  this.visibility;
                 this.transEnabled = true;
                 this.disableRotation();
                 this.disableScaling();
@@ -644,10 +592,10 @@ namespace org.ssatguru.babylonjs.component {
                 this.rCtl.parent = this.theParent;
             }
             if ((!this.rotEnabled)) {
-                this.rEndX.visibility = 1;
-                this.rEndY.visibility = 1;
-                this.rEndZ.visibility = 1;
-                this.rEndAll.visibility = 1;
+                this.rEndX.visibility =  this.visibility;
+                this.rEndY.visibility =  this.visibility;
+                this.rEndZ.visibility =  this.visibility;
+                this.rEndAll.visibility =  this.visibility;
                 this.rotEnabled = true;
                 this.disableTranslation();
                 this.disableScaling();
@@ -676,13 +624,13 @@ namespace org.ssatguru.babylonjs.component {
                 this.sCtl.parent = this.theParent;
             }
             if ((!this.scaleEnabled)) {
-                this.sEndX.visibility = 1;
-                this.sEndY.visibility = 1;
-                this.sEndZ.visibility = 1;
-                this.sEndXZ.visibility = 1;
-                this.sEndZY.visibility = 1;
-                this.sEndYX.visibility = 1;
-                this.sEndAll.visibility = 1;
+                this.sEndX.visibility =  this.visibility;
+                this.sEndY.visibility =  this.visibility;
+                this.sEndZ.visibility =  this.visibility;
+                this.sEndXZ.visibility =  this.visibility;
+                this.sEndZY.visibility =  this.visibility;
+                this.sEndYX.visibility =  this.visibility;
+                this.sEndAll.visibility =  this.visibility;
                 this.scaleEnabled = true;
                 this.disableTranslation();
                 this.disableRotation();
@@ -703,17 +651,11 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private bXaxis: LinesMesh;
-
         private bYaxis: LinesMesh;
-
         private bZaxis: LinesMesh;
-
         private xaxis: LinesMesh;
-
         private yaxis: LinesMesh;
-
         private zaxis: LinesMesh;
-
         private guideCtl: Mesh;
 
         /*
@@ -739,9 +681,9 @@ namespace org.ssatguru.babylonjs.component {
             this.bXaxis.color = Color3.Red();
             this.bYaxis.color = Color3.Green();
             this.bZaxis.color = Color3.Blue();
-            this.bXaxis.renderingGroupId = 1;
-            this.bYaxis.renderingGroupId = 1;
-            this.bZaxis.renderingGroupId = 1;
+//            this.bXaxis.renderingGroupId = 1;
+//            this.bYaxis.renderingGroupId = 1;
+//            this.bZaxis.renderingGroupId = 1;
             this.hideBaxis();
 
             //the small axis
@@ -825,7 +767,8 @@ namespace org.ssatguru.babylonjs.component {
             this.tYX.position.x = r;
 
             this.tAll = Mesh.CreateBox("ALL", r * 2, this.scene);
-
+            //this.tAll = MeshBuilder.CreatePolyhedron("ALL", {type: 1, size: r}, this.scene);
+            
             this.tX.parent = this.tCtl;
             this.tY.parent = this.tCtl;
             this.tZ.parent = this.tCtl;
@@ -874,7 +817,8 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 1.75, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
             this.tEndZY = this.tEndXZ.clone("ZY");
             this.tEndYX = this.tEndXZ.clone("YX");
-            this.tEndAll = Mesh.CreateBox("tEndAll", cr, this.scene);
+            //this.tEndAll = Mesh.CreateBox("tEndAll", cr, this.scene);
+            this.tEndAll = MeshBuilder.CreatePolyhedron("tEndAll", {type: 1, size: cr/2}, this.scene);
 
             this.tEndX.rotation.x = 1.57;
             this.tEndY.rotation.x = 1.57;
@@ -899,6 +843,14 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndZY.material = this.blueMat;
             this.tEndYX.material = this.greenMat;
             this.tEndAll.material = this.yellowMat;
+            
+//            this.tEndX.visibility = 0.5;
+//            this.tEndY.visibility = 0.5;
+//            this.tEndZ.visibility = 0.5;
+//            this.tEndXZ.visibility = 0.5;
+//            this.tEndZY.visibility = 0.5;
+//            this.tEndYX.visibility = 0.5;
+//            this.tEndAll.visibility = 0.5;
 
             this.tEndX.renderingGroupId = 1;
             this.tEndY.renderingGroupId = 1;
@@ -1211,9 +1163,9 @@ namespace org.ssatguru.babylonjs.component {
             this.snapS = s;
         }
 
-        tSnap:Vector3;
+        tSnap: Vector3;
         public setTransSnapValue(t: number) {
-            this.tSnap = new Vector3(t,t,t);
+            this.tSnap = new Vector3(t, t, t);
             this.transSnap = t;
         }
 

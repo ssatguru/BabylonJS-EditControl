@@ -28,6 +28,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private pointerdown;
         private pointerup;
         private pointermove;
+        private visibility;
         constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number);
         private renderLoopProcess();
         switchTo(mesh: Mesh): void;
@@ -48,7 +49,6 @@ declare namespace org.ssatguru.babylonjs.component {
         savedCol: Color3;
         private onPointerOver();
         private restoreColor(mesh);
-        private restoreColor_old(mesh);
         editing: boolean;
         private onPointerUp(evt);
         private prevPos;
@@ -56,9 +56,6 @@ declare namespace org.ssatguru.babylonjs.component {
         private snapRY;
         private snapRZ;
         private onPointerMove(evt);
-        private snapTX;
-        private snapTY;
-        private snapTZ;
         private snapTV;
         private transBy;
         private doTranslation(newPos);
@@ -78,7 +75,6 @@ declare namespace org.ssatguru.babylonjs.component {
         private doRotation(newPos);
         private getPosOnPickPlane();
         private hideBaxis();
-        private setAxesVisiblity(v);
         private transEnabled;
         isTranslationEnabled(): boolean;
         enableTranslation(): void;
