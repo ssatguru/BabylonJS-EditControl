@@ -394,6 +394,9 @@ namespace org.ssatguru.babylonjs.component {
             if ((this.axisPicked === this.sZ) || (this.axisPicked === this.sXZ) || (this.axisPicked === this.sZY) || (this.axisPicked === this.sAll)) {
                 this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
             }
+            if ((this.axisPicked === this.sAll)) {
+                 this.scale.copyFromFloats(this.scale.y,this.scale.y,this.scale.y);
+            }
             this.scaleWithSnap(this.mesh, this.scale);
         }
 
