@@ -332,7 +332,7 @@ namespace org.ssatguru.babylonjs.component {
                 }
                 if (Math.abs(this.snapTV.y) > (this.tSnap.y / mesh.scaling.y)) {
                     if (this.snapTV.y > 0) trans.y = this.tSnap.y; else trans.y = -this.tSnap.y;
-                    trans.y = trans.y / mesh.scaling.x;
+                    trans.y = trans.y / mesh.scaling.y;
                     snapit = true;
                 }
                 if (Math.abs(this.snapTV.z) > (this.tSnap.z / mesh.scaling.z)) {
@@ -356,9 +356,9 @@ namespace org.ssatguru.babylonjs.component {
                     //                    }
                     return;
                 } else {
-                    if (Math.abs(trans.x) !== this.tSnap.x) trans.x = 0;
-                    if (Math.abs(trans.y) !== this.tSnap.y) trans.y = 0;
-                    if (Math.abs(trans.z) !== this.tSnap.z) trans.z = 0;
+                    if (Math.abs(trans.x) !== this.tSnap.x/ mesh.scaling.x) trans.x = 0;
+                    if (Math.abs(trans.y) !== this.tSnap.y/ mesh.scaling.y) trans.y = 0;
+                    if (Math.abs(trans.z) !== this.tSnap.z/ mesh.scaling.z) trans.z = 0;
                 }
                 Vector3.FromFloatsToRef(0, 0, 0, this.snapTV);
                 snapit = false;
