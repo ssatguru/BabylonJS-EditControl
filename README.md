@@ -66,7 +66,8 @@ Takes three parms
 * mesh - the mesh to control using the editcontrol
 * camera - active camera
 * canvas - the mesh canvas 
-* scale - how small or large the editcontrol should appear
+* scale - how small or large the editcontrol should appear  
+
 2) To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
