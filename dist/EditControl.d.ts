@@ -58,7 +58,8 @@ declare namespace org.ssatguru.babylonjs.component {
         private onPointerMove(evt);
         private snapTV;
         private transBy;
-        private doTranslation(newPos);
+        private getPickPlane(axis);
+        private doTranslation(diff);
         private transWithSnap(mesh, trans, local);
         snapS: boolean;
         snapSX: number;
@@ -68,11 +69,11 @@ declare namespace org.ssatguru.babylonjs.component {
         snapSV: Vector3;
         scaleSnap: number;
         scale: Vector3;
-        private doScaling(newPos);
+        private doScaling(diff);
         private scaleWithSnap(mesh, p);
         eulerian: boolean;
         snapRA: number;
-        private doRotation(newPos);
+        private doRotation(mesh, axis, newPos);
         private getPosOnPickPlane();
         private hideBaxis();
         private transEnabled;
@@ -96,8 +97,13 @@ declare namespace org.ssatguru.babylonjs.component {
         private zaxis;
         private guideCtl;
         private createGuideAxes();
+        private pickPlanes;
         private pickPlane;
-        private createPickPlane();
+        private pALL;
+        private pXZ;
+        private pZY;
+        private pYX;
+        private createPickPlanes();
         private tCtl;
         private tX;
         private tY;
@@ -114,6 +120,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private tEndYX;
         private tEndAll;
         private createTransAxes();
+        private createTriangle(name, w, scene);
         private rCtl;
         private rX;
         private rY;
