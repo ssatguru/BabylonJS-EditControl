@@ -17,7 +17,7 @@ It currently has the following features
 * Scale size of control
 * undo, redo
 
-For a demo head on over to [http://ssatguru.appspot.com/BabylonJS-EditControl/demo.html](http://ssatguru.appspot.com/BabylonJS-EditControl/demo.html)
+For a demo head on over to [http://ssatguru.github.io/BabylonJS-EditControl/demo](http://ssatguru.github.io/BabylonJS-EditControl/demo)
 
 ## Quick start
 
