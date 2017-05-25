@@ -18,7 +18,7 @@ It currently has the following features
 * undo, redo
 
 For a demo head on over to [http://ssatguru.github.io/BabylonJS-EditControl/demo](http://ssatguru.github.io/BabylonJS-EditControl/demo)
-
+<a href="https://ssatguru.github.io/BabylonJS-EditControl/demo" target="_blank">https://ssatguru.github.io/BabylonJS-EditControl/demo</a>
 ## Quick start
 
 1) add the following dependencies 
