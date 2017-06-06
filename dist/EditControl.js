@@ -1199,24 +1199,24 @@ var org;
                         this.s = mesh.scaling.clone();
                     }
                     Act.prototype.perform = function (mesh) {
-                        mesh.position = this.p.clone();
+                        mesh.position.copyFrom(this.p);
                         if (mesh.rotationQuaternion == null) {
                             if (this.rE != null) {
-                                mesh.rotation = this.rE.clone();
+                                mesh.rotation.copyFrom(this.rE);
                             }
                             else {
-                                mesh.rotation = this.r.toEulerAngles();
+                                mesh.rotation.copyFrom(this.r.toEulerAngles());
                             }
                         }
                         else {
                             if (this.r != null) {
-                                mesh.rotationQuaternion = this.r.clone();
+                                mesh.rotationQuaternion.copyFrom(this.r);
                             }
                             else {
-                                mesh.rotationQuaternion = this.rE.toQuaternion();
+                                mesh.rotationQuaternion.copyFrom(this.rE.toQuaternion());
                             }
                         }
-                        mesh.scaling = this.s.clone();
+                        mesh.scaling.copyFrom(this.s);
                     };
                     return Act;
                 }());
