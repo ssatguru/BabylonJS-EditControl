@@ -422,7 +422,9 @@ var org;
                             snapit = false;
                         }
                         if (local) {
-                            this.mesh.locallyTranslate(trans);
+                            this.mesh.translate(Axis.X, trans.x, Space.LOCAL);
+                            this.mesh.translate(Axis.Y, trans.y, Space.LOCAL);
+                            this.mesh.translate(Axis.Z, trans.z, Space.LOCAL);
                         }
                         else {
                             this.mesh.position.addInPlace(trans);
