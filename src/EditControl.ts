@@ -404,7 +404,11 @@ namespace org.ssatguru.babylonjs.component {
             }
 
             if (local) {
-                this.mesh.locallyTranslate(trans);
+                //locallyTranslate moves the mesh wrt the absolute location not pivotlocation :(
+                //this.mesh.locallyTranslate(trans);
+                this.mesh.translate(Axis.X, trans.x, Space.LOCAL);
+                this.mesh.translate(Axis.Y, trans.y, Space.LOCAL);
+                this.mesh.translate(Axis.Z, trans.z, Space.LOCAL);
             } else {
                 this.mesh.position.addInPlace(trans);
             }
@@ -1230,8 +1234,8 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 4, this.localY);
             Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 8, this.localZ);
         }
-
-
+        
+        
         public setLocal(l: boolean) {
             if (this.local == l) return;
             this.local = l;
