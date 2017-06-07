@@ -1,5 +1,0 @@
-bugs:
-05/14/2017
-1) go into rotation
-2) hover over a circle away from the axis, to select that circle
-30 switch to translation - just the arrow at the end remains white
