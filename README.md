@@ -169,6 +169,15 @@ eulerian : true/false, optional, default false, true indicates that rotation of 
 editControl.detach();
 ```
 
+## Build
+If not already installed, install node js and typescript.  
+Switch to the project folder.  
+Run "npm install", once, to install all the dependencies (these, for now, are babylonjs and uglify).  
+To build anytime  
+Run "npm compile" - this will compile the typescript file and store the javascript file in the "dist" folder.  
+Run "npm min" - this will minify the javascript file and store the minified version in the "dist" folder.  
+Run "npm build" - this will both compile and minify. 
+Use the "test.html" to test your changes.  
 ## Note:  
 The original version was written in Java and then transpiled to TypeScript/JavaScript using JSweet.  
 It was originally written in Java, as at that time I wasn't very comfortable with the TypeScript language and its ecosystem.  
