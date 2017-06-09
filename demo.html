@@ -183,6 +183,7 @@
                 box = BABYLON.Mesh.CreateBox("box", 2, scene);
 
                 box.position = new BABYLON.Vector3(0, 1, 0);
+                box.rotationQuaternion = BABYLON.Quaternion.Identity();
 
                 var ground = BABYLON.Mesh
                         .CreateGround("ground1", 20, 20, 10, scene);

@@ -182,7 +182,8 @@
                 light.intensity = .5;
 
                 box = BABYLON.Mesh.CreateBox("box", 2, scene);
-
+                
+                box.rotationQuaternion = BABYLON.Quaternion.Identity();
                 box.position = new BABYLON.Vector3(0, 1, 0);
 
                 var ground = BABYLON.Mesh
