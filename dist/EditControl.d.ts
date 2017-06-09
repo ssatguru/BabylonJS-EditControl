@@ -29,9 +29,14 @@ declare namespace org.ssatguru.babylonjs.component {
         private pointerup;
         private pointermove;
         private visibility;
-        constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number);
+        constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean);
+        distFromCamera: number;
+        toParent: Vector3;
+        cameraNormal: Vector3;
+        private setAxesScale();
+        private setAxesRotation();
         private renderLoopProcess();
-        switchTo(mesh: Mesh): void;
+        switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;
         undo(): void;
         redo(): void;
@@ -73,6 +78,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private scaleWithSnap(mesh, p);
         eulerian: boolean;
         snapRA: number;
+        cN: Vector3;
         private doRotation(mesh, axis, newPos);
         private getPosOnPickPlane();
         private hideBaxis();
@@ -163,10 +169,6 @@ declare namespace org.ssatguru.babylonjs.component {
         setTransSnapValue(t: number): void;
         setRotSnapValue(r: number): void;
         setScaleSnapValue(r: number): void;
-        distFromCamera: number;
-        toParent: Vector3;
-        cameraNormal: Vector3;
-        private setAxesScale();
         static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number;
         private createMaterials(scene);
         private disposeMaterials();
@@ -186,7 +188,7 @@ declare namespace org.ssatguru.babylonjs.component {
     }
     class Act {
         private p;
-        private r;
+        private rQ;
         private rE;
         private s;
         constructor(mesh: AbstractMesh);

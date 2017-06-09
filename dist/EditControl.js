@@ -16,7 +16,7 @@ var org;
                 var StandardMaterial = BABYLON.StandardMaterial;
                 var Vector3 = BABYLON.Vector3;
                 var EditControl = (function () {
-                    function EditControl(mesh, camera, canvas, scale) {
+                    function EditControl(mesh, camera, canvas, scale, eulerian) {
                         var _this = this;
                         this.local = true;
                         this.snapT = false;
@@ -26,6 +26,9 @@ var org;
                         this.axesLen = 0.4;
                         this.axesScale = 1;
                         this.visibility = 0.7;
+                        this.distFromCamera = 2;
+                        this.toParent = new Vector3(0, 0, 0);
+                        this.cameraNormal = new Vector3(0, 0, 0);
                         this.pDown = false;
                         this.pointerIsOver = false;
                         this.editing = false;
@@ -44,25 +47,28 @@ var org;
                         this.scale = new Vector3(0, 0, 0);
                         this.eulerian = false;
                         this.snapRA = 0;
+                        this.cN = new Vector3(0, 0, 0);
                         this.transEnabled = false;
                         this.rotEnabled = false;
                         this.scaleEnabled = false;
                         this.localX = new Vector3(0, 0, 0);
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
-                        this.distFromCamera = 2;
-                        this.toParent = new Vector3(0, 0, 0);
-                        this.cameraNormal = new Vector3(0, 0, 0);
                         this.mesh = mesh;
                         this.canvas = canvas;
                         this.axesScale = scale;
+                        if (eulerian !== null) {
+                            this.eulerian = eulerian;
+                        }
+                        else {
+                            this.eulerian = false;
+                        }
                         this.scene = mesh.getScene();
                         this.mainCamera = camera;
                         this.actHist = new ActHist(mesh, 10);
                         mesh.computeWorldMatrix(true);
                         this.theParent = new Mesh("EditControl", this.scene);
-                        this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
-                        this.theParent.rotationQuaternion = mesh.rotationQuaternion;
+                        this.theParent.rotationQuaternion = Quaternion.Identity();
                         this.theParent.visibility = 0;
                         this.theParent.isPickable = false;
                         this.createMaterials(this.scene);
@@ -80,15 +86,37 @@ var org;
                         this.renderer = function () { return _this.renderLoopProcess(); };
                         this.scene.registerBeforeRender(this.renderer);
                     }
+                    EditControl.prototype.setAxesScale = function () {
+                        this.theParent.position.subtractToRef(this.mainCamera.position, this.toParent);
+                        Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
+                        var parentOnNormal = Vector3.Dot(this.toParent, this.cameraNormal) / this.cameraNormal.length();
+                        var s = parentOnNormal / this.distFromCamera;
+                        Vector3.FromFloatsToRef(s, s, s, this.theParent.scaling);
+                        Vector3.FromFloatsToRef(s, s, s, this.pALL.scaling);
+                    };
+                    EditControl.prototype.setAxesRotation = function () {
+                        if (this.local) {
+                            if (this.eulerian) {
+                                var rot = this.mesh.rotation;
+                                this.theParent.rotationQuaternion.copyFrom(BABYLON.Quaternion.RotationYawPitchRoll(rot.y, rot.x, rot.z));
+                            }
+                            else {
+                                this.theParent.rotationQuaternion = this.mesh.rotationQuaternion;
+                            }
+                        }
+                    };
                     EditControl.prototype.renderLoopProcess = function () {
                         this.setAxesScale();
-                        this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
+                        this.setAxesRotation();
+                        this.theParent.position = this.mesh.getAbsolutePivotPoint();
                         this.onPointerOver();
                     };
-                    EditControl.prototype.switchTo = function (mesh) {
+                    EditControl.prototype.switchTo = function (mesh, eulerian) {
                         mesh.computeWorldMatrix(true);
                         this.mesh = mesh;
-                        this.theParent.rotationQuaternion = mesh.rotationQuaternion;
+                        if (eulerian != null) {
+                            this.eulerian = eulerian;
+                        }
                         this.setLocalAxes(mesh);
                         this.actHist = new ActHist(mesh, 10);
                     };
@@ -488,7 +516,8 @@ var org;
                         mesh.scaling.addInPlace(p);
                     };
                     EditControl.prototype.doRotation = function (mesh, axis, newPos) {
-                        var cN = Vector3.TransformNormal(Axis.Z, this.mainCamera.getWorldMatrix());
+                        var cN = this.cN;
+                        Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(), cN);
                         var angle = EditControl.getAngle(this.prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
                         if (axis == this.rX) {
                             if (this.snapR) {
@@ -1060,10 +1089,9 @@ var org;
                         if (this.local == l)
                             return;
                         this.local = l;
-                        if (this.local)
-                            this.theParent.rotationQuaternion = this.mesh.rotationQuaternion;
-                        else
+                        if (!l) {
                             this.theParent.rotationQuaternion = Quaternion.Identity();
+                        }
                     };
                     EditControl.prototype.isLocal = function () {
                         return this.local;
@@ -1086,14 +1114,6 @@ var org;
                     };
                     EditControl.prototype.setScaleSnapValue = function (r) {
                         this.scaleSnap = r;
-                    };
-                    EditControl.prototype.setAxesScale = function () {
-                        this.theParent.position.subtractToRef(this.mainCamera.position, this.toParent);
-                        Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
-                        var parentOnNormal = Vector3.Dot(this.toParent, this.cameraNormal) / this.cameraNormal.length();
-                        var s = parentOnNormal / this.distFromCamera;
-                        Vector3.FromFloatsToRef(s, s, s, this.theParent.scaling);
-                        Vector3.FromFloatsToRef(s, s, s, this.pALL.scaling);
                     };
                     EditControl.getAngle = function (p1, p2, p, cN) {
                         var v1 = p1.subtract(p);
@@ -1138,11 +1158,6 @@ var org;
                         this.current = -1;
                         this.mesh = mesh;
                         this.lastMax = capacity - 1;
-                        if ((mesh.rotationQuaternion == null)) {
-                            if ((mesh.rotation != null)) {
-                                mesh.rotationQuaternion = Quaternion.RotationYawPitchRoll(mesh.rotation.y, mesh.rotation.x, mesh.rotation.z);
-                            }
-                        }
                         this.add();
                     }
                     ActHist.prototype.setCapacity = function (c) {
@@ -1191,11 +1206,11 @@ var org;
                     function Act(mesh) {
                         this.p = mesh.position.clone();
                         if (mesh.rotationQuaternion == null) {
-                            this.r = null;
+                            this.rQ = null;
                             this.rE = mesh.rotation.clone();
                         }
                         else {
-                            this.r = mesh.rotationQuaternion.clone();
+                            this.rQ = mesh.rotationQuaternion.clone();
                             this.rE = null;
                         }
                         this.s = mesh.scaling.clone();
@@ -1207,15 +1222,15 @@ var org;
                                 mesh.rotation.copyFrom(this.rE);
                             }
                             else {
-                                mesh.rotation.copyFrom(this.r.toEulerAngles());
+                                mesh.rotation.copyFrom(this.rQ.toEulerAngles());
                             }
                         }
                         else {
-                            if (this.r != null) {
-                                mesh.rotationQuaternion.copyFrom(this.r);
+                            if (this.rQ != null) {
+                                mesh.rotationQuaternion.copyFrom(this.rQ);
                             }
                             else {
-                                mesh.rotationQuaternion.copyFrom(this.rE.toQuaternion());
+                                mesh.rotationQuaternion.copyFrom(Quaternion.RotationYawPitchRoll(this.rE.y, this.rE.x, this.rE.z));
                             }
                         }
                         mesh.scaling.copyFrom(this.s);
