@@ -161,7 +161,7 @@ This quickly removes control from one mesh and attaches it to another mesh.
 
 The translation, rotation, scaling mode is maintained.  
 
-mesh : the mesh to which the control should switch to
+mesh : the mesh to which the control should switch to  
 eulerian : true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
 14) To detach from the mesh and clean up resources.
