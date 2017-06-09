@@ -45,6 +45,7 @@ namespace org.ssatguru.babylonjs.component {
         private visibility: number = 0.7;
 
         public constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean) {
+            console.log("starting");
             this.mesh = mesh;
             this.canvas = canvas;
             this.axesScale = scale;
@@ -53,7 +54,7 @@ namespace org.ssatguru.babylonjs.component {
             } else {
                 this.eulerian = false;
             }
-            
+            this.checkQuaternion();
             this.scene = mesh.getScene();
             this.mainCamera = camera;
             this.actHist = new ActHist(mesh, 10);
@@ -82,6 +83,16 @@ namespace org.ssatguru.babylonjs.component {
             this.setLocalAxes(mesh);
             this.renderer = () => { return this.renderLoopProcess() };
             this.scene.registerBeforeRender(this.renderer);
+        }
+        
+        //make sure that if eulerian is set to false then mesh's rotation is in quaternion 
+        //throw error and exit if not so.
+        private checkQuaternion(){
+            if (!this.eulerian){
+                if ((this.mesh.rotationQuaternion == null) || (this.mesh.rotationQuaternion == undefined)){
+                    throw "Error: Eulerian is set to false but the mesh's rotationQuaternion is not set.";
+                }
+            }
         }
         
         //how far away from camera should the axis appear to be
@@ -125,6 +136,7 @@ namespace org.ssatguru.babylonjs.component {
             if (eulerian !=null){
                 this.eulerian = eulerian;
             }
+            this.checkQuaternion();
             this.setLocalAxes(mesh);
             this.actHist = new ActHist(mesh, 10);
         }

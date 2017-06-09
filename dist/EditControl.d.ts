@@ -30,6 +30,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private pointermove;
         private visibility;
         constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean);
+        private checkQuaternion();
         distFromCamera: number;
         toParent: Vector3;
         cameraNormal: Vector3;

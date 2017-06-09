@@ -54,6 +54,7 @@ var org;
                         this.localX = new Vector3(0, 0, 0);
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
+                        console.log("starting");
                         this.mesh = mesh;
                         this.canvas = canvas;
                         this.axesScale = scale;
@@ -63,6 +64,7 @@ var org;
                         else {
                             this.eulerian = false;
                         }
+                        this.checkQuaternion();
                         this.scene = mesh.getScene();
                         this.mainCamera = camera;
                         this.actHist = new ActHist(mesh, 10);
@@ -86,6 +88,13 @@ var org;
                         this.renderer = function () { return _this.renderLoopProcess(); };
                         this.scene.registerBeforeRender(this.renderer);
                     }
+                    EditControl.prototype.checkQuaternion = function () {
+                        if (!this.eulerian) {
+                            if ((this.mesh.rotationQuaternion == null) || (this.mesh.rotationQuaternion == undefined)) {
+                                throw "Error: Eulerian is set to false but the mesh's rotationQuaternion is not set.";
+                            }
+                        }
+                    };
                     EditControl.prototype.setAxesScale = function () {
                         this.theParent.position.subtractToRef(this.mainCamera.position, this.toParent);
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
@@ -117,6 +126,7 @@ var org;
                         if (eulerian != null) {
                             this.eulerian = eulerian;
                         }
+                        this.checkQuaternion();
                         this.setLocalAxes(mesh);
                         this.actHist = new ActHist(mesh, 10);
                     };
