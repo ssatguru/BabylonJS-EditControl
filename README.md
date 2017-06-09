@@ -54,19 +54,20 @@ see demo.html for a working example
 ```
 // JavaScript
 var EditControl = org.ssatguru.babylonjs.component.EditControl;
-var editControl = new EditControl(mesh,camera, canvas, 0.75);
+var editControl = new EditControl(mesh,camera, canvas, 0.75, true);
 ```
 ```
 // TypeScript
 import EditControl = org.ssatguru.babylonjs.component.EditControl;
-let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75);
+let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75, true);
 ```
 This positions the edit control at the mesh pivot position and displays  x,y,z axis.  
-Takes three parms
+Takes five parms
 * mesh - the mesh to control using the editcontrol
 * camera - active camera
 * canvas - the mesh canvas 
 * scale - how small or large the editcontrol should appear  
+* eulerian - true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
 2) To enable Translation, Rotation or Scaling controls
 ```
@@ -125,7 +126,7 @@ editControl.setTransSnapValue(number n in meters);
 editControl.setRotSnapValue(number n in radians);
 ```
 ```
-editControl.setScaleSnapValue(number n in radians);
+editControl.setScaleSnapValue(number n a factor by which scale should increase);
 ```
 9) To undo or redo
 ```
@@ -154,11 +155,14 @@ returns true if the pointer is over the edit control
 
 13) To switch edit control to another mesh
 ```
-editControl.switchTo(Mesh mesh);
+editControl.switchTo(Mesh mesh, optional boolean eulerian );
 ```
 This quickly removes control from one mesh and attaches it to another mesh.
 
-The translation, rotation, scaling mode is maintained.
+The translation, rotation, scaling mode is maintained.  
+
+mesh : the mesh to which the control should switch to
+eulerian : true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
 14) To detach from the mesh and clean up resources.
 ```
