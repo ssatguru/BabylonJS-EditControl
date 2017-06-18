@@ -153,18 +153,30 @@ editControl.isPointeOver();
 ```
 returns true if the pointer is over the edit control
 
-13) To switch edit control to another mesh
+13) To be called back whenever the user takes an action
 ```
-editControl.switchTo(Mesh mesh, optional boolean eulerian );
+editControl.addActionListener(function(number actionType));
+```
+This takes a function as a parameter.  
+The function, passed as parameter, would be called every time the user translates, rotates or scales the mesh.  
+The function will be passed a number which would indicate the action taken by the user.  
+The passed number could have one of the following value  
+0 - ActionType.TRANS, Translation  
+1 - ActioneType.ROT, Rotation 
+2 - ActioneType.SCALE, Scaling  
+
+14) To switch edit control to another mesh
+```
+editControl.switchTo(Mesh mesh, optional boolean isEuler );
 ```
 This quickly removes control from one mesh and attaches it to another mesh.
 
 The translation, rotation, scaling mode is maintained.  
 
 mesh : the mesh to which the control should switch to  
-eulerian : true/false, optional, default false, true indicates that rotation of the mesh is in euler
+isEuler : true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
-14) To detach from the mesh and clean up resources.
+15) To detach from the mesh and clean up resources.
 ```
 editControl.detach();
 ```

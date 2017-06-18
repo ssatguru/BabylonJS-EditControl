@@ -43,6 +43,9 @@ declare namespace org.ssatguru.babylonjs.component {
         redo(): void;
         detach(): void;
         disposeAll(): void;
+        private actionListener;
+        addActionListener(actionListener: (actionType: number) => void): void;
+        removeActionListener(): void;
         private pDown;
         private axisPicked;
         private onPointerDown(evt);
@@ -57,6 +60,8 @@ declare namespace org.ssatguru.babylonjs.component {
         private restoreColor(mesh);
         editing: boolean;
         private onPointerUp(evt);
+        private getActionType();
+        private callActionListener(at);
         private prevPos;
         private snapRX;
         private snapRY;
@@ -183,16 +188,18 @@ declare namespace org.ssatguru.babylonjs.component {
         private current;
         constructor(mesh: AbstractMesh, capacity: number);
         setCapacity(c: number): void;
-        add(): void;
-        undo(): void;
-        redo(): void;
+        add(at?: number): void;
+        undo(): number;
+        redo(): number;
     }
     class Act {
         private p;
         private rQ;
         private rE;
         private s;
-        constructor(mesh: AbstractMesh);
+        private at;
+        constructor(mesh: AbstractMesh, at: number);
+        getActionType(): number;
         perform(mesh: AbstractMesh): void;
     }
 }

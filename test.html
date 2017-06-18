@@ -157,6 +157,16 @@
                 editControl.returnEuler(euler);
                 console.log("enable euler : " + euler);
             };
+            
+            actionListener = function(actionType){
+                if (actionType === 0){
+                    console.log("translation was done");
+                }else if (actionType === 1){
+                    console.log("rotation was done");
+                }else if (actionType === 2){
+                    console.log("scaling was done");
+                }
+            }
 
             /*
              * The scene
@@ -204,6 +214,8 @@
                 editControl.setTransSnapValue(0.5);
                 //set scale snap value in scale ratio
                 editControl.setScaleSnapValue(0.25);
+                
+                editControl.addActionListener(actionListener)
 
                 return scene;
             };

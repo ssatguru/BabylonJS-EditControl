@@ -17,6 +17,12 @@ namespace org.ssatguru.babylonjs.component {
     import StandardMaterial = BABYLON.StandardMaterial;
     import Vector3 = BABYLON.Vector3;
 
+    enum ActionType {
+        TRANS = 0,
+        ROT = 1,
+        SCALE = 2
+    }
+
     export class EditControl {
         private mesh: Mesh;
 
@@ -45,7 +51,6 @@ namespace org.ssatguru.babylonjs.component {
         private visibility: number = 0.7;
 
         public constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean) {
-            console.log("starting");
             this.mesh = mesh;
             this.canvas = canvas;
             this.axesScale = scale;
@@ -71,7 +76,7 @@ namespace org.ssatguru.babylonjs.component {
             this.guideCtl.parent = this.theParent;
             this.createPickPlanes();
             //this.pALL.parent = this.theParent;
-            
+
             this.pickPlanes.parent = this.theParent;
             this.pointerdown = (evt) => { return this.onPointerDown(evt) };
             this.pointerup = (evt) => { return this.onPointerUp(evt) };
@@ -79,22 +84,22 @@ namespace org.ssatguru.babylonjs.component {
             canvas.addEventListener("pointerdown", this.pointerdown, false);
             canvas.addEventListener("pointerup", this.pointerup, false);
             canvas.addEventListener("pointermove", this.pointermove, false);
-          
+
             this.setLocalAxes(mesh);
             this.renderer = () => { return this.renderLoopProcess() };
             this.scene.registerBeforeRender(this.renderer);
         }
-        
+
         //make sure that if eulerian is set to false then mesh's rotation is in quaternion 
         //throw error and exit if not so.
-        private checkQuaternion(){
-            if (!this.eulerian){
-                if ((this.mesh.rotationQuaternion == null) || (this.mesh.rotationQuaternion == undefined)){
+        private checkQuaternion() {
+            if (!this.eulerian) {
+                if ((this.mesh.rotationQuaternion == null) || (this.mesh.rotationQuaternion == undefined)) {
                     throw "Error: Eulerian is set to false but the mesh's rotationQuaternion is not set.";
                 }
             }
         }
-        
+
         //how far away from camera should the axis appear to be
         distFromCamera: number = 2;
         //vector from camera to axes parent
@@ -110,7 +115,7 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatsToRef(s, s, s, this.pALL.scaling);
 
         }
-        
+
         private setAxesRotation() {
             if (this.local) {
                 if (this.eulerian) {
@@ -130,10 +135,10 @@ namespace org.ssatguru.babylonjs.component {
             this.onPointerOver();
         }
 
-        public switchTo(mesh: Mesh,eulerian?:boolean) {
+        public switchTo(mesh: Mesh, eulerian?: boolean) {
             mesh.computeWorldMatrix(true);
             this.mesh = mesh;
-            if (eulerian !=null){
+            if (eulerian != null) {
                 this.eulerian = eulerian;
             }
             this.checkQuaternion();
@@ -146,15 +151,17 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public undo() {
-            this.actHist.undo();
+            let at:number = this.actHist.undo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
+            this.callActionListener(at);
         }
 
         public redo() {
-            this.actHist.redo();
+            let at:number = this.actHist.redo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
+            this.callActionListener(at);
         }
 
         public detach() {
@@ -169,6 +176,14 @@ namespace org.ssatguru.babylonjs.component {
             this.theParent.dispose();
             this.disposeMaterials();
             this.actHist = null;
+        }
+
+        private actionListener: (actionType: number) => void = null;
+        public addActionListener(actionListener: (actionType: number) => void) {
+            this.actionListener = actionListener;
+        }
+        public removeActionListener() {
+            this.actionListener = null;
         }
 
         private pDown: boolean = false;
@@ -331,8 +346,30 @@ namespace org.ssatguru.babylonjs.component {
                 this.hideBaxis();
                 this.restoreColor(this.prevOverMesh);
                 this.prevOverMesh = null;
-                this.actHist.add();
+                
+                let at: number = this.getActionType();
+                this.actHist.add(at);
+                this.callActionListener(at);
             }
+        }
+
+        private getActionType(): number {
+            let at: number = null;
+            if (this.transEnabled) {
+                at = ActionType.TRANS;
+            } else if ((this.rotEnabled)) {
+                at = ActionType.ROT;
+            } else if ((this.scaleEnabled)) {
+                at = ActionType.SCALE;
+            }
+            return at;
+        }
+
+        private callActionListener(at: number) {
+            //call actionListener if registered
+            if (this.actionListener != null) {
+                    window.setTimeout(this.actionListener, 0, at);
+                }
         }
 
         private prevPos: Vector3;
@@ -521,10 +558,10 @@ namespace org.ssatguru.babylonjs.component {
         eulerian: boolean = false;
         snapRA: number = 0;
         //vector normal to camera
-        cN:Vector3 = new Vector3(0,0,0);
+        cN: Vector3 = new Vector3(0, 0, 0);
         private doRotation(mesh: Mesh, axis: Mesh, newPos: Vector3) {
-            let cN:Vector3 = this.cN;
-            Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(),cN);
+            let cN: Vector3 = this.cN;
+            Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(), cN);
             //var angle: number = EditControl.getAngle(this.prevPos, newPos, mesh.absolutePosition, cN);
             var angle: number = EditControl.getAngle(this.prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
 
@@ -1292,11 +1329,11 @@ namespace org.ssatguru.babylonjs.component {
         public setLocal(l: boolean) {
             if (this.local == l) return;
             this.local = l;
-            if (!l){
+            if (!l) {
                 this.theParent.rotationQuaternion = Quaternion.Identity();
             }
-//            if (this.local) this.theParent.rotationQuaternion = this.mesh.rotationQuaternion;
-//            else this.theParent.rotationQuaternion = Quaternion.Identity();
+            //            if (this.local) this.theParent.rotationQuaternion = this.mesh.rotationQuaternion;
+            //            else this.theParent.rotationQuaternion = Quaternion.Identity();
         }
 
         public isLocal(): boolean {
@@ -1330,7 +1367,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
 
-        
+
 
         public static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number {
             var v1: Vector3 = p1.subtract(p);
@@ -1384,11 +1421,11 @@ namespace org.ssatguru.babylonjs.component {
         public constructor(mesh: AbstractMesh, capacity: number) {
             this.mesh = mesh;
             this.lastMax = capacity - 1;
-//            if ((mesh.rotationQuaternion == null)) {
-//                if ((mesh.rotation != null)) {
-//                    mesh.rotationQuaternion = Quaternion.RotationYawPitchRoll(mesh.rotation.y, mesh.rotation.x, mesh.rotation.z);
-//                }
-//            }
+            //            if ((mesh.rotationQuaternion == null)) {
+            //                if ((mesh.rotation != null)) {
+            //                    mesh.rotationQuaternion = Quaternion.RotationYawPitchRoll(mesh.rotation.y, mesh.rotation.x, mesh.rotation.z);
+            //                }
+            //            }
             this.add();
         }
 
@@ -1404,8 +1441,9 @@ namespace org.ssatguru.babylonjs.component {
             this.add();
         }
 
-        public add() {
-            var act: Act = new Act(this.mesh);
+        public add(at?: number) {
+            if (at === undefined) at = null;
+            var act: Act = new Act(this.mesh, at);
             if ((this.current < this.last)) {
                 this.acts.splice(this.current + 1);
                 this.last = this.current;
@@ -1420,10 +1458,12 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        public undo() {
+        public undo():number {
             if ((this.current > 0)) {
+                let at: number = (<Act>this.acts[this.current]).getActionType()
                 this.current--;
                 (<Act>this.acts[this.current]).perform(this.mesh);
+                return at;
             }
         }
 
@@ -1431,6 +1471,7 @@ namespace org.ssatguru.babylonjs.component {
             if ((this.current < this.last)) {
                 this.current++;
                 (<Act>this.acts[this.current]).perform(this.mesh);
+                return (<Act>this.acts[this.current]).getActionType()
             }
         }
     }
@@ -1443,7 +1484,10 @@ namespace org.ssatguru.babylonjs.component {
 
         private s: Vector3;
 
-        public constructor(mesh: AbstractMesh) {
+        //actiontype
+        private at: number;
+
+        public constructor(mesh: AbstractMesh, at: number) {
             this.p = mesh.position.clone();
             //if (mesh.rotationQuaternion == null) {
             if (mesh.rotationQuaternion == null) {
@@ -1454,9 +1498,14 @@ namespace org.ssatguru.babylonjs.component {
                 this.rE = null;
             }
             this.s = mesh.scaling.clone();
+            this.at = at;
+        }
+        
+        public getActionType():number{
+            return this.at;
         }
 
-        public perform(mesh: AbstractMesh) {
+        public perform(mesh: AbstractMesh){
             mesh.position.copyFrom(this.p)
             //check if we are doing euler or quaternion now
             //also check what were we doing when the rotation value

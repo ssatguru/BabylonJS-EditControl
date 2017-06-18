@@ -15,6 +15,12 @@ var org;
                 var Space = BABYLON.Space;
                 var StandardMaterial = BABYLON.StandardMaterial;
                 var Vector3 = BABYLON.Vector3;
+                var ActionType;
+                (function (ActionType) {
+                    ActionType[ActionType["TRANS"] = 0] = "TRANS";
+                    ActionType[ActionType["ROT"] = 1] = "ROT";
+                    ActionType[ActionType["SCALE"] = 2] = "SCALE";
+                })(ActionType || (ActionType = {}));
                 var EditControl = (function () {
                     function EditControl(mesh, camera, canvas, scale, eulerian) {
                         var _this = this;
@@ -29,6 +35,7 @@ var org;
                         this.distFromCamera = 2;
                         this.toParent = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
+                        this.actionListener = null;
                         this.pDown = false;
                         this.pointerIsOver = false;
                         this.editing = false;
@@ -54,7 +61,6 @@ var org;
                         this.localX = new Vector3(0, 0, 0);
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
-                        console.log("starting");
                         this.mesh = mesh;
                         this.canvas = canvas;
                         this.axesScale = scale;
@@ -134,14 +140,16 @@ var org;
                         this.actHist.setCapacity(c);
                     };
                     EditControl.prototype.undo = function () {
-                        this.actHist.undo();
+                        var at = this.actHist.undo();
                         this.mesh.computeWorldMatrix(true);
                         this.setLocalAxes(this.mesh);
+                        this.callActionListener(at);
                     };
                     EditControl.prototype.redo = function () {
-                        this.actHist.redo();
+                        var at = this.actHist.redo();
                         this.mesh.computeWorldMatrix(true);
                         this.setLocalAxes(this.mesh);
+                        this.callActionListener(at);
                     };
                     EditControl.prototype.detach = function () {
                         this.canvas.removeEventListener("pointerdown", this.pointerdown, false);
@@ -154,6 +162,12 @@ var org;
                         this.theParent.dispose();
                         this.disposeMaterials();
                         this.actHist = null;
+                    };
+                    EditControl.prototype.addActionListener = function (actionListener) {
+                        this.actionListener = actionListener;
+                    };
+                    EditControl.prototype.removeActionListener = function () {
+                        this.actionListener = null;
                     };
                     EditControl.prototype.onPointerDown = function (evt) {
                         var _this = this;
@@ -320,7 +334,27 @@ var org;
                             this.hideBaxis();
                             this.restoreColor(this.prevOverMesh);
                             this.prevOverMesh = null;
-                            this.actHist.add();
+                            var at = this.getActionType();
+                            this.actHist.add(at);
+                            this.callActionListener(at);
+                        }
+                    };
+                    EditControl.prototype.getActionType = function () {
+                        var at = null;
+                        if (this.transEnabled) {
+                            at = ActionType.TRANS;
+                        }
+                        else if ((this.rotEnabled)) {
+                            at = ActionType.ROT;
+                        }
+                        else if ((this.scaleEnabled)) {
+                            at = ActionType.SCALE;
+                        }
+                        return at;
+                    };
+                    EditControl.prototype.callActionListener = function (at) {
+                        if (this.actionListener != null) {
+                            window.setTimeout(this.actionListener, 0, at);
                         }
                     };
                     EditControl.prototype.onPointerMove = function (evt) {
@@ -1181,8 +1215,10 @@ var org;
                         this.acts = new Array();
                         this.add();
                     };
-                    ActHist.prototype.add = function () {
-                        var act = new Act(this.mesh);
+                    ActHist.prototype.add = function (at) {
+                        if (at === undefined)
+                            at = null;
+                        var act = new Act(this.mesh, at);
                         if ((this.current < this.last)) {
                             this.acts.splice(this.current + 1);
                             this.last = this.current;
@@ -1199,21 +1235,24 @@ var org;
                     };
                     ActHist.prototype.undo = function () {
                         if ((this.current > 0)) {
+                            var at = this.acts[this.current].getActionType();
                             this.current--;
                             this.acts[this.current].perform(this.mesh);
+                            return at;
                         }
                     };
                     ActHist.prototype.redo = function () {
                         if ((this.current < this.last)) {
                             this.current++;
                             this.acts[this.current].perform(this.mesh);
+                            return this.acts[this.current].getActionType();
                         }
                     };
                     return ActHist;
                 }());
                 component.ActHist = ActHist;
                 var Act = (function () {
-                    function Act(mesh) {
+                    function Act(mesh, at) {
                         this.p = mesh.position.clone();
                         if (mesh.rotationQuaternion == null) {
                             this.rQ = null;
@@ -1224,7 +1263,11 @@ var org;
                             this.rE = null;
                         }
                         this.s = mesh.scaling.clone();
+                        this.at = at;
                     }
+                    Act.prototype.getActionType = function () {
+                        return this.at;
+                    };
                     Act.prototype.perform = function (mesh) {
                         mesh.position.copyFrom(this.p);
                         if (mesh.rotationQuaternion == null) {
