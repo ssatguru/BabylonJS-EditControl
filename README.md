@@ -159,10 +159,10 @@ editControl.addActionListener(function(number actionType));
 ```
 This takes a function as a parameter.  
 The function, passed as parameter, would be called every time the user translates, rotates or scales the mesh.  
-The function will be passed a number which would indicate the action taken by the user.  
-The passed number could have one of the following value  
+The function itself would be passed a parameter which would indicate the action taken by the user.  
+The passed parameter would be a number which would have one of the following values  
 0 - ActionType.TRANS, Translation  
-1 - ActioneType.ROT, Rotation 
+1 - ActioneType.ROT, Rotation  
 2 - ActioneType.SCALE, Scaling  
 
 14) To switch edit control to another mesh
