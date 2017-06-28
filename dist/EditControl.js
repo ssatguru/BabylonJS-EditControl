@@ -156,6 +156,7 @@ var org;
                         this.canvas.removeEventListener("pointerup", this.pointerup, false);
                         this.canvas.removeEventListener("pointermove", this.pointermove, false);
                         this.scene.unregisterBeforeRender(this.renderer);
+                        this.removeActionListener();
                         this.disposeAll();
                     };
                     EditControl.prototype.disposeAll = function () {

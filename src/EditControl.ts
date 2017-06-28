@@ -169,6 +169,7 @@ namespace org.ssatguru.babylonjs.component {
             this.canvas.removeEventListener("pointerup", this.pointerup, false);
             this.canvas.removeEventListener("pointermove", this.pointermove, false);
             this.scene.unregisterBeforeRender(this.renderer);
+            this.removeActionListener();
             this.disposeAll();
         }
 
