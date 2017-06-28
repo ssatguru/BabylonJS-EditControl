@@ -151,14 +151,14 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public undo() {
-            let at:number = this.actHist.undo();
+            let at: number = this.actHist.undo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
             this.callActionListener(at);
         }
 
         public redo() {
-            let at:number = this.actHist.redo();
+            let at: number = this.actHist.redo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
             this.callActionListener(at);
@@ -273,12 +273,11 @@ namespace org.ssatguru.babylonjs.component {
                 return false;
             }, null, this.mainCamera);
             if (pickResult.hit) {
+                //if we are still over the same axis mesh then don't do anything
                 if (<Mesh>pickResult.pickedMesh != this.prevOverMesh) {
                     this.pointerIsOver = true;
-                    if (this.prevOverMesh != null) {
-                        this.prevOverMesh.visibility = 0;
-                        this.restoreColor(this.prevOverMesh);
-                    }
+                    //if we moved directly from one axis mesh to this then clean up the prev axis mesh
+                    this.clearPrevOverMesh();
                     this.prevOverMesh = <Mesh>pickResult.pickedMesh;
                     if (this.rotEnabled) {
                         this.savedCol = (<LinesMesh>this.prevOverMesh.getChildren()[0]).color;
@@ -307,6 +306,14 @@ namespace org.ssatguru.babylonjs.component {
                     this.restoreColor(this.prevOverMesh);
                     this.prevOverMesh = null;
                 }
+            }
+        }
+        
+        //clean up any axis we might have been howering over before
+        private clearPrevOverMesh() {
+            if (this.prevOverMesh != null) {
+                this.prevOverMesh.visibility = 0;
+                this.restoreColor(this.prevOverMesh);
             }
         }
 
@@ -346,7 +353,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.hideBaxis();
                 this.restoreColor(this.prevOverMesh);
                 this.prevOverMesh = null;
-                
+
                 let at: number = this.getActionType();
                 this.actHist.add(at);
                 this.callActionListener(at);
@@ -368,8 +375,8 @@ namespace org.ssatguru.babylonjs.component {
         private callActionListener(at: number) {
             //call actionListener if registered
             if (this.actionListener != null) {
-                    window.setTimeout(this.actionListener, 0, at);
-                }
+                window.setTimeout(this.actionListener, 0, at);
+            }
         }
 
         private prevPos: Vector3;
@@ -684,7 +691,8 @@ namespace org.ssatguru.babylonjs.component {
                 this.createTransAxes();
                 this.tCtl.parent = this.theParent;
             }
-            if ((!this.transEnabled)) {
+            this.clearPrevOverMesh();
+            if (!this.transEnabled) {
                 this.tEndX.visibility = this.visibility;
                 this.tEndY.visibility = this.visibility;
                 this.tEndZ.visibility = this.visibility;
@@ -699,7 +707,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public disableTranslation() {
-            if ((this.transEnabled)) {
+            if (this.transEnabled) {
                 this.tEndX.visibility = 0;
                 this.tEndY.visibility = 0;
                 this.tEndZ.visibility = 0;
@@ -722,11 +730,12 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public enableRotation() {
-            if ((this.rX == null)) {
+            if (this.rX == null) {
                 this.createRotAxes();
                 this.rCtl.parent = this.theParent;
             }
-            if ((!this.rotEnabled)) {
+            this.clearPrevOverMesh();
+            if (!this.rotEnabled) {
                 this.rEndX.visibility = this.visibility;
                 this.rEndY.visibility = this.visibility;
                 this.rEndZ.visibility = this.visibility;
@@ -738,7 +747,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public disableRotation() {
-            if ((this.rotEnabled)) {
+            if (this.rotEnabled) {
                 this.rEndX.visibility = 0;
                 this.rEndY.visibility = 0;
                 this.rEndZ.visibility = 0;
@@ -754,11 +763,12 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public enableScaling() {
-            if ((this.sX == null)) {
+            if (this.sX == null) {
                 this.createScaleAxes();
                 this.sCtl.parent = this.theParent;
             }
-            if ((!this.scaleEnabled)) {
+            this.clearPrevOverMesh();
+            if (!this.scaleEnabled) {
                 this.sEndX.visibility = this.visibility;
                 this.sEndY.visibility = this.visibility;
                 this.sEndZ.visibility = this.visibility;
@@ -773,7 +783,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public disableScaling() {
-            if ((this.scaleEnabled)) {
+            if (this.scaleEnabled) {
                 this.sEndX.visibility = 0;
                 this.sEndY.visibility = 0;
                 this.sEndZ.visibility = 0;
@@ -1458,7 +1468,7 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        public undo():number {
+        public undo(): number {
             if ((this.current > 0)) {
                 let at: number = (<Act>this.acts[this.current]).getActionType()
                 this.current--;
@@ -1500,12 +1510,12 @@ namespace org.ssatguru.babylonjs.component {
             this.s = mesh.scaling.clone();
             this.at = at;
         }
-        
-        public getActionType():number{
+
+        public getActionType(): number {
             return this.at;
         }
 
-        public perform(mesh: AbstractMesh){
+        public perform(mesh: AbstractMesh) {
             mesh.position.copyFrom(this.p)
             //check if we are doing euler or quaternion now
             //also check what were we doing when the rotation value

@@ -262,10 +262,7 @@ var org;
                         if (pickResult.hit) {
                             if (pickResult.pickedMesh != this.prevOverMesh) {
                                 this.pointerIsOver = true;
-                                if (this.prevOverMesh != null) {
-                                    this.prevOverMesh.visibility = 0;
-                                    this.restoreColor(this.prevOverMesh);
-                                }
+                                this.clearPrevOverMesh();
                                 this.prevOverMesh = pickResult.pickedMesh;
                                 if (this.rotEnabled) {
                                     this.savedCol = this.prevOverMesh.getChildren()[0].color;
@@ -299,6 +296,12 @@ var org;
                                 this.restoreColor(this.prevOverMesh);
                                 this.prevOverMesh = null;
                             }
+                        }
+                    };
+                    EditControl.prototype.clearPrevOverMesh = function () {
+                        if (this.prevOverMesh != null) {
+                            this.prevOverMesh.visibility = 0;
+                            this.restoreColor(this.prevOverMesh);
                         }
                     };
                     EditControl.prototype.restoreColor = function (mesh) {
@@ -675,7 +678,8 @@ var org;
                             this.createTransAxes();
                             this.tCtl.parent = this.theParent;
                         }
-                        if ((!this.transEnabled)) {
+                        this.clearPrevOverMesh();
+                        if (!this.transEnabled) {
                             this.tEndX.visibility = this.visibility;
                             this.tEndY.visibility = this.visibility;
                             this.tEndZ.visibility = this.visibility;
@@ -689,7 +693,7 @@ var org;
                         }
                     };
                     EditControl.prototype.disableTranslation = function () {
-                        if ((this.transEnabled)) {
+                        if (this.transEnabled) {
                             this.tEndX.visibility = 0;
                             this.tEndY.visibility = 0;
                             this.tEndZ.visibility = 0;
@@ -707,11 +711,12 @@ var org;
                         this.eulerian = euler;
                     };
                     EditControl.prototype.enableRotation = function () {
-                        if ((this.rX == null)) {
+                        if (this.rX == null) {
                             this.createRotAxes();
                             this.rCtl.parent = this.theParent;
                         }
-                        if ((!this.rotEnabled)) {
+                        this.clearPrevOverMesh();
+                        if (!this.rotEnabled) {
                             this.rEndX.visibility = this.visibility;
                             this.rEndY.visibility = this.visibility;
                             this.rEndZ.visibility = this.visibility;
@@ -722,7 +727,7 @@ var org;
                         }
                     };
                     EditControl.prototype.disableRotation = function () {
-                        if ((this.rotEnabled)) {
+                        if (this.rotEnabled) {
                             this.rEndX.visibility = 0;
                             this.rEndY.visibility = 0;
                             this.rEndZ.visibility = 0;
@@ -734,11 +739,12 @@ var org;
                         return this.scaleEnabled;
                     };
                     EditControl.prototype.enableScaling = function () {
-                        if ((this.sX == null)) {
+                        if (this.sX == null) {
                             this.createScaleAxes();
                             this.sCtl.parent = this.theParent;
                         }
-                        if ((!this.scaleEnabled)) {
+                        this.clearPrevOverMesh();
+                        if (!this.scaleEnabled) {
                             this.sEndX.visibility = this.visibility;
                             this.sEndY.visibility = this.visibility;
                             this.sEndZ.visibility = this.visibility;
@@ -752,7 +758,7 @@ var org;
                         }
                     };
                     EditControl.prototype.disableScaling = function () {
-                        if ((this.scaleEnabled)) {
+                        if (this.scaleEnabled) {
                             this.sEndX.visibility = 0;
                             this.sEndY.visibility = 0;
                             this.sEndZ.visibility = 0;

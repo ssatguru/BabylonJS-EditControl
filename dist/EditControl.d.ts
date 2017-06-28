@@ -57,6 +57,7 @@ declare namespace org.ssatguru.babylonjs.component {
         savedMat: Material;
         savedCol: Color3;
         private onPointerOver();
+        private clearPrevOverMesh();
         private restoreColor(mesh);
         editing: boolean;
         private onPointerUp(evt);
