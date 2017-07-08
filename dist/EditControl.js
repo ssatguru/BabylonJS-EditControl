@@ -511,17 +511,41 @@ var org;
                         this.scale.y = 0;
                         this.scale.z = 0;
                         var n = this.axisPicked.name;
-                        if ((n == "X") || (n == "XZ") || (n == "YX") || (n == "ALL")) {
+                        if ((n == "X") || (n == "XZ") || (n == "YX")) {
                             this.scale.x = Vector3.Dot(diff, this.localX) / this.localX.length();
                         }
-                        if ((n == "Y") || (n == "ZY") || (n == "YX") || (n == "ALL")) {
+                        if ((n == "Y") || (n == "ZY") || (n == "YX")) {
                             this.scale.y = Vector3.Dot(diff, this.localY) / this.localY.length();
                         }
-                        if ((n == "Z") || (n == "XZ") || (n == "ZY") || (n == "ALL")) {
+                        if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
                             this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
                         }
                         if (n == "ALL") {
-                            this.scale.copyFromFloats(this.scale.y, this.scale.y, this.scale.y);
+                            var s = Vector3.Dot(diff, this.mainCamera.upVector);
+                            this.scale.copyFromFloats(s, s, s);
+                        }
+                        else {
+                            if (n == "XZ") {
+                                if (Math.abs(this.scale.x) > Math.abs(this.scale.z)) {
+                                    this.scale.z = this.scale.x;
+                                }
+                                else
+                                    this.scale.x = this.scale.z;
+                            }
+                            else if (n == "ZY") {
+                                if (Math.abs(this.scale.z) > Math.abs(this.scale.y)) {
+                                    this.scale.y = this.scale.z;
+                                }
+                                else
+                                    this.scale.z = this.scale.y;
+                            }
+                            else if (n == "YX") {
+                                if (Math.abs(this.scale.y) > Math.abs(this.scale.x)) {
+                                    this.scale.x = this.scale.y;
+                                }
+                                else
+                                    this.scale.y = this.scale.x;
+                            }
                         }
                         this.scaleWithSnap(this.mesh, this.scale);
                     };
