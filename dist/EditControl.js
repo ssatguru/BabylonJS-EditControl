@@ -121,9 +121,9 @@ var org;
                         }
                     };
                     EditControl.prototype.renderLoopProcess = function () {
+                        this.theParent.position = this.mesh.getAbsolutePivotPoint();
                         this.setAxesScale();
                         this.setAxesRotation();
-                        this.theParent.position = this.mesh.getAbsolutePivotPoint();
                         this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh, eulerian) {

@@ -76,8 +76,8 @@ namespace org.ssatguru.babylonjs.component {
             this.guideCtl.parent = this.theParent;
             this.createPickPlanes();
             //this.pALL.parent = this.theParent;
-
             this.pickPlanes.parent = this.theParent;
+            
             this.pointerdown = (evt) => { return this.onPointerDown(evt) };
             this.pointerup = (evt) => { return this.onPointerUp(evt) };
             this.pointermove = (evt) => { return this.onPointerMove(evt) };
@@ -108,7 +108,7 @@ namespace org.ssatguru.babylonjs.component {
         private setAxesScale() {
             this.theParent.position.subtractToRef(this.mainCamera.position, this.toParent);
             Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
-            //get distance of axes from the camera plane - project camera to axes vector on the camera normal
+            //get distance of axes from the camera plane - project "camera to axes" vector onto the camera normal
             var parentOnNormal: number = Vector3.Dot(this.toParent, this.cameraNormal) / this.cameraNormal.length();
             var s: number = parentOnNormal / this.distFromCamera;
             Vector3.FromFloatsToRef(s, s, s, this.theParent.scaling);
@@ -128,10 +128,9 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private renderLoopProcess() {
+            this.theParent.position = this.mesh.getAbsolutePivotPoint();
             this.setAxesScale();
             this.setAxesRotation();
-            this.theParent.position = this.mesh.getAbsolutePivotPoint();
-            //this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
             this.onPointerOver();
         }
 
