@@ -89,6 +89,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private doRotation(mesh, axis, newPos);
         private getPosOnPickPlane();
         private hideBaxis();
+        private setAxesVisiblity(v);
         private transEnabled;
         isTranslationEnabled(): boolean;
         enableTranslation(): void;

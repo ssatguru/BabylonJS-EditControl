@@ -207,7 +207,7 @@ namespace org.ssatguru.babylonjs.component {
             }, null, this.mainCamera);
 
             if (pickResult.hit) {
-                //this.setAxesVisiblity(0);
+                this.setAxesVisiblity(0);
                 this.axisPicked = <Mesh>pickResult.pickedMesh;
                 let childs: Node[] = this.axisPicked.getChildren();
                 if (childs.length > 0) {
@@ -349,7 +349,7 @@ namespace org.ssatguru.babylonjs.component {
             if ((this.editing)) {
                 this.mainCamera.attachControl(this.canvas);
                 this.editing = false;
-                //this.setAxesVisiblity(1);
+                this.setAxesVisiblity(1);
                 this.hideBaxis();
                 this.restoreColor(this.prevOverMesh);
                 this.prevOverMesh = null;
@@ -668,7 +668,7 @@ namespace org.ssatguru.babylonjs.component {
             this.bYaxis.visibility = 0;
             this.bZaxis.visibility = 0;
         }
-        /*
+
         private setAxesVisiblity(v: number) {
             if (this.transEnabled) {
                 this.tEndX.visibility = v;
@@ -695,7 +695,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.sEndAll.visibility = v;
             }
         }
-        */
+
         private transEnabled: boolean = false;
 
         public isTranslationEnabled(): boolean {
@@ -1091,7 +1091,8 @@ namespace org.ssatguru.babylonjs.component {
             var d: number = this.axesLen * this.axesScale * 2;
             this.rCtl = new Mesh("rotCtl", this.scene);
             //pickable invisible torus around the rotation circles
-            this.rX = this.createTube(d / 2, 90);
+            //this.rX = this.createTube(d / 2, 90);
+            this.rX = this.createTube(d / 2, 360);
             this.rX.name = "X";
             this.rY = this.rX.clone("Y");
             this.rZ = this.rX.clone("Z");
@@ -1124,7 +1125,8 @@ namespace org.ssatguru.babylonjs.component {
 
             //non pickable but visible circles
             var cl: number = d;
-            this.rEndX = this.createCircle(cl / 2, 90);
+            //this.rEndX = this.createCircle(cl / 2, 90);
+            this.rEndX = this.createCircle(cl / 2, 360);
             this.rEndY = this.rEndX.clone("");
             this.rEndZ = this.rEndX.clone("");
             this.rEndAll = this.createCircle(cl / 1.75, 360);

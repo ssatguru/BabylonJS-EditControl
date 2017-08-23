@@ -192,6 +192,7 @@ var org;
                             return false;
                         }, null, this.mainCamera);
                         if (pickResult.hit) {
+                            this.setAxesVisiblity(0);
                             this.axisPicked = pickResult.pickedMesh;
                             var childs = this.axisPicked.getChildren();
                             if (childs.length > 0) {
@@ -335,6 +336,7 @@ var org;
                         if ((this.editing)) {
                             this.mainCamera.attachControl(this.canvas);
                             this.editing = false;
+                            this.setAxesVisiblity(1);
                             this.hideBaxis();
                             this.restoreColor(this.prevOverMesh);
                             this.prevOverMesh = null;
@@ -695,6 +697,32 @@ var org;
                         this.bYaxis.visibility = 0;
                         this.bZaxis.visibility = 0;
                     };
+                    EditControl.prototype.setAxesVisiblity = function (v) {
+                        if (this.transEnabled) {
+                            this.tEndX.visibility = v;
+                            this.tEndY.visibility = v;
+                            this.tEndZ.visibility = v;
+                            this.tEndXZ.visibility = v;
+                            this.tEndZY.visibility = v;
+                            this.tEndYX.visibility = v;
+                            this.tEndAll.visibility = v;
+                        }
+                        if (this.rotEnabled) {
+                            this.rEndX.visibility = v;
+                            this.rEndY.visibility = v;
+                            this.rEndZ.visibility = v;
+                            this.rEndAll.visibility = v;
+                        }
+                        if (this.scaleEnabled) {
+                            this.sEndX.visibility = v;
+                            this.sEndY.visibility = v;
+                            this.sEndZ.visibility = v;
+                            this.sEndXZ.visibility = v;
+                            this.sEndZY.visibility = v;
+                            this.sEndYX.visibility = v;
+                            this.sEndAll.visibility = v;
+                        }
+                    };
                     EditControl.prototype.isTranslationEnabled = function () {
                         return this.transEnabled;
                     };
@@ -958,7 +986,7 @@ var org;
                     EditControl.prototype.createRotAxes = function () {
                         var d = this.axesLen * this.axesScale * 2;
                         this.rCtl = new Mesh("rotCtl", this.scene);
-                        this.rX = this.createTube(d / 2, 90);
+                        this.rX = this.createTube(d / 2, 360);
                         this.rX.name = "X";
                         this.rY = this.rX.clone("Y");
                         this.rZ = this.rX.clone("Z");
@@ -984,7 +1012,7 @@ var org;
                         this.rZ.isPickable = false;
                         this.rAll.isPickable = false;
                         var cl = d;
-                        this.rEndX = this.createCircle(cl / 2, 90);
+                        this.rEndX = this.createCircle(cl / 2, 360);
                         this.rEndY = this.rEndX.clone("");
                         this.rEndZ = this.rEndX.clone("");
                         this.rEndAll = this.createCircle(cl / 1.75, 360);
