@@ -549,6 +549,11 @@ namespace org.ssatguru.babylonjs.component {
                     }else this.scale.y=this.scale.x;
                 }
             }
+            //as the mesh becomes large reduce the amount by which we scale.
+            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
+            this.scale.x = this.scale.x/br;
+            this.scale.y = this.scale.y/br;
+            this.scale.z = this.scale.z/br;
             this.scaleWithSnap(this.mesh, this.scale);
         }
 
@@ -646,7 +651,8 @@ namespace org.ssatguru.babylonjs.component {
                     mesh.rotate(mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
             }
             this.setLocalAxes(this.mesh);
-            if ((this.eulerian)) {
+            //we angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
+            if (this.eulerian && angle!= 0 ) {
                 mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
                 mesh.rotationQuaternion = null;
             }

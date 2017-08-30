@@ -549,6 +549,10 @@ var org;
                                     this.scale.y = this.scale.x;
                             }
                         }
+                        var br = this.mesh.getBoundingInfo().boundingSphere.radius;
+                        this.scale.x = this.scale.x / br;
+                        this.scale.y = this.scale.y / br;
+                        this.scale.z = this.scale.z / br;
                         this.scaleWithSnap(this.mesh, this.scale);
                     };
                     EditControl.prototype.scaleWithSnap = function (mesh, p) {
@@ -675,7 +679,7 @@ var org;
                                 mesh.rotate(mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
                         }
                         this.setLocalAxes(this.mesh);
-                        if ((this.eulerian)) {
+                        if (this.eulerian && angle != 0) {
                             mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
                             mesh.rotationQuaternion = null;
                         }
