@@ -366,19 +366,27 @@ var org;
                     EditControl.prototype.onPointerMove = function (evt) {
                         if (!this.pDown || !this.editing)
                             return;
+                        if (this.prevPos == null)
+                            return;
                         this.pickPlane = this.getPickPlane(this.axisPicked);
                         var newPos = this.getPosOnPickPlane();
                         if (newPos == null)
                             return;
-                        var diff = newPos.subtract(this.prevPos);
-                        if (diff.x == 0 && diff.y == 0 && diff.z == 0)
-                            return;
-                        if (this.transEnabled)
-                            this.doTranslation(diff);
-                        if (this.scaleEnabled && this.local)
-                            this.doScaling(diff);
-                        if (this.rotEnabled)
-                            this.doRotation(this.mesh, this.axisPicked, newPos);
+                        if (this.rotEnabled) {
+                            this.doRotation(this.mesh, this.axisPicked, newPos, this.prevPos);
+                        }
+                        else {
+                            var diff = newPos.subtract(this.prevPos);
+                            if (diff.x == 0 && diff.y == 0 && diff.z == 0)
+                                return;
+                            if (this.transEnabled) {
+                                this.doTranslation(diff);
+                            }
+                            else {
+                                if (this.scaleEnabled && this.local)
+                                    this.doScaling(diff);
+                            }
+                        }
                         this.prevPos = newPos;
                     };
                     EditControl.prototype.getPickPlane = function (axis) {
@@ -593,10 +601,10 @@ var org;
                         }
                         mesh.scaling.addInPlace(p);
                     };
-                    EditControl.prototype.doRotation = function (mesh, axis, newPos) {
+                    EditControl.prototype.doRotation = function (mesh, axis, newPos, prevPos) {
                         var cN = this.cN;
                         Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(), cN);
-                        var angle = EditControl.getAngle(this.prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
+                        var angle = EditControl.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
                         if (axis == this.rX) {
                             if (this.snapR) {
                                 this.snapRX += angle;
@@ -854,9 +862,9 @@ var org;
                         this.xaxis.color = Color3.Red();
                         this.yaxis.color = Color3.Green();
                         this.zaxis.color = Color3.Blue();
-                        this.xaxis.renderingGroupId = 2;
-                        this.yaxis.renderingGroupId = 2;
-                        this.zaxis.renderingGroupId = 2;
+                        this.xaxis.renderingGroupId = 1;
+                        this.yaxis.renderingGroupId = 1;
+                        this.zaxis.renderingGroupId = 1;
                     };
                     EditControl.prototype.createPickPlanes = function () {
                         this.pALL = Mesh.CreatePlane("pALL", 5, this.scene);
@@ -920,13 +928,6 @@ var org;
                         this.tZY.visibility = 0;
                         this.tYX.visibility = 0;
                         this.tAll.visibility = 0;
-                        this.tX.renderingGroupId = 1;
-                        this.tY.renderingGroupId = 1;
-                        this.tZ.renderingGroupId = 1;
-                        this.tXZ.renderingGroupId = 1;
-                        this.tZY.renderingGroupId = 1;
-                        this.tYX.renderingGroupId = 1;
-                        this.tAll.renderingGroupId = 1;
                         this.tX.isPickable = false;
                         this.tY.isPickable = false;
                         this.tZ.isPickable = false;
@@ -966,13 +967,13 @@ var org;
                         this.tEndZY.material = this.blueMat;
                         this.tEndYX.material = this.greenMat;
                         this.tEndAll.material = this.yellowMat;
-                        this.tEndX.renderingGroupId = 1;
-                        this.tEndY.renderingGroupId = 1;
-                        this.tEndZ.renderingGroupId = 1;
-                        this.tEndXZ.renderingGroupId = 1;
-                        this.tEndZY.renderingGroupId = 1;
-                        this.tEndYX.renderingGroupId = 1;
-                        this.tEndAll.renderingGroupId = 1;
+                        this.tEndX.renderingGroupId = 2;
+                        this.tEndY.renderingGroupId = 2;
+                        this.tEndZ.renderingGroupId = 2;
+                        this.tEndXZ.renderingGroupId = 2;
+                        this.tEndZY.renderingGroupId = 2;
+                        this.tEndYX.renderingGroupId = 2;
+                        this.tEndAll.renderingGroupId = 2;
                         this.tEndX.isPickable = false;
                         this.tEndY.isPickable = false;
                         this.tEndZ.isPickable = false;
@@ -1007,10 +1008,6 @@ var org;
                         this.rY.visibility = 0;
                         this.rZ.visibility = 0;
                         this.rAll.visibility = 0;
-                        this.rX.renderingGroupId = 1;
-                        this.rY.renderingGroupId = 1;
-                        this.rZ.renderingGroupId = 1;
-                        this.rAll.renderingGroupId = 1;
                         this.rX.isPickable = false;
                         this.rY.isPickable = false;
                         this.rZ.isPickable = false;
@@ -1028,10 +1025,10 @@ var org;
                         this.rEndY.color = Color3.Green();
                         this.rEndZ.color = Color3.Blue();
                         this.rEndAll.color = Color3.Yellow();
-                        this.rEndX.renderingGroupId = 1;
-                        this.rEndY.renderingGroupId = 1;
-                        this.rEndZ.renderingGroupId = 1;
-                        this.rEndAll.renderingGroupId = 1;
+                        this.rEndX.renderingGroupId = 2;
+                        this.rEndY.renderingGroupId = 2;
+                        this.rEndZ.renderingGroupId = 2;
+                        this.rEndAll.renderingGroupId = 2;
                         this.rEndX.isPickable = false;
                         this.rEndY.isPickable = false;
                         this.rEndZ.isPickable = false;
@@ -1127,13 +1124,6 @@ var org;
                         this.sZY.visibility = 0;
                         this.sYX.visibility = 0;
                         this.sAll.visibility = 0;
-                        this.sX.renderingGroupId = 1;
-                        this.sY.renderingGroupId = 1;
-                        this.sZ.renderingGroupId = 1;
-                        this.sXZ.renderingGroupId = 1;
-                        this.sZY.renderingGroupId = 1;
-                        this.sYX.renderingGroupId = 1;
-                        this.sAll.renderingGroupId = 1;
                         this.sX.isPickable = false;
                         this.sY.isPickable = false;
                         this.sZ.isPickable = false;
@@ -1169,13 +1159,13 @@ var org;
                         this.sEndZY.material = this.blueMat;
                         this.sEndYX.material = this.greenMat;
                         this.sEndAll.material = this.yellowMat;
-                        this.sEndX.renderingGroupId = 1;
-                        this.sEndY.renderingGroupId = 1;
-                        this.sEndZ.renderingGroupId = 1;
-                        this.sEndXZ.renderingGroupId = 1;
-                        this.sEndZY.renderingGroupId = 1;
-                        this.sEndYX.renderingGroupId = 1;
-                        this.sEndAll.renderingGroupId = 1;
+                        this.sEndX.renderingGroupId = 2;
+                        this.sEndY.renderingGroupId = 2;
+                        this.sEndZ.renderingGroupId = 2;
+                        this.sEndXZ.renderingGroupId = 2;
+                        this.sEndZY.renderingGroupId = 2;
+                        this.sEndYX.renderingGroupId = 2;
+                        this.sEndAll.renderingGroupId = 2;
                         this.sEndX.isPickable = false;
                         this.sEndY.isPickable = false;
                         this.sEndZ.isPickable = false;

@@ -77,7 +77,7 @@ namespace org.ssatguru.babylonjs.component {
             this.createPickPlanes();
             //this.pALL.parent = this.theParent;
             this.pickPlanes.parent = this.theParent;
-            
+
             this.pointerdown = (evt) => { return this.onPointerDown(evt) };
             this.pointerup = (evt) => { return this.onPointerUp(evt) };
             this.pointermove = (evt) => { return this.onPointerMove(evt) };
@@ -308,7 +308,7 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
         }
-        
+
         //clean up any axis we might have been howering over before
         private clearPrevOverMesh() {
             if (this.prevOverMesh != null) {
@@ -386,21 +386,26 @@ namespace org.ssatguru.babylonjs.component {
         private snapRZ: number = 0;
 
         private onPointerMove(evt: Event) {
-
+            
             if (!this.pDown || !this.editing) return;
-
+            if (this.prevPos == null) return;
+            
             this.pickPlane = this.getPickPlane(this.axisPicked);
 
             var newPos: Vector3 = this.getPosOnPickPlane();
             if (newPos == null) return;
 
-            var diff: Vector3 = newPos.subtract(this.prevPos);
-            if (diff.x == 0 && diff.y == 0 && diff.z == 0) return;
-
-            if (this.transEnabled) this.doTranslation(diff);
-            if (this.scaleEnabled && this.local) this.doScaling(diff);
-            if (this.rotEnabled) this.doRotation(this.mesh, this.axisPicked, newPos);
-
+            if (this.rotEnabled) {
+                this.doRotation(this.mesh, this.axisPicked, newPos, this.prevPos);
+            } else {
+                var diff: Vector3 = newPos.subtract(this.prevPos);
+                if (diff.x == 0 && diff.y == 0 && diff.z == 0) return;
+                if (this.transEnabled) {
+                    this.doTranslation(diff);
+                } else {
+                    if (this.scaleEnabled && this.local) this.doScaling(diff);
+                }
+            }
             this.prevPos = newPos;
         }
 
@@ -587,11 +592,11 @@ namespace org.ssatguru.babylonjs.component {
         snapRA: number = 0;
         //vector normal to camera
         cN: Vector3 = new Vector3(0, 0, 0);
-        private doRotation(mesh: Mesh, axis: Mesh, newPos: Vector3) {
+        private doRotation(mesh: Mesh, axis: Mesh, newPos: Vector3, prevPos:Vector3) {
             let cN: Vector3 = this.cN;
             Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(), cN);
             //var angle: number = EditControl.getAngle(this.prevPos, newPos, mesh.absolutePosition, cN);
-            var angle: number = EditControl.getAngle(this.prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
+            var angle: number = EditControl.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
 
             if (axis == this.rX) {
                 if (this.snapR) {
@@ -870,9 +875,12 @@ namespace org.ssatguru.babylonjs.component {
             this.xaxis.color = Color3.Red();
             this.yaxis.color = Color3.Green();
             this.zaxis.color = Color3.Blue();
-            this.xaxis.renderingGroupId = 2;
-            this.yaxis.renderingGroupId = 2;
-            this.zaxis.renderingGroupId = 2;
+            //            this.xaxis.renderingGroupId = 2;
+            //            this.yaxis.renderingGroupId = 2;
+            //            this.zaxis.renderingGroupId = 2;
+            this.xaxis.renderingGroupId = 1;
+            this.yaxis.renderingGroupId = 1;
+            this.zaxis.renderingGroupId = 1;
         }
 
         private pickPlanes: Mesh;
@@ -989,13 +997,13 @@ namespace org.ssatguru.babylonjs.component {
             this.tYX.visibility = 0;
             this.tAll.visibility = 0;
 
-            this.tX.renderingGroupId = 1;
-            this.tY.renderingGroupId = 1;
-            this.tZ.renderingGroupId = 1;
-            this.tXZ.renderingGroupId = 1;
-            this.tZY.renderingGroupId = 1;
-            this.tYX.renderingGroupId = 1;
-            this.tAll.renderingGroupId = 1;
+            //            this.tX.renderingGroupId = 1;
+            //            this.tY.renderingGroupId = 1;
+            //            this.tZ.renderingGroupId = 1;
+            //            this.tXZ.renderingGroupId = 1;
+            //            this.tZY.renderingGroupId = 1;
+            //            this.tYX.renderingGroupId = 1;
+            //            this.tAll.renderingGroupId = 1;
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function 
             this.tX.isPickable = false;
@@ -1057,13 +1065,13 @@ namespace org.ssatguru.babylonjs.component {
             //            this.tEndYX.visibility = 0.5;
             //            this.tEndAll.visibility = 0.5;
 
-            this.tEndX.renderingGroupId = 1;
-            this.tEndY.renderingGroupId = 1;
-            this.tEndZ.renderingGroupId = 1;
-            this.tEndXZ.renderingGroupId = 1;
-            this.tEndZY.renderingGroupId = 1;
-            this.tEndYX.renderingGroupId = 1;
-            this.tEndAll.renderingGroupId = 1;
+            this.tEndX.renderingGroupId = 2;
+            this.tEndY.renderingGroupId = 2;
+            this.tEndZ.renderingGroupId = 2;
+            this.tEndXZ.renderingGroupId = 2;
+            this.tEndZY.renderingGroupId = 2;
+            this.tEndYX.renderingGroupId = 2;
+            this.tEndAll.renderingGroupId = 2;
 
             this.tEndX.isPickable = false;
             this.tEndY.isPickable = false;
@@ -1118,10 +1126,10 @@ namespace org.ssatguru.babylonjs.component {
             this.rZ.visibility = 0;
             this.rAll.visibility = 0;
 
-            this.rX.renderingGroupId = 1;
-            this.rY.renderingGroupId = 1;
-            this.rZ.renderingGroupId = 1;
-            this.rAll.renderingGroupId = 1;
+            //            this.rX.renderingGroupId = 1;
+            //            this.rY.renderingGroupId = 1;
+            //            this.rZ.renderingGroupId = 1;
+            //            this.rAll.renderingGroupId = 1;
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function 
             this.rX.isPickable = false;
@@ -1147,10 +1155,10 @@ namespace org.ssatguru.babylonjs.component {
             this.rEndZ.color = Color3.Blue();
             this.rEndAll.color = Color3.Yellow();
 
-            this.rEndX.renderingGroupId = 1;
-            this.rEndY.renderingGroupId = 1;
-            this.rEndZ.renderingGroupId = 1;
-            this.rEndAll.renderingGroupId = 1;
+            this.rEndX.renderingGroupId = 2;
+            this.rEndY.renderingGroupId = 2;
+            this.rEndZ.renderingGroupId = 2;
+            this.rEndAll.renderingGroupId = 2;
 
             this.rEndX.isPickable = false;
             this.rEndY.isPickable = false;
@@ -1272,13 +1280,13 @@ namespace org.ssatguru.babylonjs.component {
             this.sYX.visibility = 0;
             this.sAll.visibility = 0;
 
-            this.sX.renderingGroupId = 1;
-            this.sY.renderingGroupId = 1;
-            this.sZ.renderingGroupId = 1;
-            this.sXZ.renderingGroupId = 1;
-            this.sZY.renderingGroupId = 1;
-            this.sYX.renderingGroupId = 1;
-            this.sAll.renderingGroupId = 1;
+            //            this.sX.renderingGroupId = 1;
+            //            this.sY.renderingGroupId = 1;
+            //            this.sZ.renderingGroupId = 1;
+            //            this.sXZ.renderingGroupId = 1;
+            //            this.sZY.renderingGroupId = 1;
+            //            this.sYX.renderingGroupId = 1;
+            //            this.sAll.renderingGroupId = 1;
 
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function 
@@ -1325,13 +1333,13 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndYX.material = this.greenMat;
             this.sEndAll.material = this.yellowMat;
 
-            this.sEndX.renderingGroupId = 1;
-            this.sEndY.renderingGroupId = 1;
-            this.sEndZ.renderingGroupId = 1;
-            this.sEndXZ.renderingGroupId = 1;
-            this.sEndZY.renderingGroupId = 1;
-            this.sEndYX.renderingGroupId = 1;
-            this.sEndAll.renderingGroupId = 1;
+            this.sEndX.renderingGroupId = 2;
+            this.sEndY.renderingGroupId = 2;
+            this.sEndZ.renderingGroupId = 2;
+            this.sEndXZ.renderingGroupId = 2;
+            this.sEndZY.renderingGroupId = 2;
+            this.sEndYX.renderingGroupId = 2;
+            this.sEndAll.renderingGroupId = 2;
 
             this.sEndX.isPickable = false;
             this.sEndY.isPickable = false;
@@ -1504,8 +1512,8 @@ namespace org.ssatguru.babylonjs.component {
         public redo() {
             if ((this.current < this.last)) {
                 this.current++;
-                (<Act>this.acts[this.current]).perform(this.mesh);
-                return (<Act>this.acts[this.current]).getActionType()
+                (<Act> this.acts[this.current]).perform(this.mesh);
+                return (<Act> this.acts[this.current]).getActionType()
             }
         }
     }

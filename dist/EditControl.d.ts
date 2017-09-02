@@ -86,7 +86,7 @@ declare namespace org.ssatguru.babylonjs.component {
         eulerian: boolean;
         snapRA: number;
         cN: Vector3;
-        private doRotation(mesh, axis, newPos);
+        private doRotation(mesh, axis, newPos, prevPos);
         private getPosOnPickPlane();
         private hideBaxis();
         private setAxesVisiblity(v);
