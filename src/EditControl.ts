@@ -1,6 +1,9 @@
+
+
 namespace org.ssatguru.babylonjs.component {
     import AbstractMesh = BABYLON.AbstractMesh;
     import Axis = BABYLON.Axis;
+    import BoundingBox = BABYLON.BoundingBox;
     import Camera = BABYLON.Camera;
     import Color3 = BABYLON.Color3;
     import LinesMesh = BABYLON.LinesMesh;
@@ -554,11 +557,22 @@ namespace org.ssatguru.babylonjs.component {
                     }else this.scale.y=this.scale.x;
                 }
             }
+            
             //as the mesh becomes large reduce the amount by which we scale.
-            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
-            this.scale.x = this.scale.x/br;
-            this.scale.y = this.scale.y/br;
-            this.scale.z = this.scale.z/br;
+            
+//            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
+//            this.scale.x = this.scale.x/br;
+//            this.scale.y = this.scale.y/br;
+//            this.scale.z = this.scale.z/br;
+            
+            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
+            let bbx: number = bb.maximum.x - bb.minimum.x;
+            let bby: number = bb.maximum.y - bb.minimum.y;
+            let bbz: number = bb.maximum.z - bb.minimum.z;
+            this.scale.x = this.scale.x/bbx;
+            this.scale.y = this.scale.y/bby;
+            this.scale.z = this.scale.z/bbz;
+            
             this.scaleWithSnap(this.mesh, this.scale);
         }
 

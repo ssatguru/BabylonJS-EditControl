@@ -557,10 +557,13 @@ var org;
                                     this.scale.y = this.scale.x;
                             }
                         }
-                        var br = this.mesh.getBoundingInfo().boundingSphere.radius;
-                        this.scale.x = this.scale.x / br;
-                        this.scale.y = this.scale.y / br;
-                        this.scale.z = this.scale.z / br;
+                        var bb = this.mesh.getBoundingInfo().boundingBox;
+                        var bbx = bb.maximum.x - bb.minimum.x;
+                        var bby = bb.maximum.y - bb.minimum.y;
+                        var bbz = bb.maximum.z - bb.minimum.z;
+                        this.scale.x = this.scale.x / bbx;
+                        this.scale.y = this.scale.y / bby;
+                        this.scale.z = this.scale.z / bbz;
                         this.scaleWithSnap(this.mesh, this.scale);
                     };
                     EditControl.prototype.scaleWithSnap = function (mesh, p) {
