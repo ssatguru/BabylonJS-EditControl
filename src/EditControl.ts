@@ -67,6 +67,8 @@ namespace org.ssatguru.babylonjs.component {
             this.mainCamera = camera;
             this.actHist = new ActHist(mesh, 10);
             mesh.computeWorldMatrix(true);
+            this.boundingDimesion = this.getBoundingDimension(mesh);
+            
             this.theParent = new Mesh("EditControl", this.scene);
             //this.theParent.position = this.meshPicked.absolutePosition;
             //this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
@@ -565,13 +567,15 @@ namespace org.ssatguru.babylonjs.component {
 //            this.scale.y = this.scale.y/br;
 //            this.scale.z = this.scale.z/br;
             
-            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
-            let bbx: number = bb.maximum.x - bb.minimum.x;
-            let bby: number = bb.maximum.y - bb.minimum.y;
-            let bbz: number = bb.maximum.z - bb.minimum.z;
-            this.scale.x = this.scale.x/bbx;
-            this.scale.y = this.scale.y/bby;
-            this.scale.z = this.scale.z/bbz;
+//            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
+//            let bbx: number = bb.maximum.x - bb.minimum.x;
+//            let bby: number = bb.maximum.y - bb.minimum.y;
+//            let bbz: number = bb.maximum.z - bb.minimum.z;
+//            
+            let bbd = this.boundingDimesion;
+            this.scale.x = this.scale.x/bbd.x;
+            this.scale.y = this.scale.y/bbd.y;
+            this.scale.z = this.scale.z/bbd.z;
             
             this.scaleWithSnap(this.mesh, this.scale);
         }
@@ -601,15 +605,40 @@ namespace org.ssatguru.babylonjs.component {
             }
             mesh.scaling.addInPlace(p);
         }
+        
+        /*
+         * boundingDimesion is used by scaling to adjust rate at which a mesh is scaled
+         * with respect to mouse movement.
+         * 
+         */
+        private boundingDimesion: Vector3;
+        private getBoundingDimension(mesh:Mesh):Vector3{
+            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
+            return bb.maximum.subtract(bb.minimum);
+        }
+        
+        /*
+         * 
+         * For the sake of speed the editcontrol calculates bounding info only once.
+         * This is in the constructor.
+         * Now The boundingbox dimension can change if the mesh is baked.
+         * If the editcontrol is attached to the mesh when the mesh was baked then
+         * the scaling speed will be incorrect.
+         * Thus client application should call refreshBoundingInfo if it bakes the mesh.
+         * 
+         */
+        public refreshBoundingInfo(){
+            this.boundingDimesion = this.getBoundingDimension(this.mesh);
+        }
 
         eulerian: boolean = false;
         snapRA: number = 0;
-        //vector normal to camera
+        //vector normal to camera in world frame of reference
         cN: Vector3 = new Vector3(0, 0, 0);
         private doRotation(mesh: Mesh, axis: Mesh, newPos: Vector3, prevPos:Vector3) {
+            //donot want to type this.cN everywhere
             let cN: Vector3 = this.cN;
             Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(), cN);
-            //var angle: number = EditControl.getAngle(this.prevPos, newPos, mesh.absolutePosition, cN);
             var angle: number = EditControl.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
 
             if (axis == this.rX) {
@@ -1423,9 +1452,12 @@ namespace org.ssatguru.babylonjs.component {
         }
 
 
+        /*
+         * finds the angle subtended by two points p1 & p2 around the point p
+         * adjust the angle depending on wether it is clockwise or anticlockwise around the vector
+         */
 
-
-        public static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number {
+        private static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number {
             var v1: Vector3 = p1.subtract(p);
             var v2: Vector3 = p2.subtract(p);
             var n: Vector3 = Vector3.Cross(v1, v2);

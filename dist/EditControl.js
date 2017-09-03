@@ -75,6 +75,7 @@ var org;
                         this.mainCamera = camera;
                         this.actHist = new ActHist(mesh, 10);
                         mesh.computeWorldMatrix(true);
+                        this.boundingDimesion = this.getBoundingDimension(mesh);
                         this.theParent = new Mesh("EditControl", this.scene);
                         this.theParent.rotationQuaternion = Quaternion.Identity();
                         this.theParent.visibility = 0;
@@ -557,13 +558,10 @@ var org;
                                     this.scale.y = this.scale.x;
                             }
                         }
-                        var bb = this.mesh.getBoundingInfo().boundingBox;
-                        var bbx = bb.maximum.x - bb.minimum.x;
-                        var bby = bb.maximum.y - bb.minimum.y;
-                        var bbz = bb.maximum.z - bb.minimum.z;
-                        this.scale.x = this.scale.x / bbx;
-                        this.scale.y = this.scale.y / bby;
-                        this.scale.z = this.scale.z / bbz;
+                        var bbd = this.boundingDimesion;
+                        this.scale.x = this.scale.x / bbd.x;
+                        this.scale.y = this.scale.y / bbd.y;
+                        this.scale.z = this.scale.z / bbd.z;
                         this.scaleWithSnap(this.mesh, this.scale);
                     };
                     EditControl.prototype.scaleWithSnap = function (mesh, p) {
@@ -603,6 +601,13 @@ var org;
                             snapit = false;
                         }
                         mesh.scaling.addInPlace(p);
+                    };
+                    EditControl.prototype.getBoundingDimension = function (mesh) {
+                        var bb = this.mesh.getBoundingInfo().boundingBox;
+                        return bb.maximum.subtract(bb.minimum);
+                    };
+                    EditControl.prototype.refreshBoundingInfo = function () {
+                        this.boundingDimesion = this.getBoundingDimension(this.mesh);
                     };
                     EditControl.prototype.doRotation = function (mesh, axis, newPos, prevPos) {
                         var cN = this.cN;

@@ -83,6 +83,9 @@ declare namespace org.ssatguru.babylonjs.component {
         scale: Vector3;
         private doScaling(diff);
         private scaleWithSnap(mesh, p);
+        private boundingDimesion;
+        private getBoundingDimension(mesh);
+        refreshBoundingInfo(): void;
         eulerian: boolean;
         snapRA: number;
         cN: Vector3;
@@ -177,7 +180,7 @@ declare namespace org.ssatguru.babylonjs.component {
         setTransSnapValue(t: number): void;
         setRotSnapValue(r: number): void;
         setScaleSnapValue(r: number): void;
-        static getAngle(p1: Vector3, p2: Vector3, p: Vector3, cN: Vector3): number;
+        private static getAngle(p1, p2, p, cN);
         private createMaterials(scene);
         private disposeMaterials();
         private static getStandardMaterial(name, col, scene);
