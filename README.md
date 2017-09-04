@@ -2,10 +2,10 @@
 An edit control for use in [BabylonJS](http://www.babylonjs.com/) (a 3D HTML Webgl framework)  applications.
 
 ## About
-All 3d editors provide a widget to translate, rotate or scale 3d objects in the editor.  
+All 3d editors provide a widget, also referred to as transform control, to translate, rotate or scale 3d objects in the editor.  
 This EditControl is similar to those widgets.  
 You can embed this in your Babylonjs application to provide those same capabilities.  
-It currently has the following features  
+It currently supports  
 * Translate 
 * Translate Snap
 * Rotate 
@@ -26,10 +26,8 @@ For a demo head on over to <a href="https://ssatguru.github.io/BabylonJS-EditCon
 <script src="https://cdn.jsdelivr.net/babylonjs/2-5/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
-You can find the "EditControl.js" in the "dist" folder or "releases" section  
-[https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)  
-[https://github.com/ssatguru/BabylonJS-EditControl/releases](https://github.com/ssatguru/BabylonJS-EditControl/releases)
 
+See INSTALL below to find where you can get "EditControl.js".  
 
 2) a small javascript code snippet to get you up and running
 ```
@@ -48,6 +46,21 @@ You can find the "EditControl.js" in the "dist" folder or "releases" section
 
 see demo.html for a working example
 [https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html](https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html)
+
+##INSTALL
+
+You can find the "EditControl.js" from its git repository "dist" folder or "releases" section  
+[https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)  
+[https://github.com/ssatguru/BabylonJS-EditControl/releases](https://github.com/ssatguru/BabylonJS-EditControl/releases)  
+
+You can also install this from npm  
+```
+npm install babylonjs-editcontrol
+```
+
+Note that even though this is available in npm it is not packaged as a node module or any other type of module.  
+For now, to keep it simple and avoid dependencies on module systems, the application is packaged as a simple javascript "namespaced" application.  
+In other words load it using the <script> tag and refer to it using the global name "org.ssatguru.babylonjs.component.EditControl".  
 
 ## API
 1) To Instantiate
@@ -158,9 +171,9 @@ returns true if the pointer is over the edit control
 editControl.addActionListener(function(number actionType));
 ```
 This takes a function as a parameter.  
-The function, passed as parameter, would be called every time the user translates, rotates or scales the mesh.  
+This function would be called every time the user translates, rotates or scales the mesh.  
 The function itself would be passed a parameter which would indicate the action taken by the user.  
-The passed parameter would be a number which would have one of the following values  
+This parameter would be a number which would have one of the following values  
 0 - ActionType.TRANS, Translation  
 1 - ActioneType.ROT, Rotation  
 2 - ActioneType.SCALE, Scaling  
