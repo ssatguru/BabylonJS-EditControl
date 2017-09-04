@@ -47,7 +47,7 @@ See INSTALL below to find where you can get "EditControl.js".
 see demo.html for a working example
 [https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html](https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html)
 
-##INSTALL
+## INSTALL
 
 You can find the "EditControl.js" from its git repository "dist" folder or "releases" section  
 [https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist](https://github.com/ssatguru/BabylonJS-EditControl/tree/master/dist)  
