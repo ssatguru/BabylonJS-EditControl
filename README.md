@@ -165,7 +165,12 @@ The passed parameter would be a number which would have one of the following val
 1 - ActioneType.ROT, Rotation  
 2 - ActioneType.SCALE, Scaling  
 
-14) To switch edit control to another mesh
+14) To refresh mesh Bounding Info. EditControl uses mesh bounding info to provide the same smooth scaling experience for both small and large mesh. The bounding info changes when a mesh is baked. Use this method to refresh the bounding info if you baked the transform of the mesh.
+```
+editControl.refreshBoundingInfo();
+```
+
+15) To switch edit control to another mesh
 ```
 editControl.switchTo(Mesh mesh, optional boolean isEuler );
 ```
@@ -176,7 +181,7 @@ The translation, rotation, scaling mode is maintained.
 mesh : the mesh to which the control should switch to  
 isEuler : true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
-15) To detach from the mesh and clean up resources.
+16) To detach from the mesh and clean up resources.
 ```
 editControl.detach();
 ```
