@@ -21,9 +21,15 @@ namespace org.ssatguru.babylonjs.component {
     import Vector3 = BABYLON.Vector3;
 
     enum ActionType {
-        TRANS = 0,
-        ROT = 1,
-        SCALE = 2
+        TRANS,
+        ROT,
+        SCALE,
+        TRANS_START,
+        ROT_START,
+        SCALE_START,
+        TRANS_MOVE,
+        ROT_MOVE,
+        SCALE_MOVE,
     }
 
     export class EditControl {
@@ -68,7 +74,7 @@ namespace org.ssatguru.babylonjs.component {
             this.actHist = new ActHist(mesh, 10);
             mesh.computeWorldMatrix(true);
             this.boundingDimesion = this.getBoundingDimension(mesh);
-            
+
             this.theParent = new Mesh("EditControl", this.scene);
             //this.theParent.position = this.meshPicked.absolutePosition;
             //this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
@@ -95,7 +101,7 @@ namespace org.ssatguru.babylonjs.component {
             this.scene.registerBeforeRender(this.renderer);
         }
 
-        //make sure that if eulerian is set to false then mesh's rotation is in quaternion 
+        //make sure that if eulerian is set to false then mesh's rotation is in quaternion
         //throw error and exit if not so.
         private checkQuaternion() {
             if (!this.eulerian) {
@@ -242,6 +248,8 @@ namespace org.ssatguru.babylonjs.component {
                 //lets find out where we are on the pickplane
                 this.pickPlane = this.getPickPlane(this.axisPicked);
                 this.prevPos = this.getPosOnPickPlane();
+                let at: number = this.getActionType('start');
+                this.callActionListener(at);
                 window.setTimeout(((cam, can) => { return this.detachControl(cam, can) }), 0, this.mainCamera, this.canvas);
             }
         }
@@ -365,14 +373,20 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        private getActionType(): number {
+        // passing phase = 'start' will return the start ActionTypes
+        // passing phase = 'move'  will return the move ActionTypes
+        // passing phase = [anythinge else] will return the standard (end) ActionTypes
+        private getActionType(phase: string): number {
             let at: number = null;
             if (this.transEnabled) {
-                at = ActionType.TRANS;
-            } else if ((this.rotEnabled)) {
-                at = ActionType.ROT;
-            } else if ((this.scaleEnabled)) {
-                at = ActionType.SCALE;
+                at = phase === 'start' ? ActionType.TRANS_START : ActionType.TRANS;
+                at = phase === 'move' ? ActionType.TRANS_MOVE : at;
+            } else if (this.rotEnabled) {
+                at = phase === 'start' ? ActionType.ROT_START : ActionType.ROT;
+                at = phase === 'move' ? ActionType.ROT_MOVE : at;
+            } else if (this.scaleEnabled) {
+                at = phase === 'start' ? ActionType.SCALE_START : ActionType.SCALE;
+                at = phase === 'move' ? ActionType.SCALE_MOVE : at;
             }
             return at;
         }
@@ -391,10 +405,10 @@ namespace org.ssatguru.babylonjs.component {
         private snapRZ: number = 0;
 
         private onPointerMove(evt: Event) {
-            
+
             if (!this.pDown || !this.editing) return;
             if (this.prevPos == null) return;
-            
+
             this.pickPlane = this.getPickPlane(this.axisPicked);
 
             var newPos: Vector3 = this.getPosOnPickPlane();
@@ -411,6 +425,10 @@ namespace org.ssatguru.babylonjs.component {
                     if (this.scaleEnabled && this.local) this.doScaling(diff);
                 }
             }
+
+            let at: number = this.getActionType('move');
+            this.callActionListener(at);
+
             this.prevPos = newPos;
         }
 
@@ -559,24 +577,24 @@ namespace org.ssatguru.babylonjs.component {
                     }else this.scale.y=this.scale.x;
                 }
             }
-            
+
             //as the mesh becomes large reduce the amount by which we scale.
-            
+
 //            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
 //            this.scale.x = this.scale.x/br;
 //            this.scale.y = this.scale.y/br;
 //            this.scale.z = this.scale.z/br;
-            
+
 //            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
 //            let bbx: number = bb.maximum.x - bb.minimum.x;
 //            let bby: number = bb.maximum.y - bb.minimum.y;
 //            let bbz: number = bb.maximum.z - bb.minimum.z;
-//            
+//
             let bbd = this.boundingDimesion;
             this.scale.x = this.scale.x/bbd.x;
             this.scale.y = this.scale.y/bbd.y;
             this.scale.z = this.scale.z/bbd.z;
-            
+
             this.scaleWithSnap(this.mesh, this.scale);
         }
 
@@ -605,27 +623,27 @@ namespace org.ssatguru.babylonjs.component {
             }
             mesh.scaling.addInPlace(p);
         }
-        
+
         /*
          * boundingDimesion is used by scaling to adjust rate at which a mesh is scaled
          * with respect to mouse movement.
-         * 
+         *
          */
         private boundingDimesion: Vector3;
         private getBoundingDimension(mesh:Mesh):Vector3{
             let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
             return bb.maximum.subtract(bb.minimum);
         }
-        
+
         /*
-         * 
+         *
          * For the sake of speed the editcontrol calculates bounding info only once.
          * This is in the constructor.
          * Now The boundingbox dimension can change if the mesh is baked.
          * If the editcontrol is attached to the mesh when the mesh was baked then
          * the scaling speed will be incorrect.
          * Thus client application should call refreshBoundingInfo if it bakes the mesh.
-         * 
+         *
          */
         public refreshBoundingInfo(){
             this.boundingDimesion = this.getBoundingDimension(this.mesh);
@@ -1048,7 +1066,7 @@ namespace org.ssatguru.babylonjs.component {
             //            this.tYX.renderingGroupId = 1;
             //            this.tAll.renderingGroupId = 1;
             //do not want clients picking this
-            //we will pick using mesh filter in scene.pick function 
+            //we will pick using mesh filter in scene.pick function
             this.tX.isPickable = false;
             this.tY.isPickable = false;
             this.tZ.isPickable = false;
@@ -1174,7 +1192,7 @@ namespace org.ssatguru.babylonjs.component {
             //            this.rZ.renderingGroupId = 1;
             //            this.rAll.renderingGroupId = 1;
             //do not want clients picking this
-            //we will pick using mesh filter in scene.pick function 
+            //we will pick using mesh filter in scene.pick function
             this.rX.isPickable = false;
             this.rY.isPickable = false;
             this.rZ.isPickable = false;
@@ -1332,7 +1350,7 @@ namespace org.ssatguru.babylonjs.component {
             //            this.sAll.renderingGroupId = 1;
 
             //do not want clients picking this
-            //we will pick using mesh filter in scene.pick function 
+            //we will pick using mesh filter in scene.pick function
             this.sX.isPickable = false;
             this.sY.isPickable = false;
             this.sZ.isPickable = false;
@@ -1341,7 +1359,7 @@ namespace org.ssatguru.babylonjs.component {
             this.sYX.isPickable = false;
             this.sAll.isPickable = false;
 
-            //non pickable visible boxes at end of axes 
+            //non pickable visible boxes at end of axes
             var cr: number = r;
             this.sEndX = Mesh.CreateBox("", cr, this.scene);
             this.sEndY = this.sEndX.clone("");
@@ -1399,7 +1417,7 @@ namespace org.ssatguru.babylonjs.component {
 
         /*
          * this would be call during rotation as the local axes direction owuld have changed
-         * need to set the local axis. 
+         * need to set the local axis.
          * These are used in all three modes to figure out direction of mouse move wrt the axes
          * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
          */
