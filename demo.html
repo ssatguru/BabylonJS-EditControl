@@ -45,8 +45,8 @@
             }
         </style>
         <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
-        <script src="https://cdn.babylonjs.com/babylon.js"></script> 
-        <script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.4.5/EditControl.min.js"></script>
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        <script src="./dist/EditControl.js"></script>
 
     </head>
 
@@ -56,7 +56,7 @@
             <button id="trans">translate</button>
             <button id="rotate">rotate</button>
             <button id="scale">scale</button>
-            <input type="checkbox" id="snaptrans">snap translation 
+            <input type="checkbox" id="snaptrans">snap translation
             <input type="checkbox" id="snaprot">snap rotation
             <input type="checkbox" id="snapscale">snap scale
             <button id="undo">undo</button>
@@ -156,14 +156,36 @@
                 editControl.returnEuler(euler);
                 console.log("enable euler : " + euler);
             };
-            
+
             actionListener = function(actionType){
-                if (actionType === 0){
-                    console.log("translation was done");
-                }else if (actionType === 1){
-                    console.log("rotation was done");
-                }else if (actionType === 2){
-                    console.log("scaling was done");
+                switch(actionType) {
+                    case 0:
+                        console.log("translation end");
+                        break;
+                    case 1:
+                        console.log("rotation end");
+                        break;
+                    case 2:
+                        console.log("scaling end");
+                        break;
+                    case 3:
+                        console.log("translation start");
+                        break;
+                    case 4:
+                        console.log("rotation start");
+                        break;
+                    case 5:
+                        console.log("scaling start");
+                        break;
+                    case 6:
+                        // console.log("translation move");
+                        break;
+                    case 7:
+                        // console.log("rotation move");
+                        break;
+                    case 8:
+                        // console.log("scaling move");
+                        break;
                 }
             }
 
@@ -213,7 +235,7 @@
                 editControl.setTransSnapValue(0.5);
                 //set scale snap value in scale ratio
                 editControl.setScaleSnapValue(0.25);
-                
+
                 editControl.addActionListener(actionListener)
 
                 return scene;
