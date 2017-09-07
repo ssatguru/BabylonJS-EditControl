@@ -47,9 +47,9 @@
         <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
         <!-- for demo -->
-        <script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.4.5/EditControl.min.js"></script>
+        <!-- <script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.4.5/EditControl.min.js"></script> -->
         <!--for test-->
-        <!--<script src="dist/EditControl.js"></script>-->
+        <script src="dist/EditControl.js"></script>
     </head>
 
     <body>
@@ -240,6 +240,11 @@
                 editControl.setTransBounds(new BABYLON.BoundingBox(
                     new BABYLON.Vector3(-5,-5,-5),
                     new BABYLON.Vector3(5,5,5)
+                ));
+
+                editControl.setScaleBounds(new BABYLON.BoundingBox(
+                    new BABYLON.Vector3(0,0,0),
+                    new BABYLON.Vector3(2,2,2)
                 ));
 
 

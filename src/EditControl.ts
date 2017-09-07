@@ -631,10 +631,18 @@ namespace org.ssatguru.babylonjs.component {
             this.scale.x = this.scale.x/bbd.x;
             this.scale.y = this.scale.y/bbd.y;
             this.scale.z = this.scale.z/bbd.z;
+            this.scaleWithSnap(this.mesh, this.scale);
 
             // bound the scale
+            if (this.scaleBounds) {
+                this.mesh.scaling.x = Math.max(this.mesh.scaling.x, this.scaleBounds.minimum.x);
+                this.mesh.scaling.y = Math.max(this.mesh.scaling.y, this.scaleBounds.minimum.y);
+                this.mesh.scaling.z = Math.max(this.mesh.scaling.z, this.scaleBounds.minimum.z);
+                this.mesh.scaling.x = Math.min(this.mesh.scaling.x, this.scaleBounds.maximum.x);
+                this.mesh.scaling.y = Math.min(this.mesh.scaling.y, this.scaleBounds.maximum.y);
+                this.mesh.scaling.z = Math.min(this.mesh.scaling.z, this.scaleBounds.maximum.z);
+            }
 
-            this.scaleWithSnap(this.mesh, this.scale);
         }
 
         private scaleWithSnap(mesh: Mesh, p: Vector3) {
@@ -1223,7 +1231,6 @@ namespace org.ssatguru.babylonjs.component {
         private rEndY: LinesMesh;
         private rEndZ: LinesMesh;
         private rEndAll: LinesMesh;
-
         private createRotAxes() {
             var d: number = this.axesLen * this.axesScale * 2;
             this.rCtl = new Mesh("rotCtl", this.scene);
