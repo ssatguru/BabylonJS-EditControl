@@ -68,7 +68,7 @@ namespace org.ssatguru.babylonjs.component {
             this.actHist = new ActHist(mesh, 10);
             mesh.computeWorldMatrix(true);
             this.boundingDimesion = this.getBoundingDimension(mesh);
-            
+
             this.theParent = new Mesh("EditControl", this.scene);
             //this.theParent.position = this.meshPicked.absolutePosition;
             //this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
@@ -95,7 +95,7 @@ namespace org.ssatguru.babylonjs.component {
             this.scene.registerBeforeRender(this.renderer);
         }
 
-        //make sure that if eulerian is set to false then mesh's rotation is in quaternion 
+        //make sure that if eulerian is set to false then mesh's rotation is in quaternion
         //throw error and exit if not so.
         private checkQuaternion() {
             if (!this.eulerian) {
@@ -190,7 +190,7 @@ namespace org.ssatguru.babylonjs.component {
         private actionListener: (actionType: number) => void = null;
         private actionStartListener: (actionType: number) => void = null;
         private actionEndListener: (actionType: number) => void = null;
-        
+
         public addActionListener(actionListener: (actionType: number) => void) {
             this.actionListener = actionListener;
         }
@@ -209,13 +209,13 @@ namespace org.ssatguru.babylonjs.component {
         public removeActionEndListener() {
             this.actionEndListener = null;
         }
-        
+
         public removeAllActionListeners(){
             this.actionListener = null;
             this.actionStartListener = null;
             this.actionEndListener = null;
         }
-        
+
         private pDown: boolean = false;
 
         private axisPicked: Mesh;
@@ -280,7 +280,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.callActionEndListener(this.actionType);
             }
         }
-        
+
         public isEditing(): boolean {
             return this.editing;
         }
@@ -396,7 +396,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.actHist.add(this.actionType);
             }
         }
-        
+
         actionType:number;
         private setActionType() {
             if (this.transEnabled) {
@@ -434,10 +434,10 @@ namespace org.ssatguru.babylonjs.component {
         private snapRZ: number = 0;
 
         private onPointerMove(evt: Event) {
-            
+
             if (!this.pDown || !this.editing) return;
             if (this.prevPos == null) return;
-            
+
             this.pickPlane = this.getPickPlane(this.axisPicked);
 
             var newPos: Vector3 = this.getPosOnPickPlane();
@@ -520,6 +520,17 @@ namespace org.ssatguru.babylonjs.component {
                 else this.transBy.z = diff.z;
             }
             this.transWithSnap(this.mesh, this.transBy, this.local);
+
+            // bound the translation
+            if (this.transBounds) {
+                this.mesh.position.x = Math.max(this.mesh.position.x, this.transBounds.minimum.x);
+                this.mesh.position.y = Math.max(this.mesh.position.y, this.transBounds.minimum.y);
+                this.mesh.position.z = Math.max(this.mesh.position.z, this.transBounds.minimum.z);
+                this.mesh.position.x = Math.min(this.mesh.position.x, this.transBounds.maximum.x);
+                this.mesh.position.y = Math.min(this.mesh.position.y, this.transBounds.maximum.y);
+                this.mesh.position.z = Math.min(this.mesh.position.z, this.transBounds.maximum.z);
+            }
+
             this.mesh.computeWorldMatrix(true);
 
         }
@@ -603,24 +614,26 @@ namespace org.ssatguru.babylonjs.component {
                     }else this.scale.y=this.scale.x;
                 }
             }
-            
+
             //as the mesh becomes large reduce the amount by which we scale.
-            
+
 //            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
 //            this.scale.x = this.scale.x/br;
 //            this.scale.y = this.scale.y/br;
 //            this.scale.z = this.scale.z/br;
-            
+
 //            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
 //            let bbx: number = bb.maximum.x - bb.minimum.x;
 //            let bby: number = bb.maximum.y - bb.minimum.y;
 //            let bbz: number = bb.maximum.z - bb.minimum.z;
-//            
+//
             let bbd = this.boundingDimesion;
             this.scale.x = this.scale.x/bbd.x;
             this.scale.y = this.scale.y/bbd.y;
             this.scale.z = this.scale.z/bbd.z;
-            
+
+            // bound the scale
+
             this.scaleWithSnap(this.mesh, this.scale);
         }
 
@@ -649,27 +662,27 @@ namespace org.ssatguru.babylonjs.component {
             }
             mesh.scaling.addInPlace(p);
         }
-        
+
         /*
          * boundingDimesion is used by scaling to adjust rate at which a mesh is scaled
          * with respect to mouse movement.
-         * 
+         *
          */
         private boundingDimesion: Vector3;
         private getBoundingDimension(mesh:Mesh):Vector3{
             let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
             return bb.maximum.subtract(bb.minimum);
         }
-        
+
         /*
-         * 
+         *
          * For the sake of speed the editcontrol calculates bounding info only once.
          * This is in the constructor.
          * Now The boundingbox dimension can change if the mesh is baked.
          * If the editcontrol is attached to the mesh when the mesh was baked then
          * the scaling speed will be incorrect.
          * Thus client application should call refreshBoundingInfo if it bakes the mesh.
-         * 
+         *
          */
         public refreshBoundingInfo(){
             this.boundingDimesion = this.getBoundingDimension(this.mesh);
@@ -909,6 +922,29 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
+        private scaleBounds: BoundingBox;
+
+        public setScaleBounds(boundingBox: BoundingBox) {
+            this.scaleBounds = boundingBox;
+        }
+
+        public removeScaleBounds() {
+            this.scaleBounds = null;
+        }
+
+
+        private transBounds: BoundingBox;
+
+        public setTransBounds(boundingBox: BoundingBox) {
+            this.transBounds = boundingBox;
+        }
+
+        public removeTransBounds() {
+            this.transBounds = null;
+        }
+
+
+
         private bXaxis: LinesMesh;
         private bYaxis: LinesMesh;
         private bZaxis: LinesMesh;
@@ -1092,7 +1128,7 @@ namespace org.ssatguru.babylonjs.component {
             //            this.tYX.renderingGroupId = 1;
             //            this.tAll.renderingGroupId = 1;
             //do not want clients picking this
-            //we will pick using mesh filter in scene.pick function 
+            //we will pick using mesh filter in scene.pick function
             this.tX.isPickable = false;
             this.tY.isPickable = false;
             this.tZ.isPickable = false;
@@ -1218,7 +1254,7 @@ namespace org.ssatguru.babylonjs.component {
             //            this.rZ.renderingGroupId = 1;
             //            this.rAll.renderingGroupId = 1;
             //do not want clients picking this
-            //we will pick using mesh filter in scene.pick function 
+            //we will pick using mesh filter in scene.pick function
             this.rX.isPickable = false;
             this.rY.isPickable = false;
             this.rZ.isPickable = false;
@@ -1376,7 +1412,7 @@ namespace org.ssatguru.babylonjs.component {
             //            this.sAll.renderingGroupId = 1;
 
             //do not want clients picking this
-            //we will pick using mesh filter in scene.pick function 
+            //we will pick using mesh filter in scene.pick function
             this.sX.isPickable = false;
             this.sY.isPickable = false;
             this.sZ.isPickable = false;
@@ -1385,7 +1421,7 @@ namespace org.ssatguru.babylonjs.component {
             this.sYX.isPickable = false;
             this.sAll.isPickable = false;
 
-            //non pickable visible boxes at end of axes 
+            //non pickable visible boxes at end of axes
             var cr: number = r;
             this.sEndX = Mesh.CreateBox("", cr, this.scene);
             this.sEndY = this.sEndX.clone("");
@@ -1443,7 +1479,7 @@ namespace org.ssatguru.babylonjs.component {
 
         /*
          * this would be call during rotation as the local axes direction owuld have changed
-         * need to set the local axis. 
+         * need to set the local axis.
          * These are used in all three modes to figure out direction of mouse move wrt the axes
          * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
          */
