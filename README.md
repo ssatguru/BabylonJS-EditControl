@@ -173,9 +173,9 @@ editControl.addActionListener(function(number actionType));
 editControl.addActionEndListener(function(number actionType));
 ```
 Each of these take a function as a parameter.  
-The ActionStartListener would be called when the user starts translating,rotating or scaling a mesh
-The ActionListener would be called when the user is translating,rotating or scaling a mesh
-The ActionEndListener would be called when the user ends translating,rotating or scaling a mesh
+The ActionStartListener would be called when the user starts translating,rotating or scaling a mesh  
+The ActionListener would be called when the user is translating,rotating or scaling a mesh  
+The ActionEndListener would be called when the user ends translating,rotating or scaling a mesh  
 
 Theses listener functions would be passed a number which would indicate the action being taken by the user.  
 This number would have one of the following values  
