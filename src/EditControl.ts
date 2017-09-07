@@ -158,14 +158,18 @@ namespace org.ssatguru.babylonjs.component {
             let at: number = this.actHist.undo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
+            this.callActionStartListener(at);
             this.callActionListener(at);
+            this.callActionEndListener(at);
         }
 
         public redo() {
             let at: number = this.actHist.redo();
             this.mesh.computeWorldMatrix(true);
             this.setLocalAxes(this.mesh);
+            this.callActionStartListener(at);
             this.callActionListener(at);
+            this.callActionEndListener(at);
         }
 
         public detach() {
@@ -173,7 +177,7 @@ namespace org.ssatguru.babylonjs.component {
             this.canvas.removeEventListener("pointerup", this.pointerup, false);
             this.canvas.removeEventListener("pointermove", this.pointermove, false);
             this.scene.unregisterBeforeRender(this.renderer);
-            this.removeActionListener();
+            this.removeAllActionListeners();
             this.disposeAll();
         }
 
@@ -184,13 +188,34 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private actionListener: (actionType: number) => void = null;
+        private actionStartListener: (actionType: number) => void = null;
+        private actionEndListener: (actionType: number) => void = null;
+        
         public addActionListener(actionListener: (actionType: number) => void) {
             this.actionListener = actionListener;
         }
         public removeActionListener() {
             this.actionListener = null;
         }
-
+        public addActionStartListener(actionStartListener: (actionType: number) => void) {
+            this.actionStartListener = actionStartListener;
+        }
+        public removeActionStartListener() {
+            this.actionStartListener = null;
+        }
+        public addActionEndListener(actionEndListener: (actionType: number) => void) {
+            this.actionEndListener = actionEndListener;
+        }
+        public removeActionEndListener() {
+            this.actionEndListener = null;
+        }
+        
+        public removeAllActionListeners(){
+            this.actionListener = null;
+            this.actionStartListener = null;
+            this.actionEndListener = null;
+        }
+        
         private pDown: boolean = false;
 
         private axisPicked: Mesh;
@@ -238,7 +263,7 @@ namespace org.ssatguru.babylonjs.component {
                     this.bYaxis.visibility = 1;
                     this.bZaxis.visibility = 1;
                 }
-                this.editing = true;
+                this.setEditing(true);
                 //lets find out where we are on the pickplane
                 this.pickPlane = this.getPickPlane(this.axisPicked);
                 this.prevPos = this.getPosOnPickPlane();
@@ -246,6 +271,16 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
+        private setEditing(editing:boolean){
+            this.editing=editing;
+            if (editing){
+                this.setActionType();
+                this.callActionStartListener(this.actionType);
+            }else{
+                this.callActionEndListener(this.actionType);
+            }
+        }
+        
         public isEditing(): boolean {
             return this.editing;
         }
@@ -351,36 +386,44 @@ namespace org.ssatguru.babylonjs.component {
 
         private onPointerUp(evt: Event) {
             this.pDown = false;
-            if ((this.editing)) {
+            if (this.editing) {
                 this.mainCamera.attachControl(this.canvas);
-                this.editing = false;
+                this.setEditing(false);
                 this.setAxesVisiblity(1);
                 this.hideBaxis();
                 this.restoreColor(this.prevOverMesh);
                 this.prevOverMesh = null;
-
-                let at: number = this.getActionType();
-                this.actHist.add(at);
-                this.callActionListener(at);
+                this.actHist.add(this.actionType);
             }
         }
-
-        private getActionType(): number {
-            let at: number = null;
+        
+        actionType:number;
+        private setActionType() {
             if (this.transEnabled) {
-                at = ActionType.TRANS;
+                this.actionType = ActionType.TRANS;
             } else if ((this.rotEnabled)) {
-                at = ActionType.ROT;
+                this.actionType = ActionType.ROT;
             } else if ((this.scaleEnabled)) {
-                at = ActionType.SCALE;
+                this.actionType = ActionType.SCALE;
             }
-            return at;
         }
 
         private callActionListener(at: number) {
             //call actionListener if registered
             if (this.actionListener != null) {
                 window.setTimeout(this.actionListener, 0, at);
+            }
+        }
+        private callActionStartListener(at: number) {
+            //call actionListener if registered
+            if (this.actionStartListener != null) {
+                window.setTimeout(this.actionStartListener, 0, at);
+            }
+        }
+        private callActionEndListener(at: number) {
+            //call actionListener if registered
+            if (this.actionEndListener != null) {
+                window.setTimeout(this.actionEndListener, 0, at);
             }
         }
 
@@ -412,6 +455,7 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
             this.prevPos = newPos;
+            this.callActionListener(this.actionType);
         }
 
 

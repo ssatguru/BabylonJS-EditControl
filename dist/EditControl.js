@@ -36,6 +36,8 @@ var org;
                         this.toParent = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
                         this.actionListener = null;
+                        this.actionStartListener = null;
+                        this.actionEndListener = null;
                         this.pDown = false;
                         this.pointerIsOver = false;
                         this.editing = false;
@@ -144,20 +146,24 @@ var org;
                         var at = this.actHist.undo();
                         this.mesh.computeWorldMatrix(true);
                         this.setLocalAxes(this.mesh);
+                        this.callActionStartListener(at);
                         this.callActionListener(at);
+                        this.callActionEndListener(at);
                     };
                     EditControl.prototype.redo = function () {
                         var at = this.actHist.redo();
                         this.mesh.computeWorldMatrix(true);
                         this.setLocalAxes(this.mesh);
+                        this.callActionStartListener(at);
                         this.callActionListener(at);
+                        this.callActionEndListener(at);
                     };
                     EditControl.prototype.detach = function () {
                         this.canvas.removeEventListener("pointerdown", this.pointerdown, false);
                         this.canvas.removeEventListener("pointerup", this.pointerup, false);
                         this.canvas.removeEventListener("pointermove", this.pointermove, false);
                         this.scene.unregisterBeforeRender(this.renderer);
-                        this.removeActionListener();
+                        this.removeAllActionListeners();
                         this.disposeAll();
                     };
                     EditControl.prototype.disposeAll = function () {
@@ -170,6 +176,23 @@ var org;
                     };
                     EditControl.prototype.removeActionListener = function () {
                         this.actionListener = null;
+                    };
+                    EditControl.prototype.addActionStartListener = function (actionStartListener) {
+                        this.actionStartListener = actionStartListener;
+                    };
+                    EditControl.prototype.removeActionStartListener = function () {
+                        this.actionStartListener = null;
+                    };
+                    EditControl.prototype.addActionEndListener = function (actionEndListener) {
+                        this.actionEndListener = actionEndListener;
+                    };
+                    EditControl.prototype.removeActionEndListener = function () {
+                        this.actionEndListener = null;
+                    };
+                    EditControl.prototype.removeAllActionListeners = function () {
+                        this.actionListener = null;
+                        this.actionStartListener = null;
+                        this.actionEndListener = null;
                     };
                     EditControl.prototype.onPointerDown = function (evt) {
                         var _this = this;
@@ -226,10 +249,20 @@ var org;
                                 this.bYaxis.visibility = 1;
                                 this.bZaxis.visibility = 1;
                             }
-                            this.editing = true;
+                            this.setEditing(true);
                             this.pickPlane = this.getPickPlane(this.axisPicked);
                             this.prevPos = this.getPosOnPickPlane();
                             window.setTimeout((function (cam, can) { return _this.detachControl(cam, can); }), 0, this.mainCamera, this.canvas);
+                        }
+                    };
+                    EditControl.prototype.setEditing = function (editing) {
+                        this.editing = editing;
+                        if (editing) {
+                            this.setActionType();
+                            this.callActionStartListener(this.actionType);
+                        }
+                        else {
+                            this.callActionEndListener(this.actionType);
                         }
                     };
                     EditControl.prototype.isEditing = function () {
@@ -334,34 +367,40 @@ var org;
                     };
                     EditControl.prototype.onPointerUp = function (evt) {
                         this.pDown = false;
-                        if ((this.editing)) {
+                        if (this.editing) {
                             this.mainCamera.attachControl(this.canvas);
-                            this.editing = false;
+                            this.setEditing(false);
                             this.setAxesVisiblity(1);
                             this.hideBaxis();
                             this.restoreColor(this.prevOverMesh);
                             this.prevOverMesh = null;
-                            var at = this.getActionType();
-                            this.actHist.add(at);
-                            this.callActionListener(at);
+                            this.actHist.add(this.actionType);
                         }
                     };
-                    EditControl.prototype.getActionType = function () {
-                        var at = null;
+                    EditControl.prototype.setActionType = function () {
                         if (this.transEnabled) {
-                            at = ActionType.TRANS;
+                            this.actionType = ActionType.TRANS;
                         }
                         else if ((this.rotEnabled)) {
-                            at = ActionType.ROT;
+                            this.actionType = ActionType.ROT;
                         }
                         else if ((this.scaleEnabled)) {
-                            at = ActionType.SCALE;
+                            this.actionType = ActionType.SCALE;
                         }
-                        return at;
                     };
                     EditControl.prototype.callActionListener = function (at) {
                         if (this.actionListener != null) {
                             window.setTimeout(this.actionListener, 0, at);
+                        }
+                    };
+                    EditControl.prototype.callActionStartListener = function (at) {
+                        if (this.actionStartListener != null) {
+                            window.setTimeout(this.actionStartListener, 0, at);
+                        }
+                    };
+                    EditControl.prototype.callActionEndListener = function (at) {
+                        if (this.actionEndListener != null) {
+                            window.setTimeout(this.actionEndListener, 0, at);
                         }
                     };
                     EditControl.prototype.onPointerMove = function (evt) {
@@ -389,6 +428,7 @@ var org;
                             }
                         }
                         this.prevPos = newPos;
+                        this.callActionListener(this.actionType);
                     };
                     EditControl.prototype.getPickPlane = function (axis) {
                         var n = axis.name;

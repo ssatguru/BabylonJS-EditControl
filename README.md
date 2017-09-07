@@ -166,17 +166,30 @@ editControl.isPointeOver();
 ```
 returns true if the pointer is over the edit control
 
-13) To be called back whenever the user takes an action
+13) To be called back whenever the user starts, takes or ends an action
 ```
+editControl.addActionStartListener(function(number actionType));
 editControl.addActionListener(function(number actionType));
+editControl.addActionEndListener(function(number actionType));
 ```
-This takes a function as a parameter.  
-This function would be called every time the user translates, rotates or scales the mesh.  
-The function itself would be passed a parameter which would indicate the action taken by the user.  
-This parameter would be a number which would have one of the following values  
+Each of these take a function as a parameter.  
+The ActionStartListener would be called when the user starts translating,rotating or scaling a mesh
+The ActionListener would be called when the user is translating,rotating or scaling a mesh
+The ActionEndListener would be called when the user ends translating,rotating or scaling a mesh
+
+Theses listener functions would be passed a number which would indicate the action being taken by the user.  
+This number would have one of the following values  
 0 - ActionType.TRANS, Translation  
 1 - ActioneType.ROT, Rotation  
 2 - ActioneType.SCALE, Scaling  
+
+To remove the listeners
+```
+editControl.removeActionStartListener();
+editControl.removeActionListener();
+editControl.removeActionEndListener();
+editControl.removeAllActionListeners() // to remove all;
+```
 
 14) To refresh mesh Bounding Info. EditControl uses mesh bounding info to provide the same smooth scaling experience for both small and large mesh. The bounding info changes when a mesh is baked. Use this method to refresh the bounding info if you baked the transform of the mesh.
 ```
