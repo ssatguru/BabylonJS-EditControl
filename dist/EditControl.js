@@ -507,6 +507,16 @@ var org;
                                 this.transBy.z = diff.z;
                         }
                         this.transWithSnap(this.mesh, this.transBy, this.local);
+                        if (this.transBoundsMin) {
+                            this.mesh.position.x = Math.max(this.mesh.position.x, this.transBoundsMin.x);
+                            this.mesh.position.y = Math.max(this.mesh.position.y, this.transBoundsMin.y);
+                            this.mesh.position.z = Math.max(this.mesh.position.z, this.transBoundsMin.z);
+                        }
+                        if (this.transBoundsMax) {
+                            this.mesh.position.x = Math.min(this.mesh.position.x, this.transBoundsMax.x);
+                            this.mesh.position.y = Math.min(this.mesh.position.y, this.transBoundsMax.y);
+                            this.mesh.position.z = Math.min(this.mesh.position.z, this.transBoundsMax.z);
+                        }
                         this.mesh.computeWorldMatrix(true);
                     };
                     EditControl.prototype.transWithSnap = function (mesh, trans, local) {
@@ -603,6 +613,16 @@ var org;
                         this.scale.y = this.scale.y / bbd.y;
                         this.scale.z = this.scale.z / bbd.z;
                         this.scaleWithSnap(this.mesh, this.scale);
+                        if (this.scaleBoundsMin) {
+                            this.mesh.scaling.x = Math.max(this.mesh.scaling.x, this.scaleBoundsMin.x);
+                            this.mesh.scaling.y = Math.max(this.mesh.scaling.y, this.scaleBoundsMin.y);
+                            this.mesh.scaling.z = Math.max(this.mesh.scaling.z, this.scaleBoundsMin.z);
+                        }
+                        if (this.scaleBoundsMax) {
+                            this.mesh.scaling.x = Math.min(this.mesh.scaling.x, this.scaleBoundsMax.x);
+                            this.mesh.scaling.y = Math.min(this.mesh.scaling.y, this.scaleBoundsMax.y);
+                            this.mesh.scaling.z = Math.min(this.mesh.scaling.z, this.scaleBoundsMax.z);
+                        }
                     };
                     EditControl.prototype.scaleWithSnap = function (mesh, p) {
                         if (this.snapS) {
@@ -881,6 +901,30 @@ var org;
                             this.sEndAll.visibility = 0;
                             this.scaleEnabled = false;
                         }
+                    };
+                    EditControl.prototype.setScaleBounds = function (min, max) {
+                        this.scaleBoundsMin = min ? min : null;
+                        this.scaleBoundsMax = max ? max : null;
+                        if (this.scaleBoundsMin != null) {
+                            if (this.scaleBoundsMin.x == 0)
+                                this.scaleBoundsMin.x = 0.00000001;
+                            if (this.scaleBoundsMin.y == 0)
+                                this.scaleBoundsMin.y = 0.00000001;
+                            if (this.scaleBoundsMin.z == 0)
+                                this.scaleBoundsMin.z = 0.00000001;
+                        }
+                    };
+                    EditControl.prototype.removeScaleBounds = function () {
+                        this.scaleBoundsMin = null;
+                        this.scaleBoundsMax = null;
+                    };
+                    EditControl.prototype.setTransBounds = function (min, max) {
+                        this.transBoundsMin = min ? min : null;
+                        this.transBoundsMax = max ? max : null;
+                    };
+                    EditControl.prototype.removeTransBounds = function () {
+                        this.transBoundsMin = null;
+                        this.transBoundsMax = null;
                     };
                     EditControl.prototype.createGuideAxes = function () {
                         this.guideCtl = new Mesh("guideCtl", this.scene);

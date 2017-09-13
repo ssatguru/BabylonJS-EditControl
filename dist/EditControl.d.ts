@@ -117,6 +117,14 @@ declare namespace org.ssatguru.babylonjs.component {
         isScalingEnabled(): boolean;
         enableScaling(): void;
         disableScaling(): void;
+        private scaleBoundsMin;
+        private scaleBoundsMax;
+        setScaleBounds(min?: Vector3, max?: Vector3): void;
+        removeScaleBounds(): void;
+        private transBoundsMin;
+        private transBoundsMax;
+        setTransBounds(min?: Vector3, max?: Vector3): void;
+        removeTransBounds(): void;
         private bXaxis;
         private bYaxis;
         private bZaxis;

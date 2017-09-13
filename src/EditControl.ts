@@ -940,6 +940,11 @@ namespace org.ssatguru.babylonjs.component {
         public setScaleBounds(min?: Vector3, max?: Vector3) {
             this.scaleBoundsMin = min ? min : null;
             this.scaleBoundsMax = max ? max : null;
+            if (this.scaleBoundsMin != null){
+                if (this.scaleBoundsMin.x == 0) this.scaleBoundsMin.x = 0.00000001;
+                if (this.scaleBoundsMin.y == 0) this.scaleBoundsMin.y = 0.00000001;
+                if (this.scaleBoundsMin.z == 0) this.scaleBoundsMin.z = 0.00000001;
+            }
         }
 
         public removeScaleBounds() {

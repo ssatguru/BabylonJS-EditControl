@@ -11,6 +11,18 @@
                 margin: 0;
                 padding: 0;
             }
+            
+            table {
+                border-radius: 10px;
+            }
+
+            table, th, td {
+                border: 1px solid black;
+                padding: 5px;
+                padding-left: 15px;
+                padding-right: 15px;
+                border-collapse: collapse;
+            }
 
             #controls {
                 position: absolute;
@@ -19,6 +31,9 @@
             }
 
             #renderCanvas {
+                position: absolute;
+                top: 0;
+                right: 0;
                 width: 100%;
                 height: 100%;
                 touch-action: none;
@@ -53,27 +68,53 @@
     </head>
 
     <body>
-        <div id="controls">
-            <input type="checkbox" id="local" checked>local
-            <button id="trans">translate</button>
-            <button id="rotate">rotate</button>
-            <button id="scale">scale</button>
-            <input type="checkbox" id="snaptrans">snap translation
-            <input type="checkbox" id="snaprot">snap rotation
-            <input type="checkbox" id="snapscale">snap scale
-            <button id="undo">undo</button>
-            <button id="redo">redo</button>
-            <button id="help" style="float: right;">Help</button>
-            <br>
-            <button id="focus">focus</button>
-            <br>
-            <button id="euler">toggle euler</button>
-            <button id="pRot">print rotation to console</button>
-
-        </div>
-
         <canvas id="renderCanvas"></canvas>
 
+        <div id="controls">
+            <table >
+                <tr>
+                    <td><input type="checkbox" id="local" checked>local</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="trans">translate</button></td>
+                    <td><button id="rotate">rotate</button></td>
+                    <td><button id="scale">scale</button></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="snaptrans">snap translation</td>
+                    <td><input type="checkbox" id="snaprot">snap rotation</td>
+                    <td><input type="checkbox" id="snapscale">snap scale</td>
+                <tr>
+                    <td><input type="checkbox" id="boundTrans">bound translation</td>
+                    <td><input type="checkbox" id="boundRot">bound rotation</td>
+                    <td><input type="checkbox" id="boundScale">bound scale</td>
+                </tr>
+                <tr>
+                    <td><button id="undo">undo</button></td>
+                    <td><button id="redo">redo</button></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="focus">focus</button></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="euler">toggle euler</button></td>
+                    <td><button id="pRot">print rotation to console</button></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="help" >Help</button></td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+            <table>
+        </div>
+
+        
         <script type="text/javascript">
             var box;
             var camera;
@@ -82,23 +123,37 @@
             /*
              * get all buttons
              */
-            var helpButton = document.getElementById("help");
+            var localButton = document.getElementById("local");
+            
             var transButton = document.getElementById("trans");
             var rotButton = document.getElementById("rotate");
             var scaleButton = document.getElementById("scale");
-            var localButton = document.getElementById("local");
+            
             var snapTButton = document.getElementById("snaptrans");
             var snapRButton = document.getElementById("snaprot");
             var snapSButton = document.getElementById("snapscale");
+            
             snapTButton.checked = false;
             snapRButton.checked = false;
             snapSButton.checked = false;
+            
+            var boundTButton = document.getElementById("boundTrans");
+            var boundRButton = document.getElementById("boundRot");
+            var boundSButton = document.getElementById("boundScale");
+            
+            boundTButton.checked = false;
+            boundRButton.checked = false;
+            boundSButton.checked = false;
+            
             var undoButton = document.getElementById("undo");
             var redoButton = document.getElementById("redo");
+            
             var focusButton = document.getElementById("focus");
 
             var pRotButton = document.getElementById("pRot");
             var eulerButton = document.getElementById("euler");
+            
+            var helpButton = document.getElementById("help");
 
             /*
              * assign functions to buttons
@@ -139,6 +194,35 @@
             snapSButton.onclick = function () {
                 editControl.setScaleSnap(snapSButton.checked);
             };
+            
+            boundTButton.onclick = function () {
+                if (boundTButton.checked){
+                    editControl.setTransBounds(
+                        new BABYLON.Vector3(-5,-5,-5),  // min
+                        new BABYLON.Vector3(5,5,5)      // max
+                    );
+                }else{
+                    editControl.removeTransBounds();
+                }
+            };
+            
+            boundRButton.onclick = function () {
+                alert("Rotation Bounds has not been implemented yet");
+            }
+            
+            boundSButton.onclick = function () {
+                if (boundSButton.checked){
+                    editControl.setScaleBounds(
+                        // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
+                        new BABYLON.Vector3(0,0,0),     // causes bug
+                        new BABYLON.Vector3(2,2,2)      // max
+                    );
+                }else{
+                    editControl.removeScaleBounds();
+                }
+            };
+            
+            
             undoButton.onclick = function () {
                 editControl.undo();
             };
@@ -233,20 +317,9 @@
                 //set scale snap value in scale ratio
                 editControl.setScaleSnapValue(0.25);
 
-                editControl.addActionStartListener(actionStartListener)
-                editControl.addActionListener(actionListener)
-                editControl.addActionEndListener(actionEndListener)
-
-                editControl.setTransBounds(
-                    new BABYLON.Vector3(-5,-5,-5),  // min
-                    new BABYLON.Vector3(5,5,5)      // max
-                );
-
-                editControl.setScaleBounds(
-                    // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
-                    new BABYLON.Vector3(0,0,0),     // causes bug
-                    new BABYLON.Vector3(2,2,2)      // max
-                );
+                editControl.addActionStartListener(actionStartListener);
+                editControl.addActionListener(actionListener);
+                editControl.addActionEndListener(actionEndListener);
 
                 return scene;
             };
