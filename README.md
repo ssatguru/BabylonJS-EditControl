@@ -133,7 +133,7 @@ removeTransBounds();
 removeRotBounds();
 removeScaleBounds();
 ```
-Note: rotation bounds has not been implemented for now.
+Note: rotation bounds has not been implemented. This is on TODO list.
 #### To undo or redo
 ```
 editControl.undo();
@@ -168,7 +168,7 @@ The ActionStartListener would be called when the user starts translating,rotatin
 The ActionListener would be called when the user is translating,rotating or scaling a mesh  
 The ActionEndListener would be called when the user ends translating,rotating or scaling a mesh  
 
-Theses listener functions would be passed a number which would indicate the action being taken by the user.  
+When called, these listeners would be passed a number which would indicate the action being taken by the user.  
 This number would have one of the following values  
 0 - ActionType.TRANS, Translation  
 1 - ActioneType.ROT, Rotation  
