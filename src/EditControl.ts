@@ -936,7 +936,7 @@ namespace org.ssatguru.babylonjs.component {
 
         private scaleBoundsMin: Vector3;
         private scaleBoundsMax: Vector3;
-
+        
         public setScaleBounds(min?: Vector3,max?: Vector3) {
             this.scaleBoundsMin=min? min:null;
             this.scaleBoundsMax=max? max:null;
