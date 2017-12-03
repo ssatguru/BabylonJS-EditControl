@@ -85,32 +85,20 @@ Takes five parms
 #### To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
-```
-```
 editControl.enableRotation();
 editControl.returnEuler(true); // Optional. This will return rotation in euler instead of quaternion. Quaternion is the default.
-```
-```
 editControl.enableScaling();
 ```
 #### To disable Translation, Rotation or Scaling controls (just displays x,y,z axis)
 ```
 editControl.disableTranslation();
-```
-```
 editControl.disableRotation();
-```
-```
 editControl.disableScaling();
 ```
 #### To check if Translation, Rotation or Scaling is enabled
 ```
 editControl.isTranslationEnabled();
-```
-```
 editControl.isRotationEnabled();
-```
-```
 editControl.isScalingEnabled();
 ```
 #### To turn on/off local/ global mode
@@ -124,28 +112,31 @@ editControl.isLocal();
 #### To turn on/off translation, rotation or scale snapping
 ```
 editControl.setTransSnap(boolean true/false);
-```
-```
 editControl.setRotSnap(boolean true/false);
-```
-```
 editControl.setScaleSnap(boolean true/false);
 ```
 #### To set translation, rotation or scale snap values
 ```
 editControl.setTransSnapValue(number n in meters);
-```
-```
 editControl.setRotSnapValue(number n in radians);
-```
-```
 editControl.setScaleSnapValue(number n a factor by which scale should increase);
 ```
+#### To bound translation, rotation or scaling
+This restricts tranlation, rotation,scaling between a minimum and maximum values
+```
+setTransBounds(min?: Vector3,max?: Vector3) ;
+setRotBounds(min?: Vector3,max?: Vector3);
+setScaleBounds(min?: Vector3,max?: Vector3);
+```
+```
+removeTransBounds();
+removeRotBounds();
+removeScaleBounds();
+```
+Note: rotation bounds has not been implemented for now.
 #### To undo or redo
 ```
 editControl.undo();
-```
-```
 editControl.redo();
 ```
 #### To set undo count
