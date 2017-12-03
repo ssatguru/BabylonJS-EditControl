@@ -926,6 +926,14 @@ var org;
                         this.transBoundsMin = null;
                         this.transBoundsMax = null;
                     };
+                    EditControl.prototype.setRotBounds = function (min, max) {
+                        this.rotBoundsMin = min ? min : null;
+                        this.rotBoundsMax = max ? max : null;
+                    };
+                    EditControl.prototype.removeRotBounds = function () {
+                        this.rotBoundsMin = null;
+                        this.rotBoundsMax = null;
+                    };
                     EditControl.prototype.createGuideAxes = function () {
                         this.guideCtl = new Mesh("guideCtl", this.scene);
                         this.bXaxis = Mesh.CreateLines("bxAxis", [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)], this.scene);
@@ -1105,10 +1113,10 @@ var org;
                         this.rZ.isPickable = false;
                         this.rAll.isPickable = false;
                         var cl = d;
-                        this.rEndX = this.createCircle(cl / 2, 360);
+                        this.rEndX = this.createCircle(cl / 2, 360, false);
                         this.rEndY = this.rEndX.clone("");
                         this.rEndZ = this.rEndX.clone("");
-                        this.rEndAll = this.createCircle(cl / 1.75, 360);
+                        this.rEndAll = this.createCircle(cl / 1.75, 360, false);
                         this.rEndX.parent = this.rX;
                         this.rEndY.parent = this.rY;
                         this.rEndZ.parent = this.rZ;
@@ -1132,7 +1140,7 @@ var org;
                         var box = Mesh.ExtrudeShape("", shape, path, 1, 0, 2, this.scene);
                         return box;
                     };
-                    EditControl.prototype.createCircle = function (r, t) {
+                    EditControl.prototype.createCircle = function (r, t, double) {
                         if (t === null)
                             t = 360;
                         var points = [];
@@ -1150,6 +1158,20 @@ var org;
                                 z = r * Math.sin(i * a);
                             points[p] = new Vector3(x, 0, z);
                             p++;
+                        }
+                        if (double) {
+                            r = r - 0.04;
+                            for (var i = 0; i <= t; i = i + 10) {
+                                x = r * Math.cos(i * a);
+                                if ((i == 90))
+                                    z = r;
+                                else if ((i == 270))
+                                    z = -r;
+                                else
+                                    z = r * Math.sin(i * a);
+                                points[p] = new Vector3(x, 0, z);
+                                p++;
+                            }
                         }
                         var circle = Mesh.CreateLines("", points, this.scene);
                         return circle;

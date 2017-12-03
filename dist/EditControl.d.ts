@@ -125,6 +125,10 @@ declare namespace org.ssatguru.babylonjs.component {
         private transBoundsMax;
         setTransBounds(min?: Vector3, max?: Vector3): void;
         removeTransBounds(): void;
+        private rotBoundsMin;
+        private rotBoundsMax;
+        setRotBounds(min?: Vector3, max?: Vector3): void;
+        removeRotBounds(): void;
         private bXaxis;
         private bYaxis;
         private bZaxis;
@@ -168,7 +172,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private rEndAll;
         private createRotAxes();
         private extrudeBox(w, l);
-        private createCircle(r, t?);
+        private createCircle(r, t, double);
         private createTube(r, t?);
         private sCtl;
         private sX;
