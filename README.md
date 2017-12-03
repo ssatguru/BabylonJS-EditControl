@@ -63,7 +63,7 @@ For now, to keep it simple and avoid dependencies on module systems, the applica
 In other words load it using the "script" tag and refer to it using the global name "org.ssatguru.babylonjs.component.EditControl".  
 
 ## API
-1) To Instantiate
+#### To Instantiate
 ```
 // JavaScript
 var EditControl = org.ssatguru.babylonjs.component.EditControl;
@@ -82,91 +82,82 @@ Takes five parms
 * scale - how small or large the editcontrol should appear  
 * eulerian - true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
-2) To enable Translation, Rotation or Scaling controls
+#### To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
-```
-```
 editControl.enableRotation();
 editControl.returnEuler(true); // Optional. This will return rotation in euler instead of quaternion. Quaternion is the default.
-```
-```
 editControl.enableScaling();
 ```
-3) To disable Translation, Rotation or Scaling controls (just displays x,y,z axis)
+#### To disable Translation, Rotation or Scaling controls (just displays x,y,z axis)
 ```
 editControl.disableTranslation();
-```
-```
 editControl.disableRotation();
-```
-```
 editControl.disableScaling();
 ```
-4) To check if Translation, Rotation or Scaling is enabled
+#### To check if Translation, Rotation or Scaling is enabled
 ```
 editControl.isTranslationEnabled();
-```
-```
 editControl.isRotationEnabled();
-```
-```
 editControl.isScalingEnabled();
 ```
-5) To turn on/off local/ global mode
+#### To turn on/off local/ global mode
 ```
 editControl.setLocal(boolean true/false);
 ```
-6) To check if local/ global mode
+#### To check if local/ global mode
 ```
 editControl.isLocal();
 ```
-7) To turn on/off translation, rotation or scale snapping
+#### To turn on/off translation, rotation or scale snapping
 ```
 editControl.setTransSnap(boolean true/false);
-```
-```
 editControl.setRotSnap(boolean true/false);
-```
-```
 editControl.setScaleSnap(boolean true/false);
 ```
-8) To set translation, rotation or scale snap values
+#### To set translation, rotation or scale snap values
 ```
 editControl.setTransSnapValue(number n in meters);
-```
-```
 editControl.setRotSnapValue(number n in radians);
-```
-```
 editControl.setScaleSnapValue(number n a factor by which scale should increase);
 ```
-9) To undo or redo
+#### To bound translation, rotation or scaling
+This restricts tranlation, rotation,scaling between a minimum and maximum values
+```
+setTransBounds(min?: Vector3,max?: Vector3) ;
+setRotBounds(min?: Vector3,max?: Vector3);
+setScaleBounds(min?: Vector3,max?: Vector3);
+```
+```
+removeTransBounds();
+removeRotBounds();
+removeScaleBounds();
+```
+Note: rotation bounds has not been implemented. This is on TODO list.
+#### To undo or redo
 ```
 editControl.undo();
-```
-```
 editControl.redo();
 ```
-10) To set undo count
+#### To set undo count
 
 By default does upto 10 undos
 ```
 editControl.setUndoCount(number count);
 ```
-11) To check if user editing (moving,translating or scaling object)
+#### To check if user editing (moving,translating or scaling object)
 ```
 editControl.isEditing();
 ```
 returns true if the use is in the process of editing
 
-12) To check if the pointer is over the edit control
+#### To check if the pointer is over the edit control
 ```
 editControl.isPointeOver();
 ```
 returns true if the pointer is over the edit control
 
-13) To be called back whenever the user starts, takes or ends an action
+#### To be called back whenever the user starts, takes or ends an action
 ```
 editControl.addActionStartListener(function(number actionType));
 editControl.addActionListener(function(number actionType));
@@ -177,7 +168,7 @@ The ActionStartListener would be called when the user starts translating,rotatin
 The ActionListener would be called when the user is translating,rotating or scaling a mesh  
 The ActionEndListener would be called when the user ends translating,rotating or scaling a mesh  
 
-Theses listener functions would be passed a number which would indicate the action being taken by the user.  
+When called, these listeners would be passed a number which would indicate the action being taken by the user.  
 This number would have one of the following values  
 0 - ActionType.TRANS, Translation  
 1 - ActioneType.ROT, Rotation  
@@ -191,12 +182,13 @@ editControl.removeActionEndListener();
 editControl.removeAllActionListeners() // to remove all;
 ```
 
-14) To refresh mesh Bounding Info. EditControl uses mesh bounding info to provide the same smooth scaling experience for both small and large mesh. The bounding info changes when a mesh is baked. Use this method to refresh the bounding info if you baked the transform of the mesh.
+#### To refresh mesh Bounding Info. 
+EditControl uses mesh bounding info to provide the same smooth scaling experience for both small and large mesh. The bounding info changes when a mesh is baked. Use this method to refresh the bounding info if you baked the transform of the mesh.
 ```
 editControl.refreshBoundingInfo();
 ```
 
-15) To switch edit control to another mesh
+#### To switch edit control to another mesh
 ```
 editControl.switchTo(Mesh mesh, optional boolean isEuler );
 ```
@@ -207,7 +199,7 @@ The translation, rotation, scaling mode is maintained.
 mesh : the mesh to which the control should switch to  
 isEuler : true/false, optional, default false, true indicates that rotation of the mesh is in euler
 
-16) To detach from the mesh and clean up resources.
+#### To detach from the mesh and clean up resources.
 ```
 editControl.detach();
 ```
