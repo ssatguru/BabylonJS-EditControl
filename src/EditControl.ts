@@ -619,16 +619,16 @@ namespace org.ssatguru.babylonjs.component {
 
             //as the mesh becomes large reduce the amount by which we scale.
 
-//            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
-//            this.scale.x = this.scale.x/br;
-//            this.scale.y = this.scale.y/br;
-//            this.scale.z = this.scale.z/br;
+            //            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
+            //            this.scale.x = this.scale.x/br;
+            //            this.scale.y = this.scale.y/br;
+            //            this.scale.z = this.scale.z/br;
 
-//            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
-//            let bbx: number = bb.maximum.x - bb.minimum.x;
-//            let bby: number = bb.maximum.y - bb.minimum.y;
-//            let bbz: number = bb.maximum.z - bb.minimum.z;
-//
+            //            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
+            //            let bbx: number = bb.maximum.x - bb.minimum.x;
+            //            let bby: number = bb.maximum.y - bb.minimum.y;
+            //            let bbz: number = bb.maximum.z - bb.minimum.z;
+            //
             let bbd = this.boundingDimesion;
             this.scale.x = this.scale.x/bbd.x;
             this.scale.y = this.scale.y/bbd.y;
@@ -966,6 +966,19 @@ namespace org.ssatguru.babylonjs.component {
             this.transBoundsMax = null;
         }
 
+        private rotBoundsMin: Vector3;
+        private rotBoundsMax: Vector3;
+
+        public setRotBounds(min?: Vector3, max?: Vector3) {
+            this.rotBoundsMin = min ? min : null;
+            this.rotBoundsMax = max ? max : null;
+        }
+
+        public removeRotBounds() {
+            this.rotBoundsMin = null;
+            this.rotBoundsMax = null;
+        }
+
         private bXaxis: LinesMesh;
         private bYaxis: LinesMesh;
         private bZaxis: LinesMesh;
@@ -1283,11 +1296,11 @@ namespace org.ssatguru.babylonjs.component {
 
             //non pickable but visible circles
             var cl: number = d;
-            //this.rEndX = this.createCircle(cl / 2, 90);
-            this.rEndX = this.createCircle(cl / 2, 360);
+            //this.rEndX = this.createCircle(cl / 2, 90,false);
+            this.rEndX = this.createCircle(cl / 2, 360, false);
             this.rEndY = this.rEndX.clone("");
             this.rEndZ = this.rEndX.clone("");
-            this.rEndAll = this.createCircle(cl / 1.75, 360);
+            this.rEndAll = this.createCircle(cl / 1.75, 360, false);
 
             this.rEndX.parent = this.rX;
             this.rEndY.parent = this.rY;
@@ -1317,7 +1330,7 @@ namespace org.ssatguru.babylonjs.component {
             return box;
         }
 
-        private createCircle(r: number, t?: number): LinesMesh {
+        private createCircle(r: number, t: number, double: boolean): LinesMesh {
             if (t === null) t = 360;
             var points: Vector3[] = [];
             var x: number;
@@ -1329,6 +1342,15 @@ namespace org.ssatguru.babylonjs.component {
                 if ((i == 90)) z = r; else if ((i == 270)) z = -r; else z = r * Math.sin(i * a);
                 points[p] = new Vector3(x, 0, z);
                 p++;
+            }
+            if (double) {
+                r = r - 0.04;
+                for (var i: number = 0; i <= t; i = i + 10) {
+                    x = r * Math.cos(i * a);
+                    if ((i == 90)) z = r; else if ((i == 270)) z = -r; else z = r * Math.sin(i * a);
+                    points[p] = new Vector3(x, 0, z);
+                    p++;
+                }
             }
             var circle: LinesMesh = Mesh.CreateLines("", points, this.scene);
             return circle;
