@@ -191,7 +191,8 @@ editControl.removeActionEndListener();
 editControl.removeAllActionListeners() // to remove all;
 ```
 
-14) To refresh mesh Bounding Info. EditControl uses mesh bounding info to provide the same smooth scaling experience for both small and large mesh. The bounding info changes when a mesh is baked. Use this method to refresh the bounding info if you baked the transform of the mesh.
+#### To refresh mesh Bounding Info. 
+EditControl uses mesh bounding info to provide the same smooth scaling experience for both small and large mesh. The bounding info changes when a mesh is baked. Use this method to refresh the bounding info if you baked the transform of the mesh.
 ```
 editControl.refreshBoundingInfo();
 ```
