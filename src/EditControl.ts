@@ -223,7 +223,7 @@ namespace org.ssatguru.babylonjs.component {
         private onPointerDown(evt: Event) {
             evt.preventDefault();
             this.pDown=true;
-            if((<PointerEvent> evt).button!=0) return;
+            if((<PointerEvent>evt).button!=0) return;
 
             var pickResult: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
                 if(this.transEnabled) {
@@ -238,10 +238,10 @@ namespace org.ssatguru.babylonjs.component {
 
             if(pickResult.hit) {
                 this.setAxesVisiblity(0);
-                this.axisPicked=<Mesh> pickResult.pickedMesh;
+                this.axisPicked=<Mesh>pickResult.pickedMesh;
                 let childs: Node[]=this.axisPicked.getChildren();
                 if(childs.length>0) {
-                    (<Mesh> childs[0]).visibility=this.visibility;
+                    (<Mesh>childs[0]).visibility=this.visibility;
                 } else {
                     this.axisPicked.visibility=this.visibility;
                 }
@@ -286,8 +286,8 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private detachControl(cam: Object,can: Object) {
-            var camera: Camera=<Camera> cam;
-            var canvas: HTMLCanvasElement=<HTMLCanvasElement> can;
+            var camera: Camera=<Camera>cam;
+            var canvas: HTMLCanvasElement=<HTMLCanvasElement>can;
             camera.detachControl(canvas);
         }
 
@@ -314,19 +314,19 @@ namespace org.ssatguru.babylonjs.component {
             },null,this.mainCamera);
             if(pickResult.hit) {
                 //if we are still over the same axis mesh then don't do anything
-                if(<Mesh> pickResult.pickedMesh!=this.prevOverMesh) {
+                if(<Mesh>pickResult.pickedMesh!=this.prevOverMesh) {
                     this.pointerIsOver=true;
                     //if we moved directly from one axis mesh to this then clean up the prev axis mesh
                     this.clearPrevOverMesh();
-                    this.prevOverMesh=<Mesh> pickResult.pickedMesh;
+                    this.prevOverMesh=<Mesh>pickResult.pickedMesh;
                     if(this.rotEnabled) {
-                        this.savedCol=(<LinesMesh> this.prevOverMesh.getChildren()[0]).color;
-                        (<LinesMesh> this.prevOverMesh.getChildren()[0]).color=Color3.White();
+                        this.savedCol=(<LinesMesh>this.prevOverMesh.getChildren()[0]).color;
+                        (<LinesMesh>this.prevOverMesh.getChildren()[0]).color=Color3.White();
                     } else {
                         let childs: Node[]=this.prevOverMesh.getChildren();
                         if(childs.length>0) {
-                            this.savedMat=(<Mesh> childs[0]).material;
-                            (<Mesh> childs[0]).material=this.whiteMat;
+                            this.savedMat=(<Mesh>childs[0]).material;
+                            (<Mesh>childs[0]).material=this.whiteMat;
                         } else {
                             this.savedMat=this.prevOverMesh.material;
                             this.prevOverMesh.material=this.whiteMat;
@@ -371,11 +371,11 @@ namespace org.ssatguru.babylonjs.component {
             }
 
             if(this.rotEnabled) {
-                (<LinesMesh> mesh.getChildren()[0]).color=this.savedCol;
+                (<LinesMesh>mesh.getChildren()[0]).color=this.savedCol;
             } else {
                 let childs: Node[]=mesh.getChildren();
                 if(childs.length>0) {
-                    (<Mesh> childs[0]).material=this.savedMat;
+                    (<Mesh>childs[0]).material=this.savedMat;
                 } else {
                     mesh.material=this.savedMat;
                 }
@@ -1671,9 +1671,9 @@ namespace org.ssatguru.babylonjs.component {
 
         public undo(): number {
             if((this.current>0)) {
-                let at: number=(<Act> this.acts[this.current]).getActionType()
+                let at: number=(<Act>this.acts[this.current]).getActionType()
                 this.current--;
-                (<Act> this.acts[this.current]).perform(this.mesh);
+                (<Act>this.acts[this.current]).perform(this.mesh);
                 return at;
             }
         }
@@ -1681,8 +1681,8 @@ namespace org.ssatguru.babylonjs.component {
         public redo() {
             if((this.current<this.last)) {
                 this.current++;
-                (<Act> this.acts[this.current]).perform(this.mesh);
-                return (<Act> this.acts[this.current]).getActionType()
+                (<Act>this.acts[this.current]).perform(this.mesh);
+                return (<Act>this.acts[this.current]).getActionType()
             }
         }
     }
