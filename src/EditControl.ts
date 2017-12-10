@@ -115,7 +115,7 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
             //get distance of axes from the camera plane - project "camera to axes" vector onto the camera normal
             var parentOnNormal: number=Vector3.Dot(this.toParent,this.cameraNormal)/this.cameraNormal.length();
-            var s: number=parentOnNormal/this.distFromCamera;
+            var s: number=Math.abs(parentOnNormal/this.distFromCamera);
             Vector3.FromFloatsToRef(s,s,s,this.theParent.scaling);
             Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
 
