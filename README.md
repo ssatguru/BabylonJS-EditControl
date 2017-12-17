@@ -80,13 +80,17 @@ Takes five parms
 * camera - active camera
 * canvas - the mesh canvas 
 * scale - how small or large the editcontrol should appear  
-* eulerian - true/false, optional, default false, true indicates that rotation of the mesh is in euler
+* eulerian - true/false. Optional. Default false. True indicates that rotation of the mesh is in euler. 
+If rotation is unresponsive then it is possible that the rotation may not have been initialized to either a eulerian or quaternion value.
 
 #### To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
+
 editControl.enableRotation();
+editControl.setRotGuideFull(true/false) //This makes the rotation guides 360 degree(true) or 90 degree(false) .90 degree  looks less cluttered.
 editControl.returnEuler(true); // Optional. This will return rotation in euler instead of quaternion. Quaternion is the default.
+
 editControl.enableScaling();
 ```
 #### To disable Translation, Rotation or Scaling controls (just displays x,y,z axis)
