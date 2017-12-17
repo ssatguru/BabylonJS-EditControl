@@ -80,7 +80,8 @@ Takes five parms
 * camera - active camera
 * canvas - the mesh canvas 
 * scale - how small or large the editcontrol should appear  
-* eulerian - true/false, optional, default false, true indicates that rotation of the mesh is in euler
+* eulerian - true/false. Optional. Default false. True indicates that rotation of the mesh is in euler. 
+If rotation is unresponsive then it is possible that the rotation may not have been initialized to either a eulerian or quaternion value.
 
 #### To enable Translation, Rotation or Scaling controls
 ```
