@@ -85,8 +85,11 @@ Takes five parms
 #### To enable Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
+
 editControl.enableRotation();
+editControl.setRotGuideFull(true/false) //This makes the rotation guides 360 degree(true) or 90 degree(false) .90 degree  looks less cluttered.
 editControl.returnEuler(true); // Optional. This will return rotation in euler instead of quaternion. Quaternion is the default.
+
 editControl.enableScaling();
 ```
 #### To disable Translation, Rotation or Scaling controls (just displays x,y,z axis)
