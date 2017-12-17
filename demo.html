@@ -63,7 +63,7 @@
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
         <!-- for demo -->
-        <script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.5.1/EditControl.min.js"></script>
+        <script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.5.2/EditControl.min.js"></script>
         <!--for test-->
         <!--<script src="dist/EditControl.js"></script>-->
     </head>
@@ -307,8 +307,8 @@
                         new BABYLON.Vector3(0, 1, 0), scene);
                 light.intensity = .5;
 
-                box = BABYLON.Mesh.CreateBox("box", 2, scene);
                 //box = BABYLON.Mesh.CreatePlane("box", 2, scene,false,BABYLON.Mesh.DOUBLESIDE);
+                box = BABYLON.MeshBuilder.CreateBox("", {height: 6, width: 4, depth: 2});
                 box.rotationQuaternion = BABYLON.Quaternion.Identity();
                 box.position = new BABYLON.Vector3(0, 1, 0);
 
