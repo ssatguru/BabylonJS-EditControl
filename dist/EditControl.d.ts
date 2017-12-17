@@ -170,6 +170,8 @@ declare namespace org.ssatguru.babylonjs.component {
         private rEndY;
         private rEndZ;
         private rEndAll;
+        private guideSize;
+        setRotGuideFull(y: boolean): void;
         private createRotAxes();
         private extrudeBox(w, l);
         private createCircle(r, t, double);

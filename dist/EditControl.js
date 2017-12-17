@@ -60,6 +60,7 @@ var org;
                         this.transEnabled = false;
                         this.rotEnabled = false;
                         this.scaleEnabled = false;
+                        this.guideSize = 90;
                         this.localX = new Vector3(0, 0, 0);
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
@@ -108,7 +109,7 @@ var org;
                         this.theParent.position.subtractToRef(this.mainCamera.position, this.toParent);
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
                         var parentOnNormal = Vector3.Dot(this.toParent, this.cameraNormal) / this.cameraNormal.length();
-                        var s = parentOnNormal / this.distFromCamera;
+                        var s = Math.abs(parentOnNormal / this.distFromCamera);
                         Vector3.FromFloatsToRef(s, s, s, this.theParent.scaling);
                         Vector3.FromFloatsToRef(s, s, s, this.pALL.scaling);
                     };
@@ -664,7 +665,14 @@ var org;
                     };
                     EditControl.prototype.getBoundingDimension = function (mesh) {
                         var bb = this.mesh.getBoundingInfo().boundingBox;
-                        return bb.maximum.subtract(bb.minimum);
+                        var bd = bb.maximum.subtract(bb.minimum);
+                        if (bd.x == 0)
+                            bd.x = 1;
+                        if (bd.y == 0)
+                            bd.y = 1;
+                        if (bd.z == 0)
+                            bd.z = 1;
+                        return bd;
                     };
                     EditControl.prototype.refreshBoundingInfo = function () {
                         this.boundingDimesion = this.getBoundingDimension(this.mesh);
@@ -751,8 +759,11 @@ var org;
                                     this.snapRA = 0;
                                 }
                             }
-                            if (angle !== 0)
+                            if (angle !== 0) {
+                                if (this.scene.useRightHandedSystem)
+                                    angle = -angle;
                                 mesh.rotate(mesh.position.subtract(this.mainCamera.position), angle, Space.WORLD);
+                            }
                         }
                         this.setLocalAxes(this.mesh);
                         if (this.eulerian && angle != 0) {
@@ -844,7 +855,7 @@ var org;
                         this.eulerian = euler;
                     };
                     EditControl.prototype.enableRotation = function () {
-                        if (this.rX == null) {
+                        if (this.rCtl == null) {
                             this.createRotAxes();
                             this.rCtl.parent = this.theParent;
                         }
@@ -1088,10 +1099,21 @@ var org;
                         var t = s.build();
                         return t;
                     };
+                    EditControl.prototype.setRotGuideFull = function (y) {
+                        if (y)
+                            this.guideSize = 360;
+                        else
+                            this.guideSize = 90;
+                        if (this.rCtl != null) {
+                            this.rCtl.dispose();
+                            this.rCtl = null;
+                            this.enableRotation();
+                        }
+                    };
                     EditControl.prototype.createRotAxes = function () {
                         var d = this.axesLen * this.axesScale * 2;
                         this.rCtl = new Mesh("rotCtl", this.scene);
-                        this.rX = this.createTube(d / 2, 360);
+                        this.rX = this.createTube(d / 2, this.guideSize);
                         this.rX.name = "X";
                         this.rY = this.rX.clone("Y");
                         this.rZ = this.rX.clone("Z");
@@ -1113,7 +1135,7 @@ var org;
                         this.rZ.isPickable = false;
                         this.rAll.isPickable = false;
                         var cl = d;
-                        this.rEndX = this.createCircle(cl / 2, 360, false);
+                        this.rEndX = this.createCircle(cl / 2, this.guideSize, false);
                         this.rEndY = this.rEndX.clone("");
                         this.rEndZ = this.rEndX.clone("");
                         this.rEndAll = this.createCircle(cl / 1.75, 360, false);

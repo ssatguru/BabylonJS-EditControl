@@ -92,6 +92,11 @@
                     <td><input type="checkbox" id="boundRot">bound rotation</td>
                     <td><input type="checkbox" id="boundScale">bound scale</td>
                 </tr>
+                 <tr>
+                    <td></td>
+                    <td><input type="checkbox" id="rotGuideFull">full rotation guides</td>
+                    <td></td>
+                </tr>
                 <tr>
                     <td><button id="undo">undo</button></td>
                     <td><button id="redo">redo</button></td>
@@ -145,6 +150,9 @@
             boundTButton.checked = false;
             boundRButton.checked = false;
             boundSButton.checked = false;
+            
+            var rotGuideFull = document.getElementById("rotGuideFull");
+            rotGuideFull.checked = false;
             
             var undoButton = document.getElementById("undo");
             var redoButton = document.getElementById("redo");
@@ -223,6 +231,10 @@
                 }
             };
             
+            rotGuideFull.onclick = function () {
+                editControl.setRotGuideFull(rotGuideFull.checked);
+            }
+            
             
             undoButton.onclick = function () {
                 editControl.undo();
@@ -296,6 +308,7 @@
                 light.intensity = .5;
 
                 box = BABYLON.Mesh.CreateBox("box", 2, scene);
+                //box = BABYLON.Mesh.CreatePlane("box", 2, scene,false,BABYLON.Mesh.DOUBLESIDE);
                 box.rotationQuaternion = BABYLON.Quaternion.Identity();
                 box.position = new BABYLON.Vector3(0, 1, 0);
 

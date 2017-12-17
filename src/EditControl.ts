@@ -68,7 +68,6 @@ namespace org.ssatguru.babylonjs.component {
             this.actHist=new ActHist(mesh,10);
             mesh.computeWorldMatrix(true);
             this.boundingDimesion=this.getBoundingDimension(mesh);
-
             this.theParent=new Mesh("EditControl",this.scene);
             //this.theParent.position = this.meshPicked.absolutePosition;
             //this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
@@ -683,7 +682,11 @@ namespace org.ssatguru.babylonjs.component {
         private boundingDimesion: Vector3;
         private getBoundingDimension(mesh: Mesh): Vector3 {
             let bb: BoundingBox=this.mesh.getBoundingInfo().boundingBox;
-            return bb.maximum.subtract(bb.minimum);
+            let bd:Vector3=bb.maximum.subtract(bb.minimum);
+            if (bd.x==0) bd.x=1;
+            if (bd.y==0) bd.y=1;
+            if (bd.z==0) bd.z=1;
+            return bd;
         }
 
         /*
@@ -764,8 +767,10 @@ namespace org.ssatguru.babylonjs.component {
                         this.snapRA=0;
                     }
                 }
-                if(angle!==0)
+                if(angle!==0){
+                    if (this.scene.useRightHandedSystem) angle=-angle;
                     mesh.rotate(mesh.position.subtract(this.mainCamera.position),angle,Space.WORLD);
+                }
             }
             this.setLocalAxes(this.mesh);
             //we angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
@@ -869,7 +874,8 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public enableRotation() {
-            if(this.rX==null) {
+            //if(this.rX==null) {
+             if(this.rCtl==null) {
                 this.createRotAxes();
                 this.rCtl.parent=this.theParent;
             }
@@ -1257,13 +1263,25 @@ namespace org.ssatguru.babylonjs.component {
         private rEndY: LinesMesh;
         private rEndZ: LinesMesh;
         private rEndAll: LinesMesh;
+        
+        private guideSize:number=90;
+        
+        public setRotGuideFull(y:boolean){
+            if (y) this.guideSize=360;
+            else this.guideSize=90;
+            if (this.rCtl!=null){
+                this.rCtl.dispose();
+                //this.rX=null;
+                this.rCtl=null;
+                this.enableRotation();
+            }
+        }
 
         private createRotAxes() {
             var d: number=this.axesLen*this.axesScale*2;
             this.rCtl=new Mesh("rotCtl",this.scene);
             //pickable invisible torus around the rotation circles
-            //this.rX = this.createTube(d / 2, 90);
-            this.rX=this.createTube(d/2,360);
+            this.rX = this.createTube(d / 2, this.guideSize);
             this.rX.name="X";
             this.rY=this.rX.clone("Y");
             this.rZ=this.rX.clone("Z");
@@ -1296,8 +1314,7 @@ namespace org.ssatguru.babylonjs.component {
 
             //non pickable but visible circles
             var cl: number=d;
-            //this.rEndX = this.createCircle(cl / 2, 90,false);
-            this.rEndX=this.createCircle(cl/2,360,false);
+            this.rEndX = this.createCircle(cl / 2, this.guideSize,false);
             this.rEndY=this.rEndX.clone("");
             this.rEndZ=this.rEndX.clone("");
             this.rEndAll=this.createCircle(cl/1.75,360,false);
@@ -1573,6 +1590,7 @@ namespace org.ssatguru.babylonjs.component {
         public setScaleSnapValue(r: number) {
             this.scaleSnap=r;
         }
+        
 
 
         /*
