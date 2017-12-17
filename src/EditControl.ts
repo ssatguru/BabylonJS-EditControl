@@ -596,9 +596,16 @@ namespace org.ssatguru.babylonjs.component {
             if((n=="Z")||(n=="XZ")||(n=="ZY")) {
                 this.scale.z=Vector3.Dot(diff,this.localZ)/this.localZ.length();
             }
+            
+            let bbd=this.boundingDimesion;
+            this.scale.x=this.scale.x/bbd.x;
+            this.scale.y=this.scale.y/bbd.y;
+            this.scale.z=this.scale.z/bbd.z;
+
             if(n=="ALL") {
                 //project movement along camera up vector
                 let s: number=Vector3.Dot(diff,this.mainCamera.upVector);
+                s=s/Math.max(bbd.x,bbd.y,bbd.z);
                 this.scale.copyFromFloats(s,s,s);
             } else {
                 if(n=="XZ") {
@@ -628,11 +635,7 @@ namespace org.ssatguru.babylonjs.component {
             //            let bby: number = bb.maximum.y - bb.minimum.y;
             //            let bbz: number = bb.maximum.z - bb.minimum.z;
             //
-            let bbd=this.boundingDimesion;
-            this.scale.x=this.scale.x/bbd.x;
-            this.scale.y=this.scale.y/bbd.y;
-            this.scale.z=this.scale.z/bbd.z;
-
+            
             this.scaleWithSnap(this.mesh,this.scale);
             // bound the scale
             if(this.scaleBoundsMin) {

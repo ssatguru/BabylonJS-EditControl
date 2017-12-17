@@ -582,8 +582,13 @@ var org;
                         if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
                             this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
                         }
+                        var bbd = this.boundingDimesion;
+                        this.scale.x = this.scale.x / bbd.x;
+                        this.scale.y = this.scale.y / bbd.y;
+                        this.scale.z = this.scale.z / bbd.z;
                         if (n == "ALL") {
                             var s = Vector3.Dot(diff, this.mainCamera.upVector);
+                            s = s / Math.max(bbd.x, bbd.y, bbd.z);
                             this.scale.copyFromFloats(s, s, s);
                         }
                         else {
@@ -609,10 +614,6 @@ var org;
                                     this.scale.y = this.scale.x;
                             }
                         }
-                        var bbd = this.boundingDimesion;
-                        this.scale.x = this.scale.x / bbd.x;
-                        this.scale.y = this.scale.y / bbd.y;
-                        this.scale.z = this.scale.z / bbd.z;
                         this.scaleWithSnap(this.mesh, this.scale);
                         if (this.scaleBoundsMin) {
                             this.mesh.scaling.x = Math.max(this.mesh.scaling.x, this.scaleBoundsMin.x);
