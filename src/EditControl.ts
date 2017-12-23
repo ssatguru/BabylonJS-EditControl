@@ -1218,9 +1218,9 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndX.material=this.redMat;
             this.tEndY.material=this.greenMat;
             this.tEndZ.material=this.blueMat;
-            this.tEndXZ.material=this.redMat;
-            this.tEndZY.material=this.blueMat;
-            this.tEndYX.material=this.greenMat;
+            this.tEndXZ.material=this.greenMat;
+            this.tEndZY.material=this.redMat;
+            this.tEndYX.material=this.blueMat;
             this.tEndAll.material=this.yellowMat;
 
             //            this.tEndX.visibility = 0.5;
@@ -1514,9 +1514,9 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndX.material=this.redMat;
             this.sEndY.material=this.greenMat;
             this.sEndZ.material=this.blueMat;
-            this.sEndXZ.material=this.redMat;
-            this.sEndZY.material=this.blueMat;
-            this.sEndYX.material=this.greenMat;
+            this.sEndXZ.material=this.greenMat;
+            this.sEndZY.material=this.redMat;
+            this.sEndYX.material=this.blueMat;
             this.sEndAll.material=this.yellowMat;
 
             this.sEndX.renderingGroupId=2;
