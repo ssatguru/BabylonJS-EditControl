@@ -64,6 +64,7 @@ var org;
                         this.localX = new Vector3(0, 0, 0);
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
+                        this.tSnap = new Vector3(this.transSnap, this.transSnap, this.transSnap);
                         this.mesh = mesh;
                         this.canvas = canvas;
                         this.axesScale = scale;
@@ -1340,7 +1341,7 @@ var org;
                         this.snapS = s;
                     };
                     EditControl.prototype.setTransSnapValue = function (t) {
-                        this.tSnap = new Vector3(t, t, t);
+                        this.tSnap.copyFromFloats(t, t, t);
                         this.transSnap = t;
                     };
                     EditControl.prototype.setRotSnapValue = function (r) {

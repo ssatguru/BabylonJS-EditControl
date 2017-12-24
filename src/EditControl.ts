@@ -1580,9 +1580,9 @@ namespace org.ssatguru.babylonjs.component {
             this.snapS=s;
         }
 
-        tSnap: Vector3;
+        tSnap: Vector3=new Vector3(this.transSnap,this.transSnap,this.transSnap);
         public setTransSnapValue(t: number) {
-            this.tSnap=new Vector3(t,t,t);
+            this.tSnap.copyFromFloats(t,t,t);
             this.transSnap=t;
         }
 
