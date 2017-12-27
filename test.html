@@ -75,7 +75,7 @@
             <table >
                 <tr>
                     <td><input type="checkbox" id="local" checked title="switch between local or global axes">local</td>
-                    <td></td>
+                    <td><button id="setRotGuide">setRotGuide</button></td>
                     <td></td>
                 </tr>
                 <tr>
@@ -130,6 +130,7 @@
              * get all buttons
              */
             var localButton = document.getElementById("local");
+            var setRotGuide = document.getElementById("setRotGuide");
             
             var transButton = document.getElementById("trans");
             var rotButton = document.getElementById("rotate");
@@ -175,12 +176,15 @@
             }
 
             helpButton.onclick = showHelp;
-
+            
+            setRotGuide.onclick = function () {
+                editControl.setRotGuides();
+            };
             transButton.onclick = function () {
-                editControl.enableTranslation()
+                editControl.enableTranslation();
             };
             rotButton.onclick = function () {
-                editControl.enableRotation()
+                editControl.enableRotation();
             };
             scaleButton.onclick = function () {
                 editControl.enableScaling()
@@ -308,7 +312,7 @@
                 light.intensity = .5;
 
                 //box = BABYLON.Mesh.CreatePlane("box", 2, scene,false,BABYLON.Mesh.DOUBLESIDE);
-                box = BABYLON.MeshBuilder.CreateBox("", {height: 6, width: 4, depth: 2});
+                box = BABYLON.MeshBuilder.CreateBox("", {height: 5, width: 3, depth: 2});
                 box.rotationQuaternion = BABYLON.Quaternion.Identity();
                 box.position = new BABYLON.Vector3(0, 1, 0);
 

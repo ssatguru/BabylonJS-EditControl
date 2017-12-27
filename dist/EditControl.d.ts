@@ -3,6 +3,7 @@ declare namespace org.ssatguru.babylonjs.component {
     import Camera = BABYLON.Camera;
     import Color3 = BABYLON.Color3;
     import Material = BABYLON.Material;
+    import Matrix = BABYLON.Matrix;
     import Mesh = BABYLON.Mesh;
     import Vector3 = BABYLON.Vector3;
     class EditControl {
@@ -36,6 +37,8 @@ declare namespace org.ssatguru.babylonjs.component {
         cameraNormal: Vector3;
         private setAxesScale();
         private setAxesRotation();
+        ecMatrix: Matrix;
+        setRotGuides(): void;
         private renderLoopProcess();
         switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;
@@ -100,6 +103,7 @@ declare namespace org.ssatguru.babylonjs.component {
         eulerian: boolean;
         snapRA: number;
         cN: Vector3;
+        rotAxis: Vector3;
         private doRotation(mesh, axis, newPos, prevPos);
         private getPosOnPickPlane();
         private hideBaxis();

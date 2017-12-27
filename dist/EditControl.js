@@ -8,6 +8,7 @@ var org;
             (function (component) {
                 var Axis = BABYLON.Axis;
                 var Color3 = BABYLON.Color3;
+                var Matrix = BABYLON.Matrix;
                 var Mesh = BABYLON.Mesh;
                 var MeshBuilder = BABYLON.MeshBuilder;
                 var Path2 = BABYLON.Path2;
@@ -31,10 +32,11 @@ var org;
                         this.rotSnap = Math.PI / 18;
                         this.axesLen = 0.4;
                         this.axesScale = 1;
-                        this.visibility = 0.7;
+                        this.visibility = 0.5;
                         this.distFromCamera = 2;
                         this.toParent = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
+                        this.ecMatrix = new Matrix();
                         this.actionListener = null;
                         this.actionStartListener = null;
                         this.actionEndListener = null;
@@ -57,10 +59,11 @@ var org;
                         this.eulerian = false;
                         this.snapRA = 0;
                         this.cN = new Vector3(0, 0, 0);
+                        this.rotAxis = new Vector3(0, 0, 0);
                         this.transEnabled = false;
                         this.rotEnabled = false;
                         this.scaleEnabled = false;
-                        this.guideSize = 90;
+                        this.guideSize = 180;
                         this.localX = new Vector3(0, 0, 0);
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
@@ -125,10 +128,41 @@ var org;
                             }
                         }
                     };
+                    EditControl.prototype.setRotGuides = function () {
+                        if (this.rotEnabled) {
+                            this.toParent.scaleInPlace(-1);
+                            if (this.local) {
+                                this.theParent.getWorldMatrix().invertToRef(this.ecMatrix);
+                                Vector3.TransformCoordinatesToRef(this.toParent, this.ecMatrix, this.toParent);
+                            }
+                            var rotX = Math.atan(this.toParent.y / this.toParent.z);
+                            if (this.toParent.z > 0) {
+                                this.rX.rotation.x = -rotX;
+                            }
+                            else {
+                                this.rX.rotation.x = -rotX - Math.PI;
+                            }
+                            var rotY = Math.atan(this.toParent.x / this.toParent.z);
+                            if (this.toParent.z > 0) {
+                                this.rY.rotation.y = rotY;
+                            }
+                            else {
+                                this.rY.rotation.y = rotY + Math.PI;
+                            }
+                            var rotZ = Math.atan(this.toParent.x / this.toParent.y);
+                            if (this.toParent.y > 0) {
+                                this.rZ.rotation.z = -rotZ;
+                            }
+                            else {
+                                this.rZ.rotation.z = -rotZ - Math.PI;
+                            }
+                        }
+                    };
                     EditControl.prototype.renderLoopProcess = function () {
                         this.theParent.position = this.mesh.getAbsolutePivotPoint();
                         this.setAxesScale();
                         this.setAxesRotation();
+                        this.setRotGuides();
                         this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh, eulerian) {
@@ -218,7 +252,6 @@ var org;
                             return false;
                         }, null, this.mainCamera);
                         if (pickResult.hit) {
-                            this.setAxesVisiblity(0);
                             this.axisPicked = pickResult.pickedMesh;
                             var childs = this.axisPicked.getChildren();
                             if (childs.length > 0) {
@@ -701,8 +734,12 @@ var org;
                                         angle = -1 * angle;
                                     mesh.rotate(Axis.X, angle, Space.LOCAL);
                                 }
-                                else
-                                    mesh.rotate(new Vector3(cN.x, 0, 0), angle, Space.WORLD);
+                                else {
+                                    this.rotAxis.x = cN.x;
+                                    this.rotAxis.y = 0;
+                                    this.rotAxis.z = 0;
+                                    mesh.rotate(this.rotAxis, angle, Space.WORLD);
+                                }
                             }
                         }
                         else if (axis == this.rY) {
@@ -723,8 +760,12 @@ var org;
                                         angle = -1 * angle;
                                     mesh.rotate(Axis.Y, angle, Space.LOCAL);
                                 }
-                                else
-                                    mesh.rotate(new Vector3(0, cN.y, 0), angle, Space.WORLD);
+                                else {
+                                    this.rotAxis.x = 0;
+                                    this.rotAxis.y = cN.y;
+                                    this.rotAxis.z = 0;
+                                    mesh.rotate(this.rotAxis, angle, Space.WORLD);
+                                }
                             }
                         }
                         else if (axis == this.rZ) {
@@ -745,8 +786,12 @@ var org;
                                         angle = -1 * angle;
                                     mesh.rotate(Axis.Z, angle, Space.LOCAL);
                                 }
-                                else
-                                    mesh.rotate(new Vector3(0, 0, cN.z), angle, Space.WORLD);
+                                else {
+                                    this.rotAxis.x = 0;
+                                    this.rotAxis.y = 0;
+                                    this.rotAxis.z = cN.z;
+                                    mesh.rotate(this.rotAxis, angle, Space.WORLD);
+                                }
                             }
                         }
                         else if (axis == this.rAll) {
@@ -1105,7 +1150,7 @@ var org;
                         if (y)
                             this.guideSize = 360;
                         else
-                            this.guideSize = 90;
+                            this.guideSize = 180;
                         if (this.rCtl != null) {
                             this.rCtl.dispose();
                             this.rCtl = null;
@@ -1117,17 +1162,23 @@ var org;
                         this.rCtl = new Mesh("rotCtl", this.scene);
                         this.rX = this.createTube(d / 2, this.guideSize);
                         this.rX.name = "X";
-                        this.rY = this.rX.clone("Y");
-                        this.rZ = this.rX.clone("Z");
+                        this.rY = this.createTube(d / 2, this.guideSize);
+                        this.rY.name = "Y";
+                        this.rZ = this.createTube(d / 2, this.guideSize);
+                        this.rZ.name = "Z";
                         this.rAll = this.createTube(d / 1.75, 360);
                         this.rAll.name = "ALL";
+                        this.rX.rotation.z = 1.57;
+                        console.log(this.rX.rotation);
+                        this.rZ.rotation.x = -1.57;
+                        this.rX.bakeCurrentTransformIntoVertices();
+                        console.log(this.rX.rotation);
+                        this.rZ.bakeCurrentTransformIntoVertices();
+                        this.rAll.rotation.x = 1.57;
                         this.rX.parent = this.rCtl;
                         this.rY.parent = this.rCtl;
                         this.rZ.parent = this.rCtl;
                         this.rAll.parent = this.pALL;
-                        this.rX.rotation.z = 1.57;
-                        this.rZ.rotation.x = -1.57;
-                        this.rAll.rotation.x = 1.57;
                         this.rX.visibility = 0;
                         this.rY.visibility = 0;
                         this.rZ.visibility = 0;
@@ -1141,14 +1192,19 @@ var org;
                         this.rEndY = this.rEndX.clone("");
                         this.rEndZ = this.rEndX.clone("");
                         this.rEndAll = this.createCircle(cl / 1.75, 360, false);
+                        var rEndAll2 = this.createCircle(cl / 2, 360, false);
                         this.rEndX.parent = this.rX;
                         this.rEndY.parent = this.rY;
                         this.rEndZ.parent = this.rZ;
+                        this.rEndX.rotation.z = 1.57;
+                        this.rEndZ.rotation.x = -1.57;
                         this.rEndAll.parent = this.rAll;
+                        rEndAll2.parent = this.rAll;
                         this.rEndX.color = Color3.Red();
                         this.rEndY.color = Color3.Green();
                         this.rEndZ.color = Color3.Blue();
                         this.rEndAll.color = Color3.Yellow();
+                        rEndAll2.color = Color3.Gray();
                         this.rEndX.renderingGroupId = 2;
                         this.rEndY.renderingGroupId = 2;
                         this.rEndZ.renderingGroupId = 2;
