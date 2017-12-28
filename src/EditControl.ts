@@ -104,20 +104,22 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        //how far away from camera should the axis appear to be
+        //how far away from camera should the edit control appear to be
         distFromCamera: number=2;
-        //vector from camera to axes parent
-        toParent: Vector3=new Vector3(0,0,0);
+        //vector from camera to edit control
+        cameraTOec: Vector3=new Vector3(0,0,0);
         cameraNormal: Vector3=new Vector3(0,0,0);
         private setAxesScale() {
-            this.theParent.position.subtractToRef(this.mainCamera.position,this.toParent);
+            this.theParent.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
             Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
-            //get distance of axes from the camera plane - project "camera to axes" vector onto the camera normal
-            var parentOnNormal: number=Vector3.Dot(this.toParent,this.cameraNormal)/this.cameraNormal.length();
+            
+            //get distance of edit control from the camera plane 
+            //project "camera to edit control" vector onto the camera normal
+            var parentOnNormal: number=Vector3.Dot(this.cameraTOec,this.cameraNormal)/this.cameraNormal.length();
+            
             var s: number=Math.abs(parentOnNormal/this.distFromCamera);
             Vector3.FromFloatsToRef(s,s,s,this.theParent.scaling);
-            Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
-
+            //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
         }
 
         private setAxesRotation() {
@@ -130,50 +132,49 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
         }
-        //rotate the rotation guides so that thet are facing the camera
+        
+        //rotate the rotation guides so that they are facing the camera
         ecMatrix:Matrix = new Matrix();
-        public setRotGuides() {
-            if(this.rotEnabled) {
-                this.toParent.scaleInPlace(-1);
+        //edit control to camera vector
+        ecTOcamera:Vector3=new Vector3(0,0,0);
+        public rotRotGuides() {
                 if (this.local){
-                    //let invMat=this.theParent.getWorldMatrix().clone().invert();
                     this.theParent.getWorldMatrix().invertToRef(this.ecMatrix);
-                    Vector3.TransformCoordinatesToRef(this.toParent,this.ecMatrix, this.toParent);
+                    Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix, this.ecTOcamera);
+                    this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
+                }else{
+                    this.mainCamera.position.subtractToRef(this.theParent.position,this.ecTOcamera);
+                    this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
                 }
 
 
-                let rotX=Math.atan(this.toParent.y/this.toParent.z);
-                //console.log(rotX + " z:" + this.toParent.z + " y:" + this.toParent.y);
-                if(this.toParent.z>0) {
+                let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
+                if(this.ecTOcamera.z>=0) {
                     this.rX.rotation.x=-rotX;
                 } else {
                     this.rX.rotation.x=-rotX-Math.PI;
                 }
 
-
-                let rotY=Math.atan(this.toParent.x/this.toParent.z);
-                if(this.toParent.z>0) {
+                let rotY=Math.atan(this.ecTOcamera.x/this.ecTOcamera.z);
+                if(this.ecTOcamera.z>=0) {
                     this.rY.rotation.y=rotY;
                 } else {
                     this.rY.rotation.y=rotY+Math.PI;
                 }
 
-
-                let rotZ=Math.atan(this.toParent.x/this.toParent.y);
-
-                if(this.toParent.y>0) {
+                let rotZ=Math.atan(this.ecTOcamera.x/this.ecTOcamera.y);
+                if(this.ecTOcamera.y>=0) {
                     this.rZ.rotation.z=-rotZ;
                 } else {
                     this.rZ.rotation.z=-rotZ-Math.PI;
                 }
-            }
         }
 
         private renderLoopProcess() {
             this.theParent.position=this.mesh.getAbsolutePivotPoint();
             this.setAxesScale();
             this.setAxesRotation();
-            this.setRotGuides();
+             if(this.rotEnabled)this.rotRotGuides();
             this.onPointerOver();
         }
 
@@ -944,7 +945,14 @@ namespace org.ssatguru.babylonjs.component {
                 this.rEndX.visibility=this.visibility;
                 this.rEndY.visibility=this.visibility;
                 this.rEndZ.visibility=this.visibility;
+                
                 this.rEndAll.visibility=this.visibility;
+                this.rEndAll2.visibility=this.visibility;
+                
+                this.xaxis.visibility=0;
+                this.yaxis.visibility=0;
+                this.zaxis.visibility=0;
+                
                 this.rotEnabled=true;
                 this.disableTranslation();
                 this.disableScaling();
@@ -957,6 +965,10 @@ namespace org.ssatguru.babylonjs.component {
                 this.rEndY.visibility=0;
                 this.rEndZ.visibility=0;
                 this.rEndAll.visibility=0;
+                this.rEndAll2.visibility=0;
+                this.xaxis.visibility=this.visibility;
+                this.yaxis.visibility=this.visibility;
+                this.zaxis.visibility=this.visibility;
                 this.rotEnabled=false;
             }
         }
@@ -1135,14 +1147,15 @@ namespace org.ssatguru.babylonjs.component {
             this.pYX.renderingGroupId=1;
 
             //this.pALL.billboardMode = Mesh.BILLBOARDMODE_ALL;
-            //this.pALL.lookAt(this.mainCamera.position);
-            this.pALL.billboardMode=Mesh.BILLBOARDMODE_ALL;
+            this.pALL.lookAt(this.mainCamera.position);
+            //this.pALL.billboardMode=Mesh.BILLBOARDMODE_ALL;
             this.pXZ.rotate(Axis.X,1.57);
             this.pZY.rotate(Axis.Y,1.57);
             //this.pYX.rotate(Axis.Y,0);
 
             this.pickPlanes=new Mesh("pickPlanes",this.scene);
-            this.pALL.parent=this.theParent;
+            //this.pALL.parent=this.theParent;
+            this.pALL.parent=this.pickPlanes;
             this.pXZ.parent=this.pickPlanes;
             this.pZY.parent=this.pickPlanes;
             this.pYX.parent=this.pickPlanes;
@@ -1323,6 +1336,7 @@ namespace org.ssatguru.babylonjs.component {
         private rEndY: LinesMesh;
         private rEndZ: LinesMesh;
         private rEndAll: LinesMesh;
+        private rEndAll2: LinesMesh;
 
         private guideSize: number=180;
 
@@ -1393,7 +1407,9 @@ namespace org.ssatguru.babylonjs.component {
             this.rEndY=this.rEndX.clone("");
             this.rEndZ=this.rEndX.clone("");
             this.rEndAll=this.createCircle(cl/1.75,360,false);
-            let rEndAll2: LinesMesh=this.createCircle(cl/2,360,false);
+            this.rEndAll2=this.createCircle(cl/2,360,false);
+            //this.rEndAll2.rotation.x=-1.57;
+            //this.rEndAll2.bakeCurrentTransformIntoVertices();
 
             this.rEndX.parent=this.rX;
             this.rEndY.parent=this.rY;
@@ -1403,19 +1419,20 @@ namespace org.ssatguru.babylonjs.component {
             this.rEndZ.rotation.x=-1.57;
 
             this.rEndAll.parent=this.rAll;
-            rEndAll2.parent=this.rAll;
+            this.rEndAll2.parent=this.rAll;
 
 
             this.rEndX.color=Color3.Red();
             this.rEndY.color=Color3.Green();
             this.rEndZ.color=Color3.Blue();
             this.rEndAll.color=Color3.Yellow();
-            rEndAll2.color=Color3.Gray();
+            this.rEndAll2.color=Color3.Black();
 
             this.rEndX.renderingGroupId=2;
             this.rEndY.renderingGroupId=2;
             this.rEndZ.renderingGroupId=2;
             this.rEndAll.renderingGroupId=2;
+            this.rEndAll2.renderingGroupId=2;
 
             this.rEndX.isPickable=false;
             this.rEndY.isPickable=false;
@@ -1437,7 +1454,7 @@ namespace org.ssatguru.babylonjs.component {
             var z: number;
             var a: number=3.14/180;
             var p: number=0;
-            for(var i: number=0;i<=t;i=i+10) {
+            for(var i: number=0;i<=t;i=i+5) {
                 x=r*Math.cos(i*a);
                 if((i==90)) z=r; else if((i==270)) z=-r; else z=r*Math.sin(i*a);
                 points[p]=new Vector3(x,0,z);
@@ -1445,7 +1462,7 @@ namespace org.ssatguru.babylonjs.component {
             }
             if(double) {
                 r=r-0.04;
-                for(var i: number=0;i<=t;i=i+10) {
+                for(var i: number=0;i<=t;i=i+5) {
                     x=r*Math.cos(i*a);
                     if((i==90)) z=r; else if((i==270)) z=-r; else z=r*Math.sin(i*a);
                     points[p]=new Vector3(x,0,z);

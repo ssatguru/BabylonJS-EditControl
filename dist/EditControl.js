@@ -34,9 +34,10 @@ var org;
                         this.axesScale = 1;
                         this.visibility = 0.5;
                         this.distFromCamera = 2;
-                        this.toParent = new Vector3(0, 0, 0);
+                        this.cameraTOec = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
                         this.ecMatrix = new Matrix();
+                        this.ecTOcamera = new Vector3(0, 0, 0);
                         this.actionListener = null;
                         this.actionStartListener = null;
                         this.actionEndListener = null;
@@ -110,12 +111,11 @@ var org;
                         }
                     };
                     EditControl.prototype.setAxesScale = function () {
-                        this.theParent.position.subtractToRef(this.mainCamera.position, this.toParent);
+                        this.theParent.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
-                        var parentOnNormal = Vector3.Dot(this.toParent, this.cameraNormal) / this.cameraNormal.length();
+                        var parentOnNormal = Vector3.Dot(this.cameraTOec, this.cameraNormal) / this.cameraNormal.length();
                         var s = Math.abs(parentOnNormal / this.distFromCamera);
                         Vector3.FromFloatsToRef(s, s, s, this.theParent.scaling);
-                        Vector3.FromFloatsToRef(s, s, s, this.pALL.scaling);
                     };
                     EditControl.prototype.setAxesRotation = function () {
                         if (this.local) {
@@ -128,41 +128,44 @@ var org;
                             }
                         }
                     };
-                    EditControl.prototype.setRotGuides = function () {
-                        if (this.rotEnabled) {
-                            this.toParent.scaleInPlace(-1);
-                            if (this.local) {
-                                this.theParent.getWorldMatrix().invertToRef(this.ecMatrix);
-                                Vector3.TransformCoordinatesToRef(this.toParent, this.ecMatrix, this.toParent);
-                            }
-                            var rotX = Math.atan(this.toParent.y / this.toParent.z);
-                            if (this.toParent.z > 0) {
-                                this.rX.rotation.x = -rotX;
-                            }
-                            else {
-                                this.rX.rotation.x = -rotX - Math.PI;
-                            }
-                            var rotY = Math.atan(this.toParent.x / this.toParent.z);
-                            if (this.toParent.z > 0) {
-                                this.rY.rotation.y = rotY;
-                            }
-                            else {
-                                this.rY.rotation.y = rotY + Math.PI;
-                            }
-                            var rotZ = Math.atan(this.toParent.x / this.toParent.y);
-                            if (this.toParent.y > 0) {
-                                this.rZ.rotation.z = -rotZ;
-                            }
-                            else {
-                                this.rZ.rotation.z = -rotZ - Math.PI;
-                            }
+                    EditControl.prototype.rotRotGuides = function () {
+                        if (this.local) {
+                            this.theParent.getWorldMatrix().invertToRef(this.ecMatrix);
+                            Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
+                            this.pALL.lookAt(this.ecTOcamera, 0, 0, 0, Space.LOCAL);
+                        }
+                        else {
+                            this.mainCamera.position.subtractToRef(this.theParent.position, this.ecTOcamera);
+                            this.pALL.lookAt(this.mainCamera.position, 0, 0, 0, Space.WORLD);
+                        }
+                        var rotX = Math.atan(this.ecTOcamera.y / this.ecTOcamera.z);
+                        if (this.ecTOcamera.z >= 0) {
+                            this.rX.rotation.x = -rotX;
+                        }
+                        else {
+                            this.rX.rotation.x = -rotX - Math.PI;
+                        }
+                        var rotY = Math.atan(this.ecTOcamera.x / this.ecTOcamera.z);
+                        if (this.ecTOcamera.z >= 0) {
+                            this.rY.rotation.y = rotY;
+                        }
+                        else {
+                            this.rY.rotation.y = rotY + Math.PI;
+                        }
+                        var rotZ = Math.atan(this.ecTOcamera.x / this.ecTOcamera.y);
+                        if (this.ecTOcamera.y >= 0) {
+                            this.rZ.rotation.z = -rotZ;
+                        }
+                        else {
+                            this.rZ.rotation.z = -rotZ - Math.PI;
                         }
                     };
                     EditControl.prototype.renderLoopProcess = function () {
                         this.theParent.position = this.mesh.getAbsolutePivotPoint();
                         this.setAxesScale();
                         this.setAxesRotation();
-                        this.setRotGuides();
+                        if (this.rotEnabled)
+                            this.rotRotGuides();
                         this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh, eulerian) {
@@ -912,6 +915,10 @@ var org;
                             this.rEndY.visibility = this.visibility;
                             this.rEndZ.visibility = this.visibility;
                             this.rEndAll.visibility = this.visibility;
+                            this.rEndAll2.visibility = this.visibility;
+                            this.xaxis.visibility = 0;
+                            this.yaxis.visibility = 0;
+                            this.zaxis.visibility = 0;
                             this.rotEnabled = true;
                             this.disableTranslation();
                             this.disableScaling();
@@ -923,6 +930,10 @@ var org;
                             this.rEndY.visibility = 0;
                             this.rEndZ.visibility = 0;
                             this.rEndAll.visibility = 0;
+                            this.rEndAll2.visibility = 0;
+                            this.xaxis.visibility = this.visibility;
+                            this.yaxis.visibility = this.visibility;
+                            this.zaxis.visibility = this.visibility;
                             this.rotEnabled = false;
                         }
                     };
@@ -1041,11 +1052,11 @@ var org;
                         this.pXZ.renderingGroupId = 1;
                         this.pZY.renderingGroupId = 1;
                         this.pYX.renderingGroupId = 1;
-                        this.pALL.billboardMode = Mesh.BILLBOARDMODE_ALL;
+                        this.pALL.lookAt(this.mainCamera.position);
                         this.pXZ.rotate(Axis.X, 1.57);
                         this.pZY.rotate(Axis.Y, 1.57);
                         this.pickPlanes = new Mesh("pickPlanes", this.scene);
-                        this.pALL.parent = this.theParent;
+                        this.pALL.parent = this.pickPlanes;
                         this.pXZ.parent = this.pickPlanes;
                         this.pZY.parent = this.pickPlanes;
                         this.pYX.parent = this.pickPlanes;
@@ -1192,23 +1203,24 @@ var org;
                         this.rEndY = this.rEndX.clone("");
                         this.rEndZ = this.rEndX.clone("");
                         this.rEndAll = this.createCircle(cl / 1.75, 360, false);
-                        var rEndAll2 = this.createCircle(cl / 2, 360, false);
+                        this.rEndAll2 = this.createCircle(cl / 2, 360, false);
                         this.rEndX.parent = this.rX;
                         this.rEndY.parent = this.rY;
                         this.rEndZ.parent = this.rZ;
                         this.rEndX.rotation.z = 1.57;
                         this.rEndZ.rotation.x = -1.57;
                         this.rEndAll.parent = this.rAll;
-                        rEndAll2.parent = this.rAll;
+                        this.rEndAll2.parent = this.rAll;
                         this.rEndX.color = Color3.Red();
                         this.rEndY.color = Color3.Green();
                         this.rEndZ.color = Color3.Blue();
                         this.rEndAll.color = Color3.Yellow();
-                        rEndAll2.color = Color3.Gray();
+                        this.rEndAll2.color = Color3.Black();
                         this.rEndX.renderingGroupId = 2;
                         this.rEndY.renderingGroupId = 2;
                         this.rEndZ.renderingGroupId = 2;
                         this.rEndAll.renderingGroupId = 2;
+                        this.rEndAll2.renderingGroupId = 2;
                         this.rEndX.isPickable = false;
                         this.rEndY.isPickable = false;
                         this.rEndZ.isPickable = false;
@@ -1228,7 +1240,7 @@ var org;
                         var z;
                         var a = 3.14 / 180;
                         var p = 0;
-                        for (var i = 0; i <= t; i = i + 10) {
+                        for (var i = 0; i <= t; i = i + 5) {
                             x = r * Math.cos(i * a);
                             if ((i == 90))
                                 z = r;
@@ -1241,7 +1253,7 @@ var org;
                         }
                         if (double) {
                             r = r - 0.04;
-                            for (var i = 0; i <= t; i = i + 10) {
+                            for (var i = 0; i <= t; i = i + 5) {
                                 x = r * Math.cos(i * a);
                                 if ((i == 90))
                                     z = r;

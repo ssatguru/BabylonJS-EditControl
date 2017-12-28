@@ -33,12 +33,13 @@ declare namespace org.ssatguru.babylonjs.component {
         constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean);
         private checkQuaternion();
         distFromCamera: number;
-        toParent: Vector3;
+        cameraTOec: Vector3;
         cameraNormal: Vector3;
         private setAxesScale();
         private setAxesRotation();
         ecMatrix: Matrix;
-        setRotGuides(): void;
+        ecTOcamera: Vector3;
+        rotRotGuides(): void;
         private renderLoopProcess();
         switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;
@@ -174,6 +175,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private rEndY;
         private rEndZ;
         private rEndAll;
+        private rEndAll2;
         private guideSize;
         setRotGuideFull(y: boolean): void;
         private createRotAxes();
