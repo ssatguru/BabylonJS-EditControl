@@ -70,6 +70,7 @@ var org;
                         this.localZ = new Vector3(0, 0, 0);
                         this.tSnap = new Vector3(this.transSnap, this.transSnap, this.transSnap);
                         this.mesh = mesh;
+                        this.mainCamera = camera;
                         this.canvas = canvas;
                         this.axesScale = scale;
                         if (eulerian !== null) {
@@ -80,19 +81,18 @@ var org;
                         }
                         this.checkQuaternion();
                         this.scene = mesh.getScene();
-                        this.mainCamera = camera;
                         this.actHist = new ActHist(mesh, 10);
                         mesh.computeWorldMatrix(true);
                         this.boundingDimesion = this.getBoundingDimension(mesh);
-                        this.theParent = new Mesh("EditControl", this.scene);
-                        this.theParent.rotationQuaternion = Quaternion.Identity();
-                        this.theParent.visibility = 0;
-                        this.theParent.isPickable = false;
+                        this.ecRoot = new Mesh("EditControl", this.scene);
+                        this.ecRoot.rotationQuaternion = Quaternion.Identity();
+                        this.ecRoot.visibility = 0;
+                        this.ecRoot.isPickable = false;
                         this.createMaterials(this.scene);
-                        this.createGuideAxes();
-                        this.guideCtl.parent = this.theParent;
-                        this.createPickPlanes();
-                        this.pickPlanes.parent = this.theParent;
+                        var guideAxes = this.createGuideAxes();
+                        guideAxes.parent = this.ecRoot;
+                        var pickPlanes = this.createPickPlanes();
+                        pickPlanes.parent = this.ecRoot;
                         this.pointerdown = function (evt) { return _this.onPointerDown(evt); };
                         this.pointerup = function (evt) { return _this.onPointerUp(evt); };
                         this.pointermove = function (evt) { return _this.onPointerMove(evt); };
@@ -111,31 +111,31 @@ var org;
                         }
                     };
                     EditControl.prototype.setAxesScale = function () {
-                        this.theParent.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
+                        this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
                         var parentOnNormal = Vector3.Dot(this.cameraTOec, this.cameraNormal) / this.cameraNormal.length();
                         var s = Math.abs(parentOnNormal / this.distFromCamera);
-                        Vector3.FromFloatsToRef(s, s, s, this.theParent.scaling);
+                        Vector3.FromFloatsToRef(s, s, s, this.ecRoot.scaling);
                     };
                     EditControl.prototype.setAxesRotation = function () {
                         if (this.local) {
                             if (this.eulerian) {
                                 var rot = this.mesh.rotation;
-                                this.theParent.rotationQuaternion.copyFrom(BABYLON.Quaternion.RotationYawPitchRoll(rot.y, rot.x, rot.z));
+                                this.ecRoot.rotationQuaternion.copyFrom(BABYLON.Quaternion.RotationYawPitchRoll(rot.y, rot.x, rot.z));
                             }
                             else {
-                                this.theParent.rotationQuaternion = this.mesh.rotationQuaternion;
+                                this.ecRoot.rotationQuaternion = this.mesh.rotationQuaternion;
                             }
                         }
                     };
                     EditControl.prototype.rotRotGuides = function () {
                         if (this.local) {
-                            this.theParent.getWorldMatrix().invertToRef(this.ecMatrix);
+                            this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                             Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
                             this.pALL.lookAt(this.ecTOcamera, 0, 0, 0, Space.LOCAL);
                         }
                         else {
-                            this.mainCamera.position.subtractToRef(this.theParent.position, this.ecTOcamera);
+                            this.mainCamera.position.subtractToRef(this.ecRoot.position, this.ecTOcamera);
                             this.pALL.lookAt(this.mainCamera.position, 0, 0, 0, Space.WORLD);
                         }
                         var rotX = Math.atan(this.ecTOcamera.y / this.ecTOcamera.z);
@@ -161,7 +161,7 @@ var org;
                         }
                     };
                     EditControl.prototype.renderLoopProcess = function () {
-                        this.theParent.position = this.mesh.getAbsolutePivotPoint();
+                        this.ecRoot.position = this.mesh.getAbsolutePivotPoint();
                         this.setAxesScale();
                         this.setAxesRotation();
                         if (this.rotEnabled)
@@ -206,7 +206,7 @@ var org;
                         this.disposeAll();
                     };
                     EditControl.prototype.disposeAll = function () {
-                        this.theParent.dispose();
+                        this.ecRoot.dispose();
                         this.disposeMaterials();
                         this.actHist = null;
                     };
@@ -289,6 +289,7 @@ var org;
                             }
                             this.setEditing(true);
                             this.pickPlane = this.getPickPlane(this.axisPicked);
+                            console.log("pname : " + this.pickPlane.name);
                             this.prevPos = this.getPosOnPickPlane();
                             window.setTimeout((function (cam, can) { return _this.detachControl(cam, can); }), 0, this.mainCamera, this.canvas);
                         }
@@ -408,7 +409,6 @@ var org;
                         if (this.editing) {
                             this.mainCamera.attachControl(this.canvas);
                             this.setEditing(false);
-                            this.setAxesVisiblity(1);
                             this.hideBaxis();
                             this.restoreColor(this.prevOverMesh);
                             this.prevOverMesh = null;
@@ -446,7 +446,6 @@ var org;
                             return;
                         if (this.prevPos == null)
                             return;
-                        this.pickPlane = this.getPickPlane(this.axisPicked);
                         var newPos = this.getPosOnPickPlane();
                         if (newPos == null)
                             return;
@@ -480,25 +479,25 @@ var org;
                             else if (n == "ALL")
                                 return this.pALL;
                             else {
-                                var invMat = this.mesh.getWorldMatrix().clone().invert();
-                                var c = Vector3.TransformCoordinates(this.mainCamera.position, invMat);
-                                var s = this.mesh.scaling;
+                                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                                Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
+                                var c = this.ecTOcamera;
                                 if (n === "X") {
-                                    if (Math.abs(c.y * s.y) > Math.abs(c.z * s.z)) {
+                                    if (Math.abs(c.y) > Math.abs(c.z)) {
                                         return this.pXZ;
                                     }
                                     else
                                         return this.pYX;
                                 }
                                 else if (n === "Z") {
-                                    if (Math.abs(c.y * s.y) > Math.abs(c.x * s.x)) {
+                                    if (Math.abs(c.y) > Math.abs(c.x)) {
                                         return this.pXZ;
                                     }
                                     else
                                         return this.pZY;
                                 }
                                 else if (n === "Y") {
-                                    if (Math.abs(c.z * s.z) > Math.abs(c.x * s.x)) {
+                                    if (Math.abs(c.z) > Math.abs(c.x)) {
                                         return this.pYX;
                                     }
                                     else
@@ -702,7 +701,7 @@ var org;
                         mesh.scaling.addInPlace(p);
                     };
                     EditControl.prototype.getBoundingDimension = function (mesh) {
-                        var bb = this.mesh.getBoundingInfo().boundingBox;
+                        var bb = mesh.getBoundingInfo().boundingBox;
                         var bd = bb.maximum.subtract(bb.minimum);
                         if (bd.x == 0)
                             bd.x = 1;
@@ -870,7 +869,7 @@ var org;
                     EditControl.prototype.enableTranslation = function () {
                         if ((this.tX == null)) {
                             this.createTransAxes();
-                            this.tCtl.parent = this.theParent;
+                            this.tCtl.parent = this.ecRoot;
                         }
                         this.clearPrevOverMesh();
                         if (!this.transEnabled) {
@@ -907,7 +906,7 @@ var org;
                     EditControl.prototype.enableRotation = function () {
                         if (this.rCtl == null) {
                             this.createRotAxes();
-                            this.rCtl.parent = this.theParent;
+                            this.rCtl.parent = this.ecRoot;
                         }
                         this.clearPrevOverMesh();
                         if (!this.rotEnabled) {
@@ -943,7 +942,7 @@ var org;
                     EditControl.prototype.enableScaling = function () {
                         if (this.sX == null) {
                             this.createScaleAxes();
-                            this.sCtl.parent = this.theParent;
+                            this.sCtl.parent = this.ecRoot;
                         }
                         this.clearPrevOverMesh();
                         if (!this.scaleEnabled) {
@@ -1004,16 +1003,16 @@ var org;
                         this.rotBoundsMax = null;
                     };
                     EditControl.prototype.createGuideAxes = function () {
-                        this.guideCtl = new Mesh("guideCtl", this.scene);
+                        var guideAxes = new Mesh("guideCtl", this.scene);
                         this.bXaxis = Mesh.CreateLines("bxAxis", [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)], this.scene);
                         this.bYaxis = Mesh.CreateLines("byAxis", [new Vector3(0, -100, 0), new Vector3(0, 100, 0)], this.scene);
                         this.bZaxis = Mesh.CreateLines("bzAxis", [new Vector3(0, 0, -100), new Vector3(0, 0, 100)], this.scene);
                         this.bXaxis.isPickable = false;
                         this.bYaxis.isPickable = false;
                         this.bZaxis.isPickable = false;
-                        this.bXaxis.parent = this.guideCtl;
-                        this.bYaxis.parent = this.guideCtl;
-                        this.bZaxis.parent = this.guideCtl;
+                        this.bXaxis.parent = guideAxes;
+                        this.bYaxis.parent = guideAxes;
+                        this.bZaxis.parent = guideAxes;
                         this.bXaxis.color = Color3.Red();
                         this.bYaxis.color = Color3.Green();
                         this.bZaxis.color = Color3.Blue();
@@ -1025,15 +1024,16 @@ var org;
                         this.xaxis.isPickable = false;
                         this.yaxis.isPickable = false;
                         this.zaxis.isPickable = false;
-                        this.xaxis.parent = this.guideCtl;
-                        this.yaxis.parent = this.guideCtl;
-                        this.zaxis.parent = this.guideCtl;
+                        this.xaxis.parent = guideAxes;
+                        this.yaxis.parent = guideAxes;
+                        this.zaxis.parent = guideAxes;
                         this.xaxis.color = Color3.Red();
                         this.yaxis.color = Color3.Green();
                         this.zaxis.color = Color3.Blue();
                         this.xaxis.renderingGroupId = 1;
                         this.yaxis.renderingGroupId = 1;
                         this.zaxis.renderingGroupId = 1;
+                        return guideAxes;
                     };
                     EditControl.prototype.createPickPlanes = function () {
                         this.pALL = Mesh.CreatePlane("pALL", 5, this.scene);
@@ -1055,11 +1055,12 @@ var org;
                         this.pALL.lookAt(this.mainCamera.position);
                         this.pXZ.rotate(Axis.X, 1.57);
                         this.pZY.rotate(Axis.Y, 1.57);
-                        this.pickPlanes = new Mesh("pickPlanes", this.scene);
-                        this.pALL.parent = this.pickPlanes;
-                        this.pXZ.parent = this.pickPlanes;
-                        this.pZY.parent = this.pickPlanes;
-                        this.pYX.parent = this.pickPlanes;
+                        var pickPlanes = new Mesh("pickPlanes", this.scene);
+                        this.pALL.parent = pickPlanes;
+                        this.pXZ.parent = pickPlanes;
+                        this.pZY.parent = pickPlanes;
+                        this.pYX.parent = pickPlanes;
+                        return pickPlanes;
                     };
                     EditControl.prototype.createTransAxes = function () {
                         var r = 0.04 * this.axesScale;
@@ -1180,10 +1181,8 @@ var org;
                         this.rAll = this.createTube(d / 1.75, 360);
                         this.rAll.name = "ALL";
                         this.rX.rotation.z = 1.57;
-                        console.log(this.rX.rotation);
                         this.rZ.rotation.x = -1.57;
                         this.rX.bakeCurrentTransformIntoVertices();
-                        console.log(this.rX.rotation);
                         this.rZ.bakeCurrentTransformIntoVertices();
                         this.rAll.rotation.x = 1.57;
                         this.rX.parent = this.rCtl;
@@ -1393,7 +1392,7 @@ var org;
                             return;
                         this.local = l;
                         if (!l) {
-                            this.theParent.rotationQuaternion = Quaternion.Identity();
+                            this.ecRoot.rotationQuaternion = Quaternion.Identity();
                         }
                     };
                     EditControl.prototype.isLocal = function () {

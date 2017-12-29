@@ -313,7 +313,12 @@
 
                 //box = BABYLON.Mesh.CreatePlane("box", 2, scene,false,BABYLON.Mesh.DOUBLESIDE);
                 box = BABYLON.MeshBuilder.CreateBox("", {height: 5, width: 3, depth: 2});
+                
+                //if we are planning on doing rotation in quaternion then make sure the rotationQuaternion is atleast initialized
+                //else edit control will throw following exception
+                //"Eulerian is set to false but the mesh's rotationQuaternion is not set."
                 box.rotationQuaternion = BABYLON.Quaternion.Identity();
+                
                 box.position = new BABYLON.Vector3(0, 1, 0);
 
                 var ground = BABYLON.Mesh
@@ -325,7 +330,7 @@
 
                 //------------------EDIT COTROL -------------------------------------------------
                 var EditControl = org.ssatguru.babylonjs.component.EditControl;
-                //create edit control (mesh to attach to, canvas, scale of editcontrol)
+                //create edit control (mesh to attach to,camera, canvas, scale of editcontrol, if doing rotation in euler)
                 editControl = new EditControl(box, camera, canvas, 0.75, false);
                 //enable translation controls
                 editControl.enableTranslation();

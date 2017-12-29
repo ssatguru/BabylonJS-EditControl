@@ -32,7 +32,8 @@ namespace org.ssatguru.babylonjs.component {
         private canvas: HTMLCanvasElement;
         private scene: Scene;
         private mainCamera: Camera;
-        private theParent: Mesh;
+        //root of the edit control
+        private ecRoot: Mesh;
         private local: boolean=true;
         private snapT: boolean=false;
         private snapR: boolean=false;
@@ -55,6 +56,7 @@ namespace org.ssatguru.babylonjs.component {
 
         public constructor(mesh: Mesh,camera: Camera,canvas: HTMLCanvasElement,scale: number,eulerian?: boolean) {
             this.mesh=mesh;
+            this.mainCamera=camera;
             this.canvas=canvas;
             this.axesScale=scale;
             if(eulerian!==null) {
@@ -63,24 +65,24 @@ namespace org.ssatguru.babylonjs.component {
                 this.eulerian=false;
             }
             this.checkQuaternion();
+            
             this.scene=mesh.getScene();
-            this.mainCamera=camera;
             this.actHist=new ActHist(mesh,10);
             mesh.computeWorldMatrix(true);
             this.boundingDimesion=this.getBoundingDimension(mesh);
-            this.theParent=new Mesh("EditControl",this.scene);
-            //this.theParent.position = this.meshPicked.absolutePosition;
-            //this.mesh.getAbsolutePivotPointToRef(this.theParent.position);
-            //this.theParent.rotationQuaternion = mesh.rotationQuaternion;
-            this.theParent.rotationQuaternion=Quaternion.Identity();
-            this.theParent.visibility=0;
-            this.theParent.isPickable=false;
+            
+            this.ecRoot=new Mesh("EditControl",this.scene);
+            this.ecRoot.rotationQuaternion=Quaternion.Identity();
+            this.ecRoot.visibility=0;
+            this.ecRoot.isPickable=false;
+            
             this.createMaterials(this.scene);
-            this.createGuideAxes();
-            this.guideCtl.parent=this.theParent;
-            this.createPickPlanes();
-            //this.pALL.parent = this.theParent;
-            this.pickPlanes.parent=this.theParent;
+            
+            let guideAxes:Mesh = this.createGuideAxes();
+            guideAxes.parent=this.ecRoot;
+            
+            let pickPlanes:Mesh= this.createPickPlanes();
+            pickPlanes.parent=this.ecRoot;
 
             this.pointerdown=(evt) => {return this.onPointerDown(evt)};
             this.pointerup=(evt) => {return this.onPointerUp(evt)};
@@ -110,15 +112,15 @@ namespace org.ssatguru.babylonjs.component {
         cameraTOec: Vector3=new Vector3(0,0,0);
         cameraNormal: Vector3=new Vector3(0,0,0);
         private setAxesScale() {
-            this.theParent.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
+            this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
             Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
-            
+
             //get distance of edit control from the camera plane 
             //project "camera to edit control" vector onto the camera normal
             var parentOnNormal: number=Vector3.Dot(this.cameraTOec,this.cameraNormal)/this.cameraNormal.length();
-            
+
             var s: number=Math.abs(parentOnNormal/this.distFromCamera);
-            Vector3.FromFloatsToRef(s,s,s,this.theParent.scaling);
+            Vector3.FromFloatsToRef(s,s,s,this.ecRoot.scaling);
             //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
         }
 
@@ -126,55 +128,55 @@ namespace org.ssatguru.babylonjs.component {
             if(this.local) {
                 if(this.eulerian) {
                     let rot: Vector3=this.mesh.rotation;
-                    this.theParent.rotationQuaternion.copyFrom(BABYLON.Quaternion.RotationYawPitchRoll(rot.y,rot.x,rot.z));
+                    this.ecRoot.rotationQuaternion.copyFrom(BABYLON.Quaternion.RotationYawPitchRoll(rot.y,rot.x,rot.z));
                 } else {
-                    this.theParent.rotationQuaternion=this.mesh.rotationQuaternion;
+                    this.ecRoot.rotationQuaternion=this.mesh.rotationQuaternion;
                 }
             }
         }
-        
+
         //rotate the rotation guides so that they are facing the camera
-        ecMatrix:Matrix = new Matrix();
+        ecMatrix: Matrix=new Matrix();
         //edit control to camera vector
-        ecTOcamera:Vector3=new Vector3(0,0,0);
-        public rotRotGuides() {
-                if (this.local){
-                    this.theParent.getWorldMatrix().invertToRef(this.ecMatrix);
-                    Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix, this.ecTOcamera);
-                    this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
-                }else{
-                    this.mainCamera.position.subtractToRef(this.theParent.position,this.ecTOcamera);
-                    this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
-                }
+        ecTOcamera: Vector3=new Vector3(0,0,0);
+        private rotRotGuides() {
+            if(this.local) {
+                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
+                this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
+            } else {
+                this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
+                this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
+            }
 
 
-                let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
-                if(this.ecTOcamera.z>=0) {
-                    this.rX.rotation.x=-rotX;
-                } else {
-                    this.rX.rotation.x=-rotX-Math.PI;
-                }
+            let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
+            if(this.ecTOcamera.z>=0) {
+                this.rX.rotation.x=-rotX;
+            } else {
+                this.rX.rotation.x=-rotX-Math.PI;
+            }
 
-                let rotY=Math.atan(this.ecTOcamera.x/this.ecTOcamera.z);
-                if(this.ecTOcamera.z>=0) {
-                    this.rY.rotation.y=rotY;
-                } else {
-                    this.rY.rotation.y=rotY+Math.PI;
-                }
+            let rotY=Math.atan(this.ecTOcamera.x/this.ecTOcamera.z);
+            if(this.ecTOcamera.z>=0) {
+                this.rY.rotation.y=rotY;
+            } else {
+                this.rY.rotation.y=rotY+Math.PI;
+            }
 
-                let rotZ=Math.atan(this.ecTOcamera.x/this.ecTOcamera.y);
-                if(this.ecTOcamera.y>=0) {
-                    this.rZ.rotation.z=-rotZ;
-                } else {
-                    this.rZ.rotation.z=-rotZ-Math.PI;
-                }
+            let rotZ=Math.atan(this.ecTOcamera.x/this.ecTOcamera.y);
+            if(this.ecTOcamera.y>=0) {
+                this.rZ.rotation.z=-rotZ;
+            } else {
+                this.rZ.rotation.z=-rotZ-Math.PI;
+            }
         }
 
         private renderLoopProcess() {
-            this.theParent.position=this.mesh.getAbsolutePivotPoint();
+            this.ecRoot.position=this.mesh.getAbsolutePivotPoint();
             this.setAxesScale();
             this.setAxesRotation();
-             if(this.rotEnabled)this.rotRotGuides();
+            if(this.rotEnabled) this.rotRotGuides();
             this.onPointerOver();
         }
 
@@ -221,7 +223,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public disposeAll() {
-            this.theParent.dispose();
+            this.ecRoot.dispose();
             this.disposeMaterials();
             this.actHist=null;
         }
@@ -305,6 +307,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.setEditing(true);
                 //lets find out where we are on the pickplane
                 this.pickPlane=this.getPickPlane(this.axisPicked);
+                console.log("pname : " + this.pickPlane.name);
                 this.prevPos=this.getPosOnPickPlane();
                 window.setTimeout(((cam,can) => {return this.detachControl(cam,can)}),0,this.mainCamera,this.canvas);
             }
@@ -428,7 +431,7 @@ namespace org.ssatguru.babylonjs.component {
             if(this.editing) {
                 this.mainCamera.attachControl(this.canvas);
                 this.setEditing(false);
-                this.setAxesVisiblity(1);
+                //this.setAxesVisiblity(1);
                 this.hideBaxis();
                 this.restoreColor(this.prevOverMesh);
                 this.prevOverMesh=null;
@@ -477,7 +480,7 @@ namespace org.ssatguru.babylonjs.component {
             if(!this.pDown||!this.editing) return;
             if(this.prevPos==null) return;
 
-            this.pickPlane=this.getPickPlane(this.axisPicked);
+            //this.pickPlane=this.getPickPlane(this.axisPicked);
 
             var newPos: Vector3=this.getPosOnPickPlane();
             if(newPos==null) return;
@@ -500,7 +503,6 @@ namespace org.ssatguru.babylonjs.component {
 
         private snapTV: Vector3=new Vector3(0,0,0);
         private transBy: Vector3=new Vector3(0,0,0);
-
         private getPickPlane(axis: Mesh): Mesh {
             let n: string=axis.name;
             if(this.transEnabled||this.scaleEnabled) {
@@ -509,20 +511,20 @@ namespace org.ssatguru.babylonjs.component {
                 else if(n=="YX") return this.pYX;
                 else if(n=="ALL") return this.pALL;
                 else {
-                    //get the position of camera in the mesh frame of reference
-                    let invMat=this.mesh.getWorldMatrix().clone().invert();
-                    let c=Vector3.TransformCoordinates(this.mainCamera.position,invMat);
-                    let s=this.mesh.scaling;
+                    //get the position of camera in the edit control frame of reference
+                    this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                    Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
+                    let c = this.ecTOcamera;
                     if(n==="X") {
-                        if(Math.abs(c.y*s.y)>Math.abs(c.z*s.z)) {
+                        if(Math.abs(c.y)>Math.abs(c.z)) {
                             return this.pXZ;
                         } else return this.pYX;
                     } else if(n==="Z") {
-                        if(Math.abs(c.y*s.y)>Math.abs(c.x*s.x)) {
+                        if(Math.abs(c.y)>Math.abs(c.x)) {
                             return this.pXZ;
                         } else return this.pZY;
                     } else if(n==="Y") {
-                        if(Math.abs(c.z*s.z)>Math.abs(c.x*s.x)) {
+                        if(Math.abs(c.z)>Math.abs(c.x)) {
                             return this.pYX;
                         } else return this.pZY;
                     }
@@ -539,9 +541,8 @@ namespace org.ssatguru.babylonjs.component {
                         return this.pALL;
                 }
             } else return null;
-
-
         }
+        
 
         private doTranslation(diff: Vector3) {
             this.transBy.x=0; this.transBy.y=0; this.transBy.z=0;
@@ -636,7 +637,8 @@ namespace org.ssatguru.babylonjs.component {
             if((n=="Z")||(n=="XZ")||(n=="ZY")) {
                 this.scale.z=Vector3.Dot(diff,this.localZ)/this.localZ.length();
             }
-
+            
+            //as the mesh becomes large reduce the amount by which we scale.
             let bbd=this.boundingDimesion;
             this.scale.x=this.scale.x/bbd.x;
             this.scale.y=this.scale.y/bbd.y;
@@ -663,20 +665,8 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
 
-            //as the mesh becomes large reduce the amount by which we scale.
-
-            //            let br: number = this.mesh.getBoundingInfo().boundingSphere.radius;
-            //            this.scale.x = this.scale.x/br;
-            //            this.scale.y = this.scale.y/br;
-            //            this.scale.z = this.scale.z/br;
-
-            //            let bb: BoundingBox = this.mesh.getBoundingInfo().boundingBox;
-            //            let bbx: number = bb.maximum.x - bb.minimum.x;
-            //            let bby: number = bb.maximum.y - bb.minimum.y;
-            //            let bbz: number = bb.maximum.z - bb.minimum.z;
-            //
-
             this.scaleWithSnap(this.mesh,this.scale);
+            
             // bound the scale
             if(this.scaleBoundsMin) {
                 this.mesh.scaling.x=Math.max(this.mesh.scaling.x,this.scaleBoundsMin.x);
@@ -724,7 +714,7 @@ namespace org.ssatguru.babylonjs.component {
          */
         private boundingDimesion: Vector3;
         private getBoundingDimension(mesh: Mesh): Vector3 {
-            let bb: BoundingBox=this.mesh.getBoundingInfo().boundingBox;
+            let bb: BoundingBox=mesh.getBoundingInfo().boundingBox;
             let bd: Vector3=bb.maximum.subtract(bb.minimum);
             if(bd.x==0) bd.x=1;
             if(bd.y==0) bd.y=1;
@@ -894,7 +884,7 @@ namespace org.ssatguru.babylonjs.component {
         public enableTranslation() {
             if((this.tX==null)) {
                 this.createTransAxes();
-                this.tCtl.parent=this.theParent;
+                this.tCtl.parent=this.ecRoot;
             }
             this.clearPrevOverMesh();
             if(!this.transEnabled) {
@@ -938,21 +928,21 @@ namespace org.ssatguru.babylonjs.component {
             //if(this.rX==null) {
             if(this.rCtl==null) {
                 this.createRotAxes();
-                this.rCtl.parent=this.theParent;
+                this.rCtl.parent=this.ecRoot;
             }
             this.clearPrevOverMesh();
             if(!this.rotEnabled) {
                 this.rEndX.visibility=this.visibility;
                 this.rEndY.visibility=this.visibility;
                 this.rEndZ.visibility=this.visibility;
-                
+
                 this.rEndAll.visibility=this.visibility;
                 this.rEndAll2.visibility=this.visibility;
-                
+
                 this.xaxis.visibility=0;
                 this.yaxis.visibility=0;
                 this.zaxis.visibility=0;
-                
+
                 this.rotEnabled=true;
                 this.disableTranslation();
                 this.disableScaling();
@@ -982,7 +972,7 @@ namespace org.ssatguru.babylonjs.component {
         public enableScaling() {
             if(this.sX==null) {
                 this.createScaleAxes();
-                this.sCtl.parent=this.theParent;
+                this.sCtl.parent=this.ecRoot;
             }
             this.clearPrevOverMesh();
             if(!this.scaleEnabled) {
@@ -1063,14 +1053,15 @@ namespace org.ssatguru.babylonjs.component {
         private xaxis: LinesMesh;
         private yaxis: LinesMesh;
         private zaxis: LinesMesh;
-        private guideCtl: Mesh;
+        
 
         /*
-         * create axeses which will be shown in all three modes, translate, rotate and scale.
+         * create big and small axeses which will be shown in translate, rotate and scale mode.
+         * small will only be shown in translate and scale.
          */
-        private createGuideAxes() {
+        private createGuideAxes():Mesh {
 
-            this.guideCtl=new Mesh("guideCtl",this.scene);
+            let guideAxes:Mesh=new Mesh("guideCtl",this.scene);
 
             //the big axes, shown when an axis is selected
             this.bXaxis=Mesh.CreateLines("bxAxis",[new Vector3(-100,0,0),new Vector3(100,0,0)],this.scene);
@@ -1082,9 +1073,9 @@ namespace org.ssatguru.babylonjs.component {
             this.bYaxis.isPickable=false;
             this.bZaxis.isPickable=false;
 
-            this.bXaxis.parent=this.guideCtl;
-            this.bYaxis.parent=this.guideCtl;
-            this.bZaxis.parent=this.guideCtl;
+            this.bXaxis.parent=guideAxes;
+            this.bYaxis.parent=guideAxes;
+            this.bZaxis.parent=guideAxes;
             this.bXaxis.color=Color3.Red();
             this.bYaxis.color=Color3.Green();
             this.bZaxis.color=Color3.Blue();
@@ -1104,21 +1095,21 @@ namespace org.ssatguru.babylonjs.component {
             this.yaxis.isPickable=false;
             this.zaxis.isPickable=false;
 
-            this.xaxis.parent=this.guideCtl;
-            this.yaxis.parent=this.guideCtl;
-            this.zaxis.parent=this.guideCtl;
+            this.xaxis.parent=guideAxes;
+            this.yaxis.parent=guideAxes;
+            this.zaxis.parent=guideAxes;
             this.xaxis.color=Color3.Red();
             this.yaxis.color=Color3.Green();
             this.zaxis.color=Color3.Blue();
-            //            this.xaxis.renderingGroupId = 2;
-            //            this.yaxis.renderingGroupId = 2;
-            //            this.zaxis.renderingGroupId = 2;
+
             this.xaxis.renderingGroupId=1;
             this.yaxis.renderingGroupId=1;
             this.zaxis.renderingGroupId=1;
+            
+            return guideAxes;
         }
 
-        private pickPlanes: Mesh;
+        //private pickPlanes: Mesh;
         private pickPlane: Mesh;
         private pALL: Mesh;
         private pXZ: Mesh;
@@ -1146,19 +1137,17 @@ namespace org.ssatguru.babylonjs.component {
             this.pZY.renderingGroupId=1;
             this.pYX.renderingGroupId=1;
 
-            //this.pALL.billboardMode = Mesh.BILLBOARDMODE_ALL;
             this.pALL.lookAt(this.mainCamera.position);
-            //this.pALL.billboardMode=Mesh.BILLBOARDMODE_ALL;
             this.pXZ.rotate(Axis.X,1.57);
             this.pZY.rotate(Axis.Y,1.57);
-            //this.pYX.rotate(Axis.Y,0);
 
-            this.pickPlanes=new Mesh("pickPlanes",this.scene);
-            //this.pALL.parent=this.theParent;
-            this.pALL.parent=this.pickPlanes;
-            this.pXZ.parent=this.pickPlanes;
-            this.pZY.parent=this.pickPlanes;
-            this.pYX.parent=this.pickPlanes;
+            let pickPlanes:Mesh=new Mesh("pickPlanes",this.scene);
+            this.pALL.parent=pickPlanes;
+            this.pXZ.parent=pickPlanes;
+            this.pZY.parent=pickPlanes;
+            this.pYX.parent=pickPlanes;
+            
+            return pickPlanes;
 
 
         }
@@ -1369,13 +1358,9 @@ namespace org.ssatguru.babylonjs.component {
             this.rAll=this.createTube(d/1.75,360);
             this.rAll.name="ALL";
 
-
-
             this.rX.rotation.z=1.57;
-            console.log(this.rX.rotation);
             this.rZ.rotation.x=-1.57;
             this.rX.bakeCurrentTransformIntoVertices();
-            console.log(this.rX.rotation);
             this.rZ.bakeCurrentTransformIntoVertices();
 
             this.rAll.rotation.x=1.57;
@@ -1390,10 +1375,6 @@ namespace org.ssatguru.babylonjs.component {
             this.rZ.visibility=0;
             this.rAll.visibility=0;
 
-            //            this.rX.renderingGroupId = 1;
-            //            this.rY.renderingGroupId = 1;
-            //            this.rZ.renderingGroupId = 1;
-            //            this.rAll.renderingGroupId = 1;
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function
             this.rX.isPickable=false;
@@ -1408,8 +1389,6 @@ namespace org.ssatguru.babylonjs.component {
             this.rEndZ=this.rEndX.clone("");
             this.rEndAll=this.createCircle(cl/1.75,360,false);
             this.rEndAll2=this.createCircle(cl/2,360,false);
-            //this.rEndAll2.rotation.x=-1.57;
-            //this.rEndAll2.bakeCurrentTransformIntoVertices();
 
             this.rEndX.parent=this.rX;
             this.rEndY.parent=this.rY;
@@ -1486,7 +1465,6 @@ namespace org.ssatguru.babylonjs.component {
                 points[p]=new Vector3(x,0,z);
                 p++;
             }
-            //var circle: LinesMesh = Mesh.CreateLines("", points, this.scene);
             let tube: Mesh=Mesh.CreateTube("",points,0.02,3,null,BABYLON.Mesh.NO_CAP,this.scene);
             return tube;
         }
@@ -1563,14 +1541,6 @@ namespace org.ssatguru.babylonjs.component {
             this.sYX.visibility=0;
             this.sAll.visibility=0;
 
-            //            this.sX.renderingGroupId = 1;
-            //            this.sY.renderingGroupId = 1;
-            //            this.sZ.renderingGroupId = 1;
-            //            this.sXZ.renderingGroupId = 1;
-            //            this.sZY.renderingGroupId = 1;
-            //            this.sYX.renderingGroupId = 1;
-            //            this.sAll.renderingGroupId = 1;
-
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function
             this.sX.isPickable=false;
@@ -1586,9 +1556,8 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndX=Mesh.CreateBox("",cr,this.scene);
             this.sEndY=this.sEndX.clone("");
             this.sEndZ=this.sEndX.clone("");
-            //this.sEndAll = this.sEndX.clone("");
+
             this.sEndAll=MeshBuilder.CreatePolyhedron("sEndAll",{type: 1,size: cr/2},this.scene);
-            //this.sEndXZ = MeshBuilder.CreatePlane("XZ", { size: cr * 1.75, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
             this.sEndXZ=this.createTriangle("XZ",cr*1.75,this.scene);
             this.sEndZY=this.sEndXZ.clone("ZY");
             this.sEndYX=this.sEndXZ.clone("YX");
@@ -1655,10 +1624,8 @@ namespace org.ssatguru.babylonjs.component {
             if(this.local==l) return;
             this.local=l;
             if(!l) {
-                this.theParent.rotationQuaternion=Quaternion.Identity();
+                this.ecRoot.rotationQuaternion=Quaternion.Identity();
             }
-            //            if (this.local) this.theParent.rotationQuaternion = this.mesh.rotationQuaternion;
-            //            else this.theParent.rotationQuaternion = Quaternion.Identity();
         }
 
         public isLocal(): boolean {
@@ -1750,11 +1717,6 @@ namespace org.ssatguru.babylonjs.component {
         public constructor(mesh: AbstractMesh,capacity: number) {
             this.mesh=mesh;
             this.lastMax=capacity-1;
-            //            if ((mesh.rotationQuaternion == null)) {
-            //                if ((mesh.rotation != null)) {
-            //                    mesh.rotationQuaternion = Quaternion.RotationYawPitchRoll(mesh.rotation.y, mesh.rotation.x, mesh.rotation.z);
-            //                }
-            //            }
             this.add();
         }
 

@@ -11,7 +11,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private canvas;
         private scene;
         private mainCamera;
-        private theParent;
+        private ecRoot;
         private local;
         private snapT;
         private snapR;
@@ -39,7 +39,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private setAxesRotation();
         ecMatrix: Matrix;
         ecTOcamera: Vector3;
-        rotRotGuides(): void;
+        private rotRotGuides();
         private renderLoopProcess();
         switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;
@@ -140,9 +140,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private xaxis;
         private yaxis;
         private zaxis;
-        private guideCtl;
         private createGuideAxes();
-        private pickPlanes;
         private pickPlane;
         private pALL;
         private pXZ;
