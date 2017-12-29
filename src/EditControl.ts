@@ -107,10 +107,10 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         //how far away from camera should the edit control appear to be
-        distFromCamera: number=2;
+        private distFromCamera: number=2;
         //vector from camera to edit control
-        cameraTOec: Vector3=new Vector3(0,0,0);
-        cameraNormal: Vector3=new Vector3(0,0,0);
+        private cameraTOec: Vector3=new Vector3(0,0,0);
+        private cameraNormal: Vector3=new Vector3(0,0,0);
         private setAxesScale() {
             this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
             Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
@@ -136,9 +136,9 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         //rotate the rotation guides so that they are facing the camera
-        ecMatrix: Matrix=new Matrix();
+        private ecMatrix: Matrix=new Matrix();
         //edit control to camera vector
-        ecTOcamera: Vector3=new Vector3(0,0,0);
+        private ecTOcamera: Vector3=new Vector3(0,0,0);
         private rotRotGuides() {
             if(this.local) {
                 this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
@@ -307,7 +307,6 @@ namespace org.ssatguru.babylonjs.component {
                 this.setEditing(true);
                 //lets find out where we are on the pickplane
                 this.pickPlane=this.getPickPlane(this.axisPicked);
-                console.log("pname : " + this.pickPlane.name);
                 this.prevPos=this.getPosOnPickPlane();
                 window.setTimeout(((cam,can) => {return this.detachControl(cam,can)}),0,this.mainCamera,this.canvas);
             }
@@ -340,8 +339,8 @@ namespace org.ssatguru.babylonjs.component {
         public isPointerOver(): boolean {
             return this.pointerIsOver;
         }
-        savedMat: Material;
-        savedCol: Color3;
+        private savedMat: Material;
+        private savedCol: Color3;
         private onPointerOver() {
             if(this.pDown) return;
             var pickResult: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
@@ -424,7 +423,7 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        editing: boolean=false;
+        private editing: boolean=false;
 
         private onPointerUp(evt: Event) {
             this.pDown=false;
@@ -433,13 +432,15 @@ namespace org.ssatguru.babylonjs.component {
                 this.setEditing(false);
                 //this.setAxesVisiblity(1);
                 this.hideBaxis();
-                this.restoreColor(this.prevOverMesh);
-                this.prevOverMesh=null;
+                if(this.prevOverMesh!=null) {
+                    this.restoreColor(this.prevOverMesh);
+                    this.prevOverMesh=null;
+                }
                 this.actHist.add(this.actionType);
             }
         }
 
-        actionType: number;
+        private actionType: number;
         private setActionType() {
             if(this.transEnabled) {
                 this.actionType=ActionType.TRANS;
@@ -615,14 +616,14 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        snapS: boolean=false;
-        snapSX: number=0;
-        snapSY: number=0;
-        snapSZ: number=0;
-        snapSA: number=0;
-        snapSV: Vector3=new Vector3(0,0,0);
-        scaleSnap: number=0.25;
-        scale: Vector3=new Vector3(0,0,0);
+        private snapS: boolean=false;
+        private snapSX: number=0;
+        private snapSY: number=0;
+        private snapSZ: number=0;
+        private snapSA: number=0;
+        private snapSV: Vector3=new Vector3(0,0,0);
+        private scaleSnap: number=0.25;
+        private scale: Vector3=new Vector3(0,0,0);
         private doScaling(diff: Vector3) {
             this.scale.x=0;
             this.scale.y=0;
@@ -736,12 +737,12 @@ namespace org.ssatguru.babylonjs.component {
             this.boundingDimesion=this.getBoundingDimension(this.mesh);
         }
 
-        eulerian: boolean=false;
-        snapRA: number=0;
+        private eulerian: boolean=false;
+        private snapRA: number=0;
         //vector normal to camera in world frame of reference
-        cN: Vector3=new Vector3(0,0,0);
+        private cN: Vector3=new Vector3(0,0,0);
         //rotation axis based on camera orientation
-        rotAxis: Vector3=new Vector3(0,0,0);
+        private rotAxis: Vector3=new Vector3(0,0,0);
         private doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
             //donot want to type this.cN everywhere
             let cN: Vector3=this.cN;
@@ -873,6 +874,14 @@ namespace org.ssatguru.babylonjs.component {
                 this.sEndYX.visibility=v;
                 this.sEndAll.visibility=v;
             }
+        }
+        
+        public getRotationQuaternion():Quaternion{
+            return this.ecRoot.rotationQuaternion
+        }
+        
+        public getPosition():Vector3 {
+            return this.ecRoot.position;
         }
 
         private transEnabled: boolean=false;
@@ -1516,7 +1525,8 @@ namespace org.ssatguru.babylonjs.component {
             this.sYX.position.x=r;
 
             this.sAll=Mesh.CreateBox("ALL",r*2,this.scene);
-
+            
+            //?? TODO do we need material for these
             this.sX.material=this.redMat;
             this.sY.material=this.greenMat;
             this.sZ.material=this.blueMat;
@@ -1643,7 +1653,7 @@ namespace org.ssatguru.babylonjs.component {
             this.snapS=s;
         }
 
-        tSnap: Vector3=new Vector3(this.transSnap,this.transSnap,this.transSnap);
+        private tSnap: Vector3=new Vector3(this.transSnap,this.transSnap,this.transSnap);
         public setTransSnapValue(t: number) {
             this.tSnap.copyFromFloats(t,t,t);
             this.transSnap=t;

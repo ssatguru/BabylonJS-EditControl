@@ -289,7 +289,6 @@ var org;
                             }
                             this.setEditing(true);
                             this.pickPlane = this.getPickPlane(this.axisPicked);
-                            console.log("pname : " + this.pickPlane.name);
                             this.prevPos = this.getPosOnPickPlane();
                             window.setTimeout((function (cam, can) { return _this.detachControl(cam, can); }), 0, this.mainCamera, this.canvas);
                         }
@@ -410,8 +409,10 @@ var org;
                             this.mainCamera.attachControl(this.canvas);
                             this.setEditing(false);
                             this.hideBaxis();
-                            this.restoreColor(this.prevOverMesh);
-                            this.prevOverMesh = null;
+                            if (this.prevOverMesh != null) {
+                                this.restoreColor(this.prevOverMesh);
+                                this.prevOverMesh = null;
+                            }
                             this.actHist.add(this.actionType);
                         }
                     };
@@ -862,6 +863,12 @@ var org;
                             this.sEndYX.visibility = v;
                             this.sEndAll.visibility = v;
                         }
+                    };
+                    EditControl.prototype.getRotationQuaternion = function () {
+                        return this.ecRoot.rotationQuaternion;
+                    };
+                    EditControl.prototype.getPosition = function () {
+                        return this.ecRoot.position;
                     };
                     EditControl.prototype.isTranslationEnabled = function () {
                         return this.transEnabled;
