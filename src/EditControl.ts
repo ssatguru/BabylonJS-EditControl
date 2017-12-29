@@ -78,7 +78,7 @@ namespace org.ssatguru.babylonjs.component {
             
             this.createMaterials(this.scene);
             
-            let guideAxes:Mesh = this.createGuideAxes();
+            let guideAxes:Mesh = this.createCommonAxes();
             guideAxes.parent=this.ecRoot;
             
             let pickPlanes:Mesh= this.createPickPlanes();
@@ -221,8 +221,45 @@ namespace org.ssatguru.babylonjs.component {
             this.removeAllActionListeners();
             this.disposeAll();
         }
+        private prevState:String="";
+        private hidden:boolean=false;
+        public hide(){
+            this.hidden=true;
+            if (this.transEnabled){
+                 this.prevState="T";
+                 this.disableTranslation();
+            }else if(this.rotEnabled){
+                this.prevState="R";
+                this.disableRotation();
+            }else if(this.scaleEnabled){
+                this.prevState="S";
+                this.disableScaling();
+            }
+            this.hideCommonAxes();
+        }
+        
+        private hideCommonAxes(){
+            this.xaxis.visibility=0;
+            this.yaxis.visibility=0;
+            this.zaxis.visibility=0;
+        }
+        private showCommonAxes(){
+            this.xaxis.visibility=this.visibility;
+            this.yaxis.visibility=this.visibility;
+            this.zaxis.visibility=this.visibility;
+        }
+        public show(){
+            this.hidden=false;
+            this.showCommonAxes();
+            if(this.prevState=="T") this.enableTranslation();
+            else if(this.prevState=="R") this.enableRotation();
+            else if(this.prevState=="S") this.enableScaling();
+        }
+        public isHidden():boolean{
+            return this.hidden;
+        }
 
-        public disposeAll() {
+        private disposeAll() {
             this.ecRoot.dispose();
             this.disposeMaterials();
             this.actHist=null;
@@ -306,7 +343,7 @@ namespace org.ssatguru.babylonjs.component {
                 }
                 this.setEditing(true);
                 //lets find out where we are on the pickplane
-                this.pickPlane=this.getPickPlane(this.axisPicked);
+                this.pickedPlane=this.getPickPlane(this.axisPicked);
                 this.prevPos=this.getPosOnPickPlane();
                 window.setTimeout(((cam,can) => {return this.detachControl(cam,can)}),0,this.mainCamera,this.canvas);
             }
@@ -834,9 +871,10 @@ namespace org.ssatguru.babylonjs.component {
 
         private getPosOnPickPlane(): Vector3 {
             var pickinfo: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
-                return mesh==this.pickPlane;
+                return mesh==this.pickedPlane;
             },null,this.mainCamera);
-            if((pickinfo.hit)) {
+            
+            if(pickinfo.hit) {
                 return pickinfo.pickedPoint;
             } else {
                 return null;
@@ -948,9 +986,9 @@ namespace org.ssatguru.babylonjs.component {
                 this.rEndAll.visibility=this.visibility;
                 this.rEndAll2.visibility=this.visibility;
 
-                this.xaxis.visibility=0;
-                this.yaxis.visibility=0;
-                this.zaxis.visibility=0;
+//                this.xaxis.visibility=0;
+//                this.yaxis.visibility=0;
+//                this.zaxis.visibility=0;
 
                 this.rotEnabled=true;
                 this.disableTranslation();
@@ -965,9 +1003,9 @@ namespace org.ssatguru.babylonjs.component {
                 this.rEndZ.visibility=0;
                 this.rEndAll.visibility=0;
                 this.rEndAll2.visibility=0;
-                this.xaxis.visibility=this.visibility;
-                this.yaxis.visibility=this.visibility;
-                this.zaxis.visibility=this.visibility;
+//                this.xaxis.visibility=this.visibility;
+//                this.yaxis.visibility=this.visibility;
+//                this.zaxis.visibility=this.visibility;
                 this.rotEnabled=false;
             }
         }
@@ -1066,9 +1104,9 @@ namespace org.ssatguru.babylonjs.component {
 
         /*
          * create big and small axeses which will be shown in translate, rotate and scale mode.
-         * small will only be shown in translate and scale.
+         *
          */
-        private createGuideAxes():Mesh {
+        private createCommonAxes():Mesh {
 
             let guideAxes:Mesh=new Mesh("guideCtl",this.scene);
 
@@ -1088,13 +1126,10 @@ namespace org.ssatguru.babylonjs.component {
             this.bXaxis.color=Color3.Red();
             this.bYaxis.color=Color3.Green();
             this.bZaxis.color=Color3.Blue();
-            //            this.bXaxis.renderingGroupId = 1;
-            //            this.bYaxis.renderingGroupId = 1;
-            //            this.bZaxis.renderingGroupId = 1;
             this.hideBaxis();
 
             //the small axis
-            let al: number=this.axesLen*this.axesScale;
+            let al: number=this.axesLen*this.axesScale*0.75;
             this.xaxis=Mesh.CreateLines("xAxis",[new Vector3(0,0,0),new Vector3(al,0,0)],this.scene);
             this.yaxis=Mesh.CreateLines("yAxis",[new Vector3(0,0,0),new Vector3(0,al,0)],this.scene);
             this.zaxis=Mesh.CreateLines("zAxis",[new Vector3(0,0,0),new Vector3(0,0,al)],this.scene);
@@ -1119,7 +1154,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         //private pickPlanes: Mesh;
-        private pickPlane: Mesh;
+        private pickedPlane: Mesh;
         private pALL: Mesh;
         private pXZ: Mesh;
         private pZY: Mesh;
@@ -1343,6 +1378,7 @@ namespace org.ssatguru.babylonjs.component {
             else this.guideSize=180;
             if(this.rCtl!=null) {
                 this.rCtl.dispose();
+                this.rAll.dispose();
                 //this.rX=null;
                 this.rCtl=null;
                 this.enableRotation();
@@ -1527,10 +1563,10 @@ namespace org.ssatguru.babylonjs.component {
             this.sAll=Mesh.CreateBox("ALL",r*2,this.scene);
             
             //?? TODO do we need material for these
-            this.sX.material=this.redMat;
-            this.sY.material=this.greenMat;
-            this.sZ.material=this.blueMat;
-            this.sAll.material=this.yellowMat;
+//            this.sX.material=this.redMat;
+//            this.sY.material=this.greenMat;
+//            this.sZ.material=this.blueMat;
+//            this.sAll.material=this.yellowMat;
 
             this.sX.parent=this.sCtl;
             this.sY.parent=this.sCtl;

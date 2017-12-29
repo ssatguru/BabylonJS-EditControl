@@ -178,7 +178,10 @@
             helpButton.onclick = showHelp;
             
             setRotGuide.onclick = function () {
-                editControl.setRotGuides();
+                //editControl.setRotGuides();
+                if (editControl.isHidden()){
+                    editControl.show();
+                }else editControl.hide();
             };
             transButton.onclick = function () {
                 editControl.enableTranslation();

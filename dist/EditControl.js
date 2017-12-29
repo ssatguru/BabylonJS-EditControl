@@ -38,6 +38,8 @@ var org;
                         this.cameraNormal = new Vector3(0, 0, 0);
                         this.ecMatrix = new Matrix();
                         this.ecTOcamera = new Vector3(0, 0, 0);
+                        this.prevState = "";
+                        this.hidden = false;
                         this.actionListener = null;
                         this.actionStartListener = null;
                         this.actionEndListener = null;
@@ -89,7 +91,7 @@ var org;
                         this.ecRoot.visibility = 0;
                         this.ecRoot.isPickable = false;
                         this.createMaterials(this.scene);
-                        var guideAxes = this.createGuideAxes();
+                        var guideAxes = this.createCommonAxes();
                         guideAxes.parent = this.ecRoot;
                         var pickPlanes = this.createPickPlanes();
                         pickPlanes.parent = this.ecRoot;
@@ -205,6 +207,45 @@ var org;
                         this.removeAllActionListeners();
                         this.disposeAll();
                     };
+                    EditControl.prototype.hide = function () {
+                        this.hidden = true;
+                        if (this.transEnabled) {
+                            this.prevState = "T";
+                            this.disableTranslation();
+                        }
+                        else if (this.rotEnabled) {
+                            this.prevState = "R";
+                            this.disableRotation();
+                        }
+                        else if (this.scaleEnabled) {
+                            this.prevState = "S";
+                            this.disableScaling();
+                        }
+                        this.hideCommonAxes();
+                    };
+                    EditControl.prototype.hideCommonAxes = function () {
+                        this.xaxis.visibility = 0;
+                        this.yaxis.visibility = 0;
+                        this.zaxis.visibility = 0;
+                    };
+                    EditControl.prototype.showCommonAxes = function () {
+                        this.xaxis.visibility = this.visibility;
+                        this.yaxis.visibility = this.visibility;
+                        this.zaxis.visibility = this.visibility;
+                    };
+                    EditControl.prototype.show = function () {
+                        this.hidden = false;
+                        this.showCommonAxes();
+                        if (this.prevState == "T")
+                            this.enableTranslation();
+                        else if (this.prevState == "R")
+                            this.enableRotation();
+                        else if (this.prevState == "S")
+                            this.enableScaling();
+                    };
+                    EditControl.prototype.isHidden = function () {
+                        return this.hidden;
+                    };
                     EditControl.prototype.disposeAll = function () {
                         this.ecRoot.dispose();
                         this.disposeMaterials();
@@ -288,7 +329,7 @@ var org;
                                 this.bZaxis.visibility = 1;
                             }
                             this.setEditing(true);
-                            this.pickPlane = this.getPickPlane(this.axisPicked);
+                            this.pickedPlane = this.getPickPlane(this.axisPicked);
                             this.prevPos = this.getPosOnPickPlane();
                             window.setTimeout((function (cam, can) { return _this.detachControl(cam, can); }), 0, this.mainCamera, this.canvas);
                         }
@@ -824,9 +865,9 @@ var org;
                     EditControl.prototype.getPosOnPickPlane = function () {
                         var _this = this;
                         var pickinfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
-                            return mesh == _this.pickPlane;
+                            return mesh == _this.pickedPlane;
                         }, null, this.mainCamera);
-                        if ((pickinfo.hit)) {
+                        if (pickinfo.hit) {
                             return pickinfo.pickedPoint;
                         }
                         else {
@@ -922,9 +963,6 @@ var org;
                             this.rEndZ.visibility = this.visibility;
                             this.rEndAll.visibility = this.visibility;
                             this.rEndAll2.visibility = this.visibility;
-                            this.xaxis.visibility = 0;
-                            this.yaxis.visibility = 0;
-                            this.zaxis.visibility = 0;
                             this.rotEnabled = true;
                             this.disableTranslation();
                             this.disableScaling();
@@ -937,9 +975,6 @@ var org;
                             this.rEndZ.visibility = 0;
                             this.rEndAll.visibility = 0;
                             this.rEndAll2.visibility = 0;
-                            this.xaxis.visibility = this.visibility;
-                            this.yaxis.visibility = this.visibility;
-                            this.zaxis.visibility = this.visibility;
                             this.rotEnabled = false;
                         }
                     };
@@ -1009,7 +1044,7 @@ var org;
                         this.rotBoundsMin = null;
                         this.rotBoundsMax = null;
                     };
-                    EditControl.prototype.createGuideAxes = function () {
+                    EditControl.prototype.createCommonAxes = function () {
                         var guideAxes = new Mesh("guideCtl", this.scene);
                         this.bXaxis = Mesh.CreateLines("bxAxis", [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)], this.scene);
                         this.bYaxis = Mesh.CreateLines("byAxis", [new Vector3(0, -100, 0), new Vector3(0, 100, 0)], this.scene);
@@ -1024,7 +1059,7 @@ var org;
                         this.bYaxis.color = Color3.Green();
                         this.bZaxis.color = Color3.Blue();
                         this.hideBaxis();
-                        var al = this.axesLen * this.axesScale;
+                        var al = this.axesLen * this.axesScale * 0.75;
                         this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(al, 0, 0)], this.scene);
                         this.yaxis = Mesh.CreateLines("yAxis", [new Vector3(0, 0, 0), new Vector3(0, al, 0)], this.scene);
                         this.zaxis = Mesh.CreateLines("zAxis", [new Vector3(0, 0, 0), new Vector3(0, 0, al)], this.scene);
@@ -1172,6 +1207,7 @@ var org;
                             this.guideSize = 180;
                         if (this.rCtl != null) {
                             this.rCtl.dispose();
+                            this.rAll.dispose();
                             this.rCtl = null;
                             this.enableRotation();
                         }
@@ -1316,10 +1352,6 @@ var org;
                         this.sYX.position.y = r;
                         this.sYX.position.x = r;
                         this.sAll = Mesh.CreateBox("ALL", r * 2, this.scene);
-                        this.sX.material = this.redMat;
-                        this.sY.material = this.greenMat;
-                        this.sZ.material = this.blueMat;
-                        this.sAll.material = this.yellowMat;
                         this.sX.parent = this.sCtl;
                         this.sY.parent = this.sCtl;
                         this.sZ.parent = this.sCtl;

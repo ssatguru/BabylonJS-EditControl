@@ -45,7 +45,14 @@ declare namespace org.ssatguru.babylonjs.component {
         undo(): void;
         redo(): void;
         detach(): void;
-        disposeAll(): void;
+        private prevState;
+        private hidden;
+        hide(): void;
+        private hideCommonAxes();
+        private showCommonAxes();
+        show(): void;
+        isHidden(): boolean;
+        private disposeAll();
         private actionListener;
         private actionStartListener;
         private actionEndListener;
@@ -141,8 +148,8 @@ declare namespace org.ssatguru.babylonjs.component {
         private xaxis;
         private yaxis;
         private zaxis;
-        private createGuideAxes();
-        private pickPlane;
+        private createCommonAxes();
+        private pickedPlane;
         private pALL;
         private pXZ;
         private pZY;
