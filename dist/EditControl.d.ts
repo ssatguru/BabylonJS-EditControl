@@ -1,3 +1,4 @@
+/// <reference types="babylonjs" />
 declare namespace org.ssatguru.babylonjs.component {
     import AbstractMesh = BABYLON.AbstractMesh;
     import Camera = BABYLON.Camera;

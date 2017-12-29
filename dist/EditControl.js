@@ -1214,7 +1214,7 @@ var org;
                         this.rEndY.color = Color3.Green();
                         this.rEndZ.color = Color3.Blue();
                         this.rEndAll.color = Color3.Yellow();
-                        this.rEndAll2.color = Color3.Black();
+                        this.rEndAll2.color = Color3.Gray();
                         this.rEndX.renderingGroupId = 2;
                         this.rEndY.renderingGroupId = 2;
                         this.rEndZ.renderingGroupId = 2;

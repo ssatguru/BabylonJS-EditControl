@@ -1343,15 +1343,14 @@ namespace org.ssatguru.babylonjs.component {
         private createRotAxes() {
             var d: number=this.axesLen*this.axesScale*2;
             this.rCtl=new Mesh("rotCtl",this.scene);
+            
             //pickable invisible torus around the rotation circles
             this.rX=this.createTube(d/2,this.guideSize);
             this.rX.name="X";
 
-            //this.rY=this.rX.clone("Y");
             this.rY=this.createTube(d/2,this.guideSize);
             this.rY.name="Y";
 
-            //this.rZ=this.rX.clone("Z");
             this.rZ=this.createTube(d/2,this.guideSize);
             this.rZ.name="Z";
 
@@ -1405,7 +1404,7 @@ namespace org.ssatguru.babylonjs.component {
             this.rEndY.color=Color3.Green();
             this.rEndZ.color=Color3.Blue();
             this.rEndAll.color=Color3.Yellow();
-            this.rEndAll2.color=Color3.Black();
+            this.rEndAll2.color=Color3.Gray();
 
             this.rEndX.renderingGroupId=2;
             this.rEndY.renderingGroupId=2;
