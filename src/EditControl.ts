@@ -87,6 +87,11 @@ namespace org.ssatguru.babylonjs.component {
             this.pointerdown=(evt) => {return this.onPointerDown(evt)};
             this.pointerup=(evt) => {return this.onPointerUp(evt)};
             this.pointermove=(evt) => {return this.onPointerMove(evt)};
+            
+            //use canvas rather than scene to handle pointer events
+            //scene cannot have mutiple eventlisteners for an event
+            //with canvas one will have to do ones own pickinfo generattion.
+            
             canvas.addEventListener("pointerdown",this.pointerdown,false);
             canvas.addEventListener("pointerup",this.pointerup,false);
             canvas.addEventListener("pointermove",this.pointermove,false);
@@ -177,7 +182,7 @@ namespace org.ssatguru.babylonjs.component {
             this.setAxesScale();
             this.setAxesRotation();
             if(this.rotEnabled) this.rotRotGuides();
-            this.onPointerOver();
+            //this.onPointerOver();
         }
 
         public switchTo(mesh: Mesh,eulerian?: boolean) {
@@ -302,7 +307,8 @@ namespace org.ssatguru.babylonjs.component {
             evt.preventDefault();
             this.pDown=true;
             if((<PointerEvent>evt).button!=0) return;
-
+            //TODO: do we really need to do a pick here?
+            //onPointerOver() has already done this.
             var pickResult: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
                 if(this.transEnabled) {
                     if((mesh==this.tX)||(mesh==this.tY)||(mesh==this.tZ)||(mesh==this.tXZ)||(mesh==this.tZY)||(mesh==this.tYX)||(mesh==this.tAll)) return true;
@@ -514,7 +520,9 @@ namespace org.ssatguru.babylonjs.component {
         private snapRZ: number=0;
 
         private onPointerMove(evt: Event) {
-
+            
+            this.onPointerOver();
+            
             if(!this.pDown||!this.editing) return;
             if(this.prevPos==null) return;
 

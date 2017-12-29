@@ -168,7 +168,6 @@ var org;
                         this.setAxesRotation();
                         if (this.rotEnabled)
                             this.rotRotGuides();
-                        this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh, eulerian) {
                         mesh.computeWorldMatrix(true);
@@ -484,6 +483,7 @@ var org;
                         }
                     };
                     EditControl.prototype.onPointerMove = function (evt) {
+                        this.onPointerOver();
                         if (!this.pDown || !this.editing)
                             return;
                         if (this.prevPos == null)
