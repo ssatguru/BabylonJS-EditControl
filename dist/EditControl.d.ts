@@ -68,7 +68,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private onPointerDown(evt);
         private setEditing(editing);
         isEditing(): boolean;
-        private detachControl(cam, can);
+        private detachCamera(cam, can);
         private prevOverMesh;
         private pointerIsOver;
         isPointerOver(): boolean;

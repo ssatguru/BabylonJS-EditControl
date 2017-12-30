@@ -329,8 +329,13 @@ var org;
                             }
                             this.setEditing(true);
                             this.pickedPlane = this.getPickPlane(this.axisPicked);
-                            this.prevPos = this.getPosOnPickPlane();
-                            window.setTimeout((function (cam, can) { return _this.detachControl(cam, can); }), 0, this.mainCamera, this.canvas);
+                            if (this.pickedPlane != null) {
+                                this.prevPos = this.getPosOnPickPlane();
+                            }
+                            else {
+                                this.prevPos = null;
+                            }
+                            window.setTimeout((function (cam, can) { return _this.detachCamera(cam, can); }), 0, this.mainCamera, this.canvas);
                         }
                     };
                     EditControl.prototype.setEditing = function (editing) {
@@ -346,7 +351,7 @@ var org;
                     EditControl.prototype.isEditing = function () {
                         return this.editing;
                     };
-                    EditControl.prototype.detachControl = function (cam, can) {
+                    EditControl.prototype.detachCamera = function (cam, can) {
                         var camera = cam;
                         var canvas = can;
                         camera.detachControl(canvas);
@@ -356,8 +361,6 @@ var org;
                     };
                     EditControl.prototype.onPointerOver = function () {
                         var _this = this;
-                        if (this.pDown)
-                            return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
                                 if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tXZ) || (mesh == _this.tZY) || (mesh == _this.tYX) || (mesh == _this.tAll))
@@ -483,8 +486,11 @@ var org;
                         }
                     };
                     EditControl.prototype.onPointerMove = function (evt) {
-                        this.onPointerOver();
-                        if (!this.pDown || !this.editing)
+                        if (!this.pDown) {
+                            this.onPointerOver();
+                            return;
+                        }
+                        if (!this.editing)
                             return;
                         if (this.prevPos == null)
                             return;
@@ -548,13 +554,25 @@ var org;
                             }
                         }
                         else if (this.rotEnabled) {
+                            this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                            Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
+                            var c = this.ecTOcamera;
                             switch (n) {
                                 case "X":
-                                    return this.pZY;
+                                    if (Math.abs(c.x) < 0.2)
+                                        return null;
+                                    else
+                                        return this.pZY;
                                 case "Y":
-                                    return this.pXZ;
+                                    if (Math.abs(c.y) < 0.2)
+                                        return null;
+                                    else
+                                        return this.pXZ;
                                 case "Z":
-                                    return this.pYX;
+                                    if (Math.abs(c.z) < 0.2)
+                                        return null;
+                                    else
+                                        return this.pYX;
                                 default:
                                     return this.pALL;
                             }
