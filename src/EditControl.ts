@@ -52,7 +52,7 @@ namespace org.ssatguru.babylonjs.component {
         private pointerup: EventListener;
         private pointermove: EventListener;
         //axes visibility
-        private visibility: number=0.5;
+        private visibility: number=0.75;
 
         public constructor(mesh: Mesh,camera: Camera,canvas: HTMLCanvasElement,scale: number,eulerian?: boolean) {
             this.mesh=mesh;
@@ -1660,7 +1660,7 @@ namespace org.ssatguru.babylonjs.component {
         private localZ: Vector3=new Vector3(0,0,0);;
 
         /*
-         * this would be call during rotation as the local axes direction owuld have changed
+         * this would be call during rotation as the local axes direction would have changed
          * need to set the local axis.
          * These are used in all three modes to figure out direction of mouse move wrt the axes
          * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
@@ -1671,8 +1671,17 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatArrayToRef(meshMatrix.asArray(),4,this.localY);
             Vector3.FromFloatArrayToRef(meshMatrix.asArray(),8,this.localZ);
         }
-
-
+        
+        /**
+         * set how transparent the axes are
+         * 0 to 1
+         * 0 - completely transparent
+         * 1 - completely non transparent
+         * default is 0.75
+         */
+        public setVisibility(v:number){
+            this.visibility=v;
+        }
         public setLocal(l: boolean) {
             if(this.local==l) return;
             this.local=l;

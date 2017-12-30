@@ -32,7 +32,7 @@ var org;
                         this.rotSnap = Math.PI / 18;
                         this.axesLen = 0.4;
                         this.axesScale = 1;
-                        this.visibility = 0.5;
+                        this.visibility = 0.75;
                         this.distFromCamera = 2;
                         this.cameraTOec = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
@@ -1425,6 +1425,9 @@ var org;
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 0, this.localX);
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 4, this.localY);
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 8, this.localZ);
+                    };
+                    EditControl.prototype.setVisibility = function (v) {
+                        this.visibility = v;
                     };
                     EditControl.prototype.setLocal = function (l) {
                         if (this.local == l)

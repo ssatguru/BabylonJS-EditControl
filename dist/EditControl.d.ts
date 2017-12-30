@@ -208,6 +208,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private localY;
         private localZ;
         private setLocalAxes(mesh);
+        setVisibility(v: number): void;
         setLocal(l: boolean): void;
         isLocal(): boolean;
         setTransSnap(s: boolean): void;
