@@ -61,12 +61,15 @@
         </style>
         <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
         
+        <!-- specific -->
         <script src="lib/babylon-3.1.1-12.13.2017.js"></script>
+        <!-- stable -->
         <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
+        <!-- latest -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
         
         <!-- for demo -->
-        <!--<script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.5.1/EditControl.min.js"></script>-->
+        <!--<script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v2.5.3/EditControl.min.js"></script>-->
         <!--for test-->
         <script src="dist/EditControl.js"></script>
     </head>
@@ -78,7 +81,7 @@
             <table >
                 <tr>
                     <td><input type="checkbox" id="local" checked title="switch between local or global axes">local</td>
-                    <td><button id="setRotGuide">setRotGuide</button></td>
+                    <td><button id="hide">hide/show</button></td>
                     <td></td>
                 </tr>
                 <tr>
@@ -133,7 +136,7 @@
              * get all buttons
              */
             var localButton = document.getElementById("local");
-            var setRotGuide = document.getElementById("setRotGuide");
+            var hideButton = document.getElementById("hide");
             
             var transButton = document.getElementById("trans");
             var rotButton = document.getElementById("rotate");
@@ -180,8 +183,7 @@
 
             helpButton.onclick = showHelp;
             
-            setRotGuide.onclick = function () {
-                //editControl.setRotGuides();
+            hideButton.onclick = function () {
                 if (editControl.isHidden()){
                     editControl.show();
                 }else editControl.hide();
