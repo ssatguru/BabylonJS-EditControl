@@ -63,7 +63,7 @@ For now, to keep it simple and avoid dependencies on module systems, the applica
 In other words load it using the "script" tag and refer to it using the global name "org.ssatguru.babylonjs.component.EditControl". 
 Different module system provides way to handle non modules. Here is how you can use Edit Control from web pack.  
 #### webpack
-Because EditControl is not a module, it does not export/import anything.
+Because EditControl is not a module, it does not export/import anything.  
 webpack provides "exports-loader" and "imports-loader" to add exports and imports to such apps.  
 This is how you would use it from webpack  
 ```
@@ -217,7 +217,7 @@ editControl.hide();
 editControl.isHidden(); //turns true or false
 editControl.show();
 ```
-#### To setvisiililty
+#### To set visibililty (transparency)
 ```
 editControl.setVisibility(v:number);
 ```
