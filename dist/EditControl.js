@@ -32,11 +32,18 @@ var org;
                         this.rotSnap = Math.PI / 18;
                         this.axesLen = 0.4;
                         this.axesScale = 1;
+                        //how close to an axis should we get before we can pck it 
+                        this.pickWidth = 0.02;
+                        //axes visibility
                         this.visibility = 0.75;
+                        //how far away from camera should the edit control appear to be
                         this.distFromCamera = 2;
+                        //vector from camera to edit control
                         this.cameraTOec = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
+                        //rotate the rotation guides so that they are facing the camera
                         this.ecMatrix = new Matrix();
+                        //edit control to camera vector
                         this.ecTOcamera = new Vector3(0, 0, 0);
                         this.prevState = "";
                         this.hidden = false;
@@ -61,7 +68,9 @@ var org;
                         this.scale = new Vector3(0, 0, 0);
                         this.eulerian = false;
                         this.snapRA = 0;
+                        //vector normal to camera in world frame of reference
                         this.cN = new Vector3(0, 0, 0);
+                        //rotation axis based on camera orientation
                         this.rotAxis = new Vector3(0, 0, 0);
                         this.transEnabled = false;
                         this.rotEnabled = false;
@@ -98,6 +107,9 @@ var org;
                         this.pointerdown = function (evt) { return _this.onPointerDown(evt); };
                         this.pointerup = function (evt) { return _this.onPointerUp(evt); };
                         this.pointermove = function (evt) { return _this.onPointerMove(evt); };
+                        //use canvas rather than scene to handle pointer events
+                        //scene cannot have mutiple eventlisteners for an event
+                        //with canvas one will have to do ones own pickinfo generattion.
                         canvas.addEventListener("pointerdown", this.pointerdown, false);
                         canvas.addEventListener("pointerup", this.pointerup, false);
                         canvas.addEventListener("pointermove", this.pointermove, false);
@@ -105,6 +117,8 @@ var org;
                         this.renderer = function () { return _this.renderLoopProcess(); };
                         this.scene.registerBeforeRender(this.renderer);
                     }
+                    //make sure that if eulerian is set to false then mesh's rotation is in quaternion
+                    //throw error and exit if not so.
                     EditControl.prototype.checkQuaternion = function () {
                         if (!this.eulerian) {
                             if ((this.mesh.rotationQuaternion == null) || (this.mesh.rotationQuaternion == undefined)) {
@@ -115,9 +129,12 @@ var org;
                     EditControl.prototype.setAxesScale = function () {
                         this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
+                        //get distance of edit control from the camera plane 
+                        //project "camera to edit control" vector onto the camera normal
                         var parentOnNormal = Vector3.Dot(this.cameraTOec, this.cameraNormal) / this.cameraNormal.length();
                         var s = Math.abs(parentOnNormal / this.distFromCamera);
                         Vector3.FromFloatsToRef(s, s, s, this.ecRoot.scaling);
+                        //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
                     };
                     EditControl.prototype.setAxesRotation = function () {
                         if (this.local) {
@@ -168,6 +185,8 @@ var org;
                         this.setAxesRotation();
                         if (this.rotEnabled)
                             this.rotRotGuides();
+                        //check pointer over axes only during pointer moves
+                        //this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh, eulerian) {
                         mesh.computeWorldMatrix(true);
@@ -198,6 +217,10 @@ var org;
                         this.callActionListener(at);
                         this.callActionEndListener(at);
                     };
+                    /**
+                     * detach the edit control from the mesh and dispose off all
+                     * resources created by the edit control
+                     */
                     EditControl.prototype.detach = function () {
                         this.canvas.removeEventListener("pointerdown", this.pointerdown, false);
                         this.canvas.removeEventListener("pointerup", this.pointerup, false);
@@ -206,6 +229,9 @@ var org;
                         this.removeAllActionListeners();
                         this.disposeAll();
                     };
+                    /**
+                     * hide the edit control. use show() to unhide the control.
+                     */
                     EditControl.prototype.hide = function () {
                         this.hidden = true;
                         if (this.transEnabled) {
@@ -232,6 +258,9 @@ var org;
                         this.yaxis.visibility = this.visibility;
                         this.zaxis.visibility = this.visibility;
                     };
+                    /**
+                     * unhide the editcontrol hidden using the hide() method
+                     */
                     EditControl.prototype.show = function () {
                         this.hidden = false;
                         this.showCommonAxes();
@@ -242,6 +271,9 @@ var org;
                         else if (this.prevState == "S")
                             this.enableScaling();
                     };
+                    /**
+                     * check if the editcontrol was hidden using the hide() methods
+                     */
                     EditControl.prototype.isHidden = function () {
                         return this.hidden;
                     };
@@ -279,6 +311,8 @@ var org;
                         this.pDown = true;
                         if (evt.button != 0)
                             return;
+                        //TODO: do we really need to do a pick here?
+                        //onPointerOver() has already done this.
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
                                 if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tXZ) || (mesh == _this.tZY) || (mesh == _this.tYX) || (mesh == _this.tAll))
@@ -295,6 +329,7 @@ var org;
                             return false;
                         }, null, this.mainCamera);
                         if (pickResult.hit) {
+                            //this.setAxesVisiblity(0);
                             this.axisPicked = pickResult.pickedMesh;
                             var childs = this.axisPicked.getChildren();
                             if (childs.length > 0) {
@@ -303,31 +338,32 @@ var org;
                             else {
                                 this.axisPicked.visibility = this.visibility;
                             }
-                            var name = this.axisPicked.name;
-                            if ((name == "X"))
+                            var name_1 = this.axisPicked.name;
+                            if ((name_1 == "X"))
                                 this.bXaxis.visibility = 1;
-                            else if ((name == "Y"))
+                            else if ((name_1 == "Y"))
                                 this.bYaxis.visibility = 1;
-                            else if ((name == "Z"))
+                            else if ((name_1 == "Z"))
                                 this.bZaxis.visibility = 1;
-                            else if ((name == "XZ")) {
+                            else if ((name_1 == "XZ")) {
                                 this.bXaxis.visibility = 1;
                                 this.bZaxis.visibility = 1;
                             }
-                            else if ((name == "ZY")) {
+                            else if ((name_1 == "ZY")) {
                                 this.bZaxis.visibility = 1;
                                 this.bYaxis.visibility = 1;
                             }
-                            else if ((name == "YX")) {
+                            else if ((name_1 == "YX")) {
                                 this.bYaxis.visibility = 1;
                                 this.bXaxis.visibility = 1;
                             }
-                            else if ((name == "ALL")) {
+                            else if ((name_1 == "ALL")) {
                                 this.bXaxis.visibility = 1;
                                 this.bYaxis.visibility = 1;
                                 this.bZaxis.visibility = 1;
                             }
                             this.setEditing(true);
+                            //lets find out where we are on the pickplane
                             this.pickedPlane = this.getPickPlane(this.axisPicked);
                             if (this.pickedPlane != null) {
                                 this.prevPos = this.getPosOnPickPlane();
@@ -351,6 +387,9 @@ var org;
                     EditControl.prototype.isEditing = function () {
                         return this.editing;
                     };
+                    /**
+                     * no camera movement during edit
+                     */
                     EditControl.prototype.detachCamera = function (cam, can) {
                         var camera = cam;
                         var canvas = can;
@@ -361,6 +400,7 @@ var org;
                     };
                     EditControl.prototype.onPointerOver = function () {
                         var _this = this;
+                        //if(this.pDown) return;
                         var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY, function (mesh) {
                             if (_this.transEnabled) {
                                 if ((mesh == _this.tX) || (mesh == _this.tY) || (mesh == _this.tZ) || (mesh == _this.tXZ) || (mesh == _this.tZY) || (mesh == _this.tYX) || (mesh == _this.tAll))
@@ -377,8 +417,10 @@ var org;
                             return false;
                         }, null, this.mainCamera);
                         if (pickResult.hit) {
+                            //if we are still over the same axis mesh then don't do anything
                             if (pickResult.pickedMesh != this.prevOverMesh) {
                                 this.pointerIsOver = true;
+                                //if we moved directly from one axis mesh to this then clean up the prev axis mesh
                                 this.clearPrevOverMesh();
                                 this.prevOverMesh = pickResult.pickedMesh;
                                 if (this.rotEnabled) {
@@ -415,6 +457,7 @@ var org;
                             }
                         }
                     };
+                    //clean up any axis we might have been howering over before
                     EditControl.prototype.clearPrevOverMesh = function () {
                         if (this.prevOverMesh != null) {
                             this.prevOverMesh.visibility = 0;
@@ -451,6 +494,7 @@ var org;
                         if (this.editing) {
                             this.mainCamera.attachControl(this.canvas);
                             this.setEditing(false);
+                            //this.setAxesVisiblity(1);
                             this.hideBaxis();
                             if (this.prevOverMesh != null) {
                                 this.restoreColor(this.prevOverMesh);
@@ -471,16 +515,19 @@ var org;
                         }
                     };
                     EditControl.prototype.callActionListener = function (at) {
+                        //call actionListener if registered
                         if (this.actionListener != null) {
                             window.setTimeout(this.actionListener, 0, at);
                         }
                     };
                     EditControl.prototype.callActionStartListener = function (at) {
+                        //call actionListener if registered
                         if (this.actionStartListener != null) {
                             window.setTimeout(this.actionStartListener, 0, at);
                         }
                     };
                     EditControl.prototype.callActionEndListener = function (at) {
+                        //call actionListener if registered
                         if (this.actionEndListener != null) {
                             window.setTimeout(this.actionEndListener, 0, at);
                         }
@@ -494,6 +541,7 @@ var org;
                             return;
                         if (this.prevPos == null)
                             return;
+                        //this.pickPlane=this.getPickPlane(this.axisPicked);
                         var newPos = this.getPosOnPickPlane();
                         if (newPos == null)
                             return;
@@ -527,6 +575,7 @@ var org;
                             else if (n == "ALL")
                                 return this.pALL;
                             else {
+                                //get the position of camera in the edit control frame of reference
                                 this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                                 Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
                                 var c = this.ecTOcamera;
@@ -554,9 +603,11 @@ var org;
                             }
                         }
                         else if (this.rotEnabled) {
+                            //get the position of camera in the edit control frame of reference
                             this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                             Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
                             var c = this.ecTOcamera;
+                            //if camera is too close to the rotation plane then donot rotate
                             switch (n) {
                                 case "X":
                                     if (Math.abs(c.x) < 0.2)
@@ -604,6 +655,7 @@ var org;
                                 this.transBy.z = diff.z;
                         }
                         this.transWithSnap(this.mesh, this.transBy, this.local);
+                        // bound the translation
                         if (this.transBoundsMin) {
                             this.mesh.position.x = Math.max(this.mesh.position.x, this.transBoundsMin.x);
                             this.mesh.position.y = Math.max(this.mesh.position.y, this.transBoundsMin.y);
@@ -656,6 +708,8 @@ var org;
                             snapit = false;
                         }
                         if (local) {
+                            //locallyTranslate moves the mesh wrt the absolute location not pivotlocation :(
+                            //this.mesh.locallyTranslate(trans);
                             this.mesh.translate(Axis.X, trans.x, Space.LOCAL);
                             this.mesh.translate(Axis.Y, trans.y, Space.LOCAL);
                             this.mesh.translate(Axis.Z, trans.z, Space.LOCAL);
@@ -678,11 +732,13 @@ var org;
                         if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
                             this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
                         }
+                        //as the mesh becomes large reduce the amount by which we scale.
                         var bbd = this.boundingDimesion;
                         this.scale.x = this.scale.x / bbd.x;
                         this.scale.y = this.scale.y / bbd.y;
                         this.scale.z = this.scale.z / bbd.z;
                         if (n == "ALL") {
+                            //project movement along camera up vector
                             var s = Vector3.Dot(diff, this.mainCamera.upVector);
                             s = s / Math.max(bbd.x, bbd.y, bbd.z);
                             this.scale.copyFromFloats(s, s, s);
@@ -711,6 +767,7 @@ var org;
                             }
                         }
                         this.scaleWithSnap(this.mesh, this.scale);
+                        // bound the scale
                         if (this.scaleBoundsMin) {
                             this.mesh.scaling.x = Math.max(this.mesh.scaling.x, this.scaleBoundsMin.x);
                             this.mesh.scaling.y = Math.max(this.mesh.scaling.y, this.scaleBoundsMin.y);
@@ -771,13 +828,27 @@ var org;
                             bd.z = 1;
                         return bd;
                     };
+                    /*
+                     *
+                     * For the sake of speed the editcontrol calculates bounding info only once.
+                     * This is in the constructor.
+                     * Now The boundingbox dimension can change if the mesh is baked.
+                     * If the editcontrol is attached to the mesh when the mesh was baked then
+                     * the scaling speed will be incorrect.
+                     * Thus client application should call refreshBoundingInfo if it bakes the mesh.
+                     *
+                     */
                     EditControl.prototype.refreshBoundingInfo = function () {
                         this.boundingDimesion = this.getBoundingDimension(this.mesh);
                     };
                     EditControl.prototype.doRotation = function (mesh, axis, newPos, prevPos) {
+                        //donot want to type this.cN everywhere
                         var cN = this.cN;
-                        Vector3.TransformNormalToRef(Axis.Z, this.mainCamera.getWorldMatrix(), cN);
+                        Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, cN);
+                        //first find the angle and the direction (clockwise or anticlockwise) by which the user was trying to rotate
+                        //from the user(camera) perspective
                         var angle = EditControl.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
+                        //then rotate based on users(camera) postion and orientation in the local/world space
                         if (axis == this.rX) {
                             if (this.snapR) {
                                 this.snapRX += angle;
@@ -875,6 +946,7 @@ var org;
                             }
                         }
                         this.setLocalAxes(this.mesh);
+                        //we angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
                         if (this.eulerian && angle != 0) {
                             mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
                             mesh.rotationQuaternion = null;
@@ -970,6 +1042,7 @@ var org;
                         this.eulerian = euler;
                     };
                     EditControl.prototype.enableRotation = function () {
+                        //if(this.rX==null) {
                         if (this.rCtl == null) {
                             this.createRotAxes();
                             this.rCtl.parent = this.ecRoot;
@@ -1062,11 +1135,17 @@ var org;
                         this.rotBoundsMin = null;
                         this.rotBoundsMax = null;
                     };
+                    /*
+                     * create big and small axeses which will be shown in translate, rotate and scale mode.
+                     *
+                     */
                     EditControl.prototype.createCommonAxes = function () {
                         var guideAxes = new Mesh("guideCtl", this.scene);
+                        //the big axes, shown when an axis is selected
                         this.bXaxis = Mesh.CreateLines("bxAxis", [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)], this.scene);
                         this.bYaxis = Mesh.CreateLines("byAxis", [new Vector3(0, -100, 0), new Vector3(0, 100, 0)], this.scene);
                         this.bZaxis = Mesh.CreateLines("bzAxis", [new Vector3(0, 0, -100), new Vector3(0, 0, 100)], this.scene);
+                        //lines are now pickable too
                         this.bXaxis.isPickable = false;
                         this.bYaxis.isPickable = false;
                         this.bZaxis.isPickable = false;
@@ -1077,10 +1156,12 @@ var org;
                         this.bYaxis.color = Color3.Green();
                         this.bZaxis.color = Color3.Blue();
                         this.hideBaxis();
+                        //the small axis
                         var al = this.axesLen * this.axesScale * 0.75;
                         this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(al, 0, 0)], this.scene);
                         this.yaxis = Mesh.CreateLines("yAxis", [new Vector3(0, 0, 0), new Vector3(0, al, 0)], this.scene);
                         this.zaxis = Mesh.CreateLines("zAxis", [new Vector3(0, 0, 0), new Vector3(0, 0, al)], this.scene);
+                        //lines are now pickable too
                         this.xaxis.isPickable = false;
                         this.yaxis.isPickable = false;
                         this.zaxis.isPickable = false;
@@ -1123,9 +1204,10 @@ var org;
                         return pickPlanes;
                     };
                     EditControl.prototype.createTransAxes = function () {
-                        var r = 0.04 * this.axesScale;
+                        var r = this.pickWidth * 2 * this.axesScale;
                         var l = this.axesLen * this.axesScale;
                         this.tCtl = new Mesh("tarnsCtl", this.scene);
+                        //pickable invisible boxes around axes lines
                         this.tX = this.extrudeBox(r / 2, l);
                         this.tX.name = "X";
                         this.tY = this.tX.clone("Y");
@@ -1158,6 +1240,8 @@ var org;
                         this.tZY.visibility = 0;
                         this.tYX.visibility = 0;
                         this.tAll.visibility = 0;
+                        //do not want clients picking this
+                        //we will pick using mesh filter in scene.pick function
                         this.tX.isPickable = false;
                         this.tY.isPickable = false;
                         this.tZ.isPickable = false;
@@ -1165,7 +1249,10 @@ var org;
                         this.tZY.isPickable = false;
                         this.tYX.isPickable = false;
                         this.tAll.isPickable = false;
+                        //non pickable but visible cones at end of axes lines
+                        //cone length
                         var cl = l / 5;
+                        //cone base radius
                         var cr = r;
                         this.tEndX = Mesh.CreateCylinder("tEndX", cl, 0, cr, 6, 1, this.scene);
                         this.tEndY = this.tEndX.clone("tEndY");
@@ -1233,6 +1320,7 @@ var org;
                     EditControl.prototype.createRotAxes = function () {
                         var d = this.axesLen * this.axesScale * 2;
                         this.rCtl = new Mesh("rotCtl", this.scene);
+                        //pickable invisible torus around the rotation circles
                         this.rX = this.createTube(d / 2, this.guideSize);
                         this.rX.name = "X";
                         this.rY = this.createTube(d / 2, this.guideSize);
@@ -1254,10 +1342,13 @@ var org;
                         this.rY.visibility = 0;
                         this.rZ.visibility = 0;
                         this.rAll.visibility = 0;
+                        //do not want clients picking this
+                        //we will pick using mesh filter in scene.pick function
                         this.rX.isPickable = false;
                         this.rY.isPickable = false;
                         this.rZ.isPickable = false;
                         this.rAll.isPickable = false;
+                        //non pickable but visible circles
                         var cl = d;
                         this.rEndX = this.createCircle(cl / 2, this.guideSize, false);
                         this.rEndY = this.rEndX.clone("");
@@ -1302,9 +1393,9 @@ var org;
                         var p = 0;
                         for (var i = 0; i <= t; i = i + 5) {
                             x = r * Math.cos(i * a);
-                            if ((i == 90))
+                            if (i == 90)
                                 z = r;
-                            else if ((i == 270))
+                            else if (i == 270)
                                 z = -r;
                             else
                                 z = r * Math.sin(i * a);
@@ -1315,9 +1406,9 @@ var org;
                             r = r - 0.04;
                             for (var i = 0; i <= t; i = i + 5) {
                                 x = r * Math.cos(i * a);
-                                if ((i == 90))
+                                if (i == 90)
                                     z = r;
-                                else if ((i == 270))
+                                else if (i == 270)
                                     z = -r;
                                 else
                                     z = r * Math.sin(i * a);
@@ -1338,22 +1429,23 @@ var org;
                         var p = 0;
                         for (var i = 0; i <= t; i = i + 30) {
                             x = r * Math.cos(i * a);
-                            if ((i == 90))
+                            if (i == 90)
                                 z = r;
-                            else if ((i == 270))
+                            else if (i == 270)
                                 z = -r;
                             else
                                 z = r * Math.sin(i * a);
                             points[p] = new Vector3(x, 0, z);
                             p++;
                         }
-                        var tube = Mesh.CreateTube("", points, 0.02, 3, null, BABYLON.Mesh.NO_CAP, this.scene);
+                        var tube = Mesh.CreateTube("", points, this.pickWidth * this.axesScale, 3, null, BABYLON.Mesh.NO_CAP, this.scene);
                         return tube;
                     };
                     EditControl.prototype.createScaleAxes = function () {
-                        var r = 0.04 * this.axesScale;
+                        var r = this.pickWidth * 2 * this.axesScale;
                         var l = this.axesLen * this.axesScale;
                         this.sCtl = new Mesh("sCtl", this.scene);
+                        //pickable , invisible part
                         this.sX = this.extrudeBox(r / 2, l);
                         this.sX.name = "X";
                         this.sY = this.sX.clone("Y");
@@ -1386,6 +1478,8 @@ var org;
                         this.sZY.visibility = 0;
                         this.sYX.visibility = 0;
                         this.sAll.visibility = 0;
+                        //do not want clients picking this
+                        //we will pick using mesh filter in scene.pick function
                         this.sX.isPickable = false;
                         this.sY.isPickable = false;
                         this.sZ.isPickable = false;
@@ -1393,14 +1487,15 @@ var org;
                         this.sZY.isPickable = false;
                         this.sYX.isPickable = false;
                         this.sAll.isPickable = false;
+                        //non pickable visible boxes at end of axes
                         var cr = r;
                         this.sEndX = Mesh.CreateBox("", cr, this.scene);
                         this.sEndY = this.sEndX.clone("");
                         this.sEndZ = this.sEndX.clone("");
-                        this.sEndAll = MeshBuilder.CreatePolyhedron("sEndAll", { type: 1, size: cr / 2 }, this.scene);
                         this.sEndXZ = this.createTriangle("XZ", cr * 1.75, this.scene);
                         this.sEndZY = this.sEndXZ.clone("ZY");
                         this.sEndYX = this.sEndXZ.clone("YX");
+                        this.sEndAll = MeshBuilder.CreatePolyhedron("sEndAll", { type: 1, size: cr / 2 }, this.scene);
                         this.sEndXZ.rotation.x = -1.57;
                         this.sEndZY.rotation.x = -1.57;
                         this.sEndYX.rotation.x = -1.57;
@@ -1438,12 +1533,25 @@ var org;
                     };
                     ;
                     ;
+                    /*
+                     * This would be called during rotation as the local axes direction would have changed
+                     * We need to set the local axis as these are used in all three modes to figure out
+                     * direction of mouse move wrt the axes
+                     * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
+                     */
                     EditControl.prototype.setLocalAxes = function (mesh) {
                         var meshMatrix = mesh.getWorldMatrix();
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 0, this.localX);
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 4, this.localY);
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 8, this.localZ);
                     };
+                    /**
+                     * set how transparent the axes are
+                     * 0 to 1
+                     * 0 - completely transparent
+                     * 1 - completely non transparent
+                     * default is 0.75
+                     */
                     EditControl.prototype.setVisibility = function (v) {
                         this.visibility = v;
                     };
@@ -1474,14 +1582,23 @@ var org;
                     EditControl.prototype.setRotSnapValue = function (r) {
                         this.rotSnap = r;
                     };
+                    /**
+                     * use this to set the scale snap value
+                     */
                     EditControl.prototype.setScaleSnapValue = function (r) {
                         this.scaleSnap = r;
                     };
+                    /**
+                     * finds the angle subtended from points p1 to p2 around the point p
+                     * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
+                     * to figure this out it checks the orientation of the user(camera)normal with the rotation normal
+                     */
                     EditControl.getAngle = function (p1, p2, p, cN) {
                         var v1 = p1.subtract(p);
                         var v2 = p2.subtract(p);
                         var n = Vector3.Cross(v1, v2);
                         var angle = Math.asin(n.length() / (v1.length() * v2.length()));
+                        //camera looking down from front of plane or looking up from behind plane
                         if ((Vector3.Dot(n, cN) < 0)) {
                             angle = -1 * angle;
                         }
@@ -1572,6 +1689,7 @@ var org;
                 var Act = (function () {
                     function Act(mesh, at) {
                         this.p = mesh.position.clone();
+                        //if (mesh.rotationQuaternion == null) {
                         if (mesh.rotationQuaternion == null) {
                             this.rQ = null;
                             this.rE = mesh.rotation.clone();
@@ -1588,11 +1706,16 @@ var org;
                     };
                     Act.prototype.perform = function (mesh) {
                         mesh.position.copyFrom(this.p);
+                        //check if we are doing euler or quaternion now
+                        //also check what were we doing when the rotation value
+                        //was captured and set value accordingly
                         if (mesh.rotationQuaternion == null) {
                             if (this.rE != null) {
+                                //mesh.rotation = this.rE.clone();
                                 mesh.rotation.copyFrom(this.rE);
                             }
                             else {
+                                //mesh.rotation = this.r.toEulerAngles();
                                 mesh.rotation.copyFrom(this.rQ.toEulerAngles());
                             }
                         }
@@ -1601,6 +1724,8 @@ var org;
                                 mesh.rotationQuaternion.copyFrom(this.rQ);
                             }
                             else {
+                                //TODO use BABYLON.Quaternion.RotationYawPitchRoll(rot.y, rot.x, rot.z) instead of toQuaternion.
+                                //mesh.rotationQuaternion.copyFrom(this.rE.toQuaternion());
                                 mesh.rotationQuaternion.copyFrom(Quaternion.RotationYawPitchRoll(this.rE.y, this.rE.x, this.rE.z));
                             }
                         }

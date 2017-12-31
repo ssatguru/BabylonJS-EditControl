@@ -18,6 +18,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private rotSnap;
         private axesLen;
         private axesScale;
+        private pickWidth;
         private redMat;
         private greenMat;
         private blueMat;
@@ -44,13 +45,26 @@ declare namespace org.ssatguru.babylonjs.component {
         setUndoCount(c: number): void;
         undo(): void;
         redo(): void;
+        /**
+         * detach the edit control from the mesh and dispose off all
+         * resources created by the edit control
+         */
         detach(): void;
         private prevState;
         private hidden;
+        /**
+         * hide the edit control. use show() to unhide the control.
+         */
         hide(): void;
         private hideCommonAxes();
         private showCommonAxes();
+        /**
+         * unhide the editcontrol hidden using the hide() method
+         */
         show(): void;
+        /**
+         * check if the editcontrol was hidden using the hide() methods
+         */
         isHidden(): boolean;
         private disposeAll();
         private actionListener;
@@ -68,6 +82,9 @@ declare namespace org.ssatguru.babylonjs.component {
         private onPointerDown(evt);
         private setEditing(editing);
         isEditing(): boolean;
+        /**
+         * no camera movement during edit
+         */
         private detachCamera(cam, can);
         private prevOverMesh;
         private pointerIsOver;
@@ -208,6 +225,13 @@ declare namespace org.ssatguru.babylonjs.component {
         private localY;
         private localZ;
         private setLocalAxes(mesh);
+        /**
+         * set how transparent the axes are
+         * 0 to 1
+         * 0 - completely transparent
+         * 1 - completely non transparent
+         * default is 0.75
+         */
         setVisibility(v: number): void;
         setLocal(l: boolean): void;
         isLocal(): boolean;
@@ -217,7 +241,15 @@ declare namespace org.ssatguru.babylonjs.component {
         private tSnap;
         setTransSnapValue(t: number): void;
         setRotSnapValue(r: number): void;
+        /**
+         * use this to set the scale snap value
+         */
         setScaleSnapValue(r: number): void;
+        /**
+         * finds the angle subtended from points p1 to p2 around the point p
+         * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
+         * to figure this out it checks the orientation of the user(camera)normal with the rotation normal
+         */
         private static getAngle(p1, p2, p, cN);
         private createMaterials(scene);
         private disposeMaterials();
