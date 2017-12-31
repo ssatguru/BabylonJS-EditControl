@@ -60,7 +60,21 @@ npm install babylonjs-editcontrol
 
 Note that even though this is available in npm it is not packaged as a node module or any other type of module.  
 For now, to keep it simple and avoid dependencies on module systems, the application is packaged as a simple javascript "namespaced" application.  
-In other words load it using the "script" tag and refer to it using the global name "org.ssatguru.babylonjs.component.EditControl".  
+In other words load it using the "script" tag and refer to it using the global name "org.ssatguru.babylonjs.component.EditControl". 
+Different module system provides way to handle non modules. Here is how you can use Edit Control from web pack.  
+#### webpack
+Because EditControl is not a module, it does not export/import anything.
+webpack provides "exports-loader" and "imports-loader" to add exports and imports to such apps.  
+This is how you would use it from webpack  
+```
+var EditControl=require("exports-loader?org.ssatguru.babylonjs.component.EditControl!imports-loader?BABYLON=babylonjs!babylonjs-editcontrol/dist/EditControl");
+```
+
+you will, ofcourse, have to npm install the following  
+exports-loader  
+imports-loader  
+babylonjs  
+babylonjs-editcontrol  
 
 ## API
 #### To Instantiate
@@ -191,6 +205,23 @@ EditControl uses mesh bounding info to provide the same smooth scaling experienc
 ```
 editControl.refreshBoundingInfo();
 ```
+#### To get position and rotaion of EditControl
+```
+editControl.getPosition();//returns Vector3
+editControl.getRotationQuaternion(): //returns rotation in quaternion
+```
+The postion and rotation of EditControl would be the same as that of the mesh to which it is attached  
+#### To show/hide EditControl
+```
+editControl.hide();
+editControl.isHidden(); //turns true or false
+editControl.show();
+```
+#### To setvisiililty
+```
+editControl.setVisibility(v:number);
+```
+By default the visibility is set to 0.75
 
 #### To switch edit control to another mesh
 ```
