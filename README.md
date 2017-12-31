@@ -23,7 +23,7 @@ For a demo head on over to <a href="https://ssatguru.github.io/BabylonJS-EditCon
 1) add the following dependencies 
  ```
 <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
-<script src="https://cdn.jsdelivr.net/babylonjs/2-5/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
 
