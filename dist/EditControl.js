@@ -953,13 +953,11 @@ var org;
                                 }
                             }
                             if (angle !== 0) {
-                                if (!this.scene.useRightHandedSystem)
-                                    angle = -angle;
-                                mesh.rotate(this.cameraTOec, angle, Space.WORLD);
+                                mesh.rotate(this.cameraTOec, -angle, Space.WORLD);
                             }
                         }
                         this.setLocalAxes(this.mesh);
-                        //we angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
+                        //if angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
                         if (this.eulerian && angle != 0) {
                             mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
                             mesh.rotationQuaternion = null;
