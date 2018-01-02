@@ -2,6 +2,7 @@
 declare namespace org.ssatguru.babylonjs.component {
     import AbstractMesh = BABYLON.AbstractMesh;
     import Camera = BABYLON.Camera;
+    import Matrix = BABYLON.Matrix;
     import Mesh = BABYLON.Mesh;
     import Quaternion = BABYLON.Quaternion;
     import Vector3 = BABYLON.Vector3;
@@ -109,6 +110,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private snapTV;
         private transBy;
         private getPickPlane(axis);
+        private rotate2;
         private doTranslation(diff);
         private transWithSnap(mesh, trans, local);
         private snapS;
@@ -126,9 +128,10 @@ declare namespace org.ssatguru.babylonjs.component {
         refreshBoundingInfo(): void;
         private eulerian;
         private snapRA;
+        private doRotation(mesh, axis, newPos, prevPos);
         private cN;
         private rotAxis;
-        private doRotation(mesh, axis, newPos, prevPos);
+        private doRotation_old(mesh, axis, newPos, prevPos);
         private getPosOnPickPlane();
         private hideBaxis();
         private setAxesVisiblity(v);
@@ -245,12 +248,17 @@ declare namespace org.ssatguru.babylonjs.component {
          * use this to set the scale snap value
          */
         setScaleSnapValue(r: number): void;
+        tv1: Vector3;
+        tv2: Vector3;
+        tv3: Vector3;
+        tm: Matrix;
+        private getAngle2(p1, p2, cameraPos, c2ec, mN);
         /**
          * finds the angle subtended from points p1 to p2 around the point p
          * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
-         * to figure this out it checks the orientation of the user(camera)normal with the rotation normal
+         * to figure this check the orientation of the user(camera)to ec vector with the rotation normal vector
          */
-        private static getAngle(p1, p2, p, cN);
+        private getAngle(p1, p2, p, c2ec);
         private createMaterials(scene);
         private disposeMaterials();
         private static getStandardMaterial(name, col, scene);

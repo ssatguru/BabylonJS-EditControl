@@ -58,6 +58,8 @@ var org;
                         this.snapRZ = 0;
                         this.snapTV = new Vector3(0, 0, 0);
                         this.transBy = new Vector3(0, 0, 0);
+                        //rotate differently if camera is too close to the rotation plane
+                        this.rotate2 = false;
                         this.snapS = false;
                         this.snapSX = 0;
                         this.snapSY = 0;
@@ -68,6 +70,7 @@ var org;
                         this.scale = new Vector3(0, 0, 0);
                         this.eulerian = false;
                         this.snapRA = 0;
+                        //TODO REMOVE
                         //vector normal to camera in world frame of reference
                         this.cN = new Vector3(0, 0, 0);
                         //rotation axis based on camera orientation
@@ -80,6 +83,11 @@ var org;
                         this.localY = new Vector3(0, 0, 0);
                         this.localZ = new Vector3(0, 0, 0);
                         this.tSnap = new Vector3(this.transSnap, this.transSnap, this.transSnap);
+                        //few temp vectors & matrix
+                        this.tv1 = new Vector3(0, 0, 0);
+                        this.tv2 = new Vector3(0, 0, 0);
+                        this.tv3 = new Vector3(0, 0, 0);
+                        this.tm = new Matrix();
                         this.mesh = mesh;
                         this.mainCamera = camera;
                         this.canvas = canvas;
@@ -603,25 +611,32 @@ var org;
                             }
                         }
                         else if (this.rotEnabled) {
+                            this.rotate2 = false;
                             //get the position of camera in the edit control frame of reference
                             this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                             Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
                             var c = this.ecTOcamera;
-                            //if camera is too close to the rotation plane then donot rotate
+                            //if camera is too close to the rotation plane then use alternate rotation process
                             switch (n) {
                                 case "X":
-                                    if (Math.abs(c.x) < 0.2)
-                                        return null;
+                                    if (Math.abs(c.x) < 0.2) {
+                                        this.rotate2 = true;
+                                        return this.pALL;
+                                    }
                                     else
                                         return this.pZY;
                                 case "Y":
-                                    if (Math.abs(c.y) < 0.2)
-                                        return null;
+                                    if (Math.abs(c.y) < 0.2) {
+                                        this.rotate2 = true;
+                                        return this.pALL;
+                                    }
                                     else
                                         return this.pXZ;
                                 case "Z":
-                                    if (Math.abs(c.z) < 0.2)
-                                        return null;
+                                    if (Math.abs(c.z) < 0.2) {
+                                        this.rotate2 = true;
+                                        return this.pALL;
+                                    }
                                     else
                                         return this.pYX;
                                 default:
@@ -842,12 +857,127 @@ var org;
                         this.boundingDimesion = this.getBoundingDimension(this.mesh);
                     };
                     EditControl.prototype.doRotation = function (mesh, axis, newPos, prevPos) {
+                        var angle = 0;
+                        //rotation axis
+                        var rAxis;
+                        if (axis == this.rX)
+                            rAxis = this.local ? this.localX : Axis.X;
+                        else if (axis == this.rY)
+                            rAxis = this.local ? this.localY : Axis.Y;
+                        else if (axis == this.rZ)
+                            rAxis = this.local ? this.localZ : Axis.Z;
+                        this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
+                        /**
+                         * A)first find the angle and the direction (clockwise or anticlockwise) by which the user was trying to rotate
+                         * from the user(camera) perspective
+                         */
+                        if (this.rotate2) {
+                            angle = this.getAngle2(prevPos, newPos, this.mainCamera.position, this.cameraTOec, rAxis);
+                        }
+                        else {
+                            angle = this.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), this.cameraTOec);
+                        }
+                        /**
+                         * B)then rotate based on users(camera) postion and orientation in the local/world space
+                         *
+                         */
+                        this.cameraTOec.normalize();
+                        if (axis == this.rX) {
+                            if (this.snapR) {
+                                this.snapRX += angle;
+                                angle = 0;
+                                if (Math.abs(this.snapRX) >= this.rotSnap) {
+                                    if ((this.snapRX > 0))
+                                        angle = this.rotSnap;
+                                    else
+                                        angle = -this.rotSnap;
+                                    this.snapRX = 0;
+                                }
+                            }
+                            if (angle !== 0) {
+                                if (Vector3.Dot(rAxis, this.cameraTOec) >= 0)
+                                    angle = -1 * angle;
+                                mesh.rotate(rAxis, angle, Space.WORLD);
+                            }
+                        }
+                        else if (axis == this.rY) {
+                            if (this.snapR) {
+                                this.snapRY += angle;
+                                angle = 0;
+                                if (Math.abs(this.snapRY) >= this.rotSnap) {
+                                    if ((this.snapRY > 0))
+                                        angle = this.rotSnap;
+                                    else
+                                        angle = -this.rotSnap;
+                                    this.snapRY = 0;
+                                }
+                            }
+                            if (angle !== 0) {
+                                if (angle !== 0) {
+                                    if (Vector3.Dot(rAxis, this.cameraTOec) >= 0)
+                                        angle = -1 * angle;
+                                    mesh.rotate(rAxis, angle, Space.WORLD);
+                                }
+                            }
+                        }
+                        else if (axis == this.rZ) {
+                            if (this.snapR) {
+                                this.snapRZ += angle;
+                                angle = 0;
+                                if (Math.abs(this.snapRZ) >= this.rotSnap) {
+                                    if (this.snapRZ > 0)
+                                        angle = this.rotSnap;
+                                    else
+                                        angle = -this.rotSnap;
+                                    this.snapRZ = 0;
+                                }
+                            }
+                            if (angle !== 0) {
+                                if (angle !== 0) {
+                                    if (Vector3.Dot(rAxis, this.cameraTOec) >= 0)
+                                        angle = -1 * angle;
+                                    mesh.rotate(rAxis, angle, Space.WORLD);
+                                }
+                            }
+                        }
+                        else if (axis == this.rAll) {
+                            if (this.snapR) {
+                                this.snapRA += angle;
+                                angle = 0;
+                                if (Math.abs(this.snapRA) >= this.rotSnap) {
+                                    if (this.snapRA > 0)
+                                        angle = this.rotSnap;
+                                    else
+                                        angle = -this.rotSnap;
+                                    this.snapRA = 0;
+                                }
+                            }
+                            if (angle !== 0) {
+                                if (!this.scene.useRightHandedSystem)
+                                    angle = -angle;
+                                mesh.rotate(this.cameraTOec, angle, Space.WORLD);
+                            }
+                        }
+                        this.setLocalAxes(this.mesh);
+                        //we angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
+                        if (this.eulerian && angle != 0) {
+                            mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
+                            mesh.rotationQuaternion = null;
+                        }
+                    };
+                    EditControl.prototype.doRotation_old = function (mesh, axis, newPos, prevPos) {
                         //donot want to type this.cN everywhere
                         var cN = this.cN;
+                        var angle = 0;
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, cN);
                         //first find the angle and the direction (clockwise or anticlockwise) by which the user was trying to rotate
                         //from the user(camera) perspective
-                        var angle = EditControl.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
+                        if (this.rotate2) {
+                            angle = this.getAngle2(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN, this.localX);
+                        }
+                        else {
+                            angle = this.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), cN);
+                        }
                         //then rotate based on users(camera) postion and orientation in the local/world space
                         if (axis == this.rX) {
                             if (this.snapR) {
@@ -1438,7 +1568,7 @@ var org;
                             points[p] = new Vector3(x, 0, z);
                             p++;
                         }
-                        var tube = Mesh.CreateTube("", points, this.pickWidth * this.axesScale, 3, null, BABYLON.Mesh.NO_CAP, this.scene);
+                        var tube = Mesh.CreateTube("", points, this.pickWidth * this.axesScale * 2, 3, null, BABYLON.Mesh.NO_CAP, this.scene);
                         return tube;
                     };
                     EditControl.prototype.createScaleAxes = function () {
@@ -1588,18 +1718,109 @@ var org;
                     EditControl.prototype.setScaleSnapValue = function (r) {
                         this.scaleSnap = r;
                     };
+                    EditControl.prototype.getAngle2 = function (p1, p2, cameraPos, c2ec, mN) {
+                        /**
+                         * A) find out if the camera is above , below, left, right of the rotation plane
+                         */
+                        //project "camera to ec" vector onto mesh normal to get distance to rotation plane
+                        var d = Vector3.Dot(c2ec, mN);
+                        //scale mesh normal by above ammount to get vector to rotation plane
+                        mN.scaleToRef(d, this.tv1);
+                        //get the point of intersection of vector from camera perpendicular to rotation plane
+                        cameraPos.addToRef(this.tv1, this.tv2);
+                        var i = this.tv2; //save some typing
+                        //find the co-ordinate of this point in the cameras frame of reference
+                        this.mainCamera.getWorldMatrix().invertToRef(this.tm);
+                        Vector3.TransformCoordinatesToRef(this.tv2, this.tm, this.tv2);
+                        //find in which quadarant the point (and thus the rotation plane) is in the camera xy plane
+                        var q = 0; //(1=x y,2=-x y,3=-x -y,4=x -y)
+                        if (i.x >= 0 && i.y >= 0)
+                            q = 1;
+                        else if (i.x <= 0 && i.y >= 0)
+                            q = 2;
+                        else if (i.x <= 0 && i.y <= 0)
+                            q = 3;
+                        else if (i.x >= 0 && i.y <= 0)
+                            q = 4;
+                        /**
+                         * B) find out if the user moved pointer up,down, right, left
+                         */
+                        //find movement vector in camera frame of reference
+                        Vector3.TransformCoordinatesToRef(p1, this.tm, this.tv1);
+                        Vector3.TransformCoordinatesToRef(p2, this.tm, this.tv2);
+                        this.tv2.subtractInPlace(this.tv1);
+                        var mv = this.tv2; //save some typing
+                        //for now lets set the angle magnitutde same as amount by which the mouse moved
+                        var angle = mv.length();
+                        var m = ""; //(u ,d ,r,l)
+                        if (mv.x >= 0 && mv.y >= 0) {
+                            if (mv.x >= mv.y)
+                                m = "r";
+                            else
+                                m = "u";
+                        }
+                        else if (mv.x <= 0 && mv.y >= 0) {
+                            if (-mv.x >= mv.y)
+                                m = "l";
+                            else
+                                m = "u";
+                        }
+                        else if (mv.x <= 0 && mv.y <= 0) {
+                            if (-mv.x >= -mv.y)
+                                m = "l";
+                            else
+                                m = "d";
+                        }
+                        else if (mv.x >= 0 && mv.y <= 0) {
+                            if (mv.x >= -mv.y)
+                                m = "r";
+                            else
+                                m = "d";
+                        }
+                        /**
+                         * C) decide if the user was trying to rotate clockwise (+1) or anti-clockwise(-1)
+                         */
+                        var r = 0;
+                        //if mouse moved down /up and rotation plane is on  right or left side of user
+                        if (m == "d") {
+                            if (q == 1 || q == 4)
+                                r = 1;
+                            else
+                                r = -1;
+                        }
+                        else if (m == "u") {
+                            if (q == 1 || q == 4)
+                                r = -1;
+                            else
+                                r = 1;
+                            //if mouse moved right/left and  rotation plane is above or below user
+                        }
+                        else if (m == "r") {
+                            if (q == 2 || q == 1)
+                                r = 1;
+                            else
+                                r = -1;
+                        }
+                        else if (m == "l") {
+                            if (q == 2 || q == 1)
+                                r = -1;
+                            else
+                                r = 1;
+                        }
+                        return r * angle;
+                    };
                     /**
                      * finds the angle subtended from points p1 to p2 around the point p
                      * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
-                     * to figure this out it checks the orientation of the user(camera)normal with the rotation normal
+                     * to figure this check the orientation of the user(camera)to ec vector with the rotation normal vector
                      */
-                    EditControl.getAngle = function (p1, p2, p, cN) {
-                        var v1 = p1.subtract(p);
-                        var v2 = p2.subtract(p);
-                        var n = Vector3.Cross(v1, v2);
-                        var angle = Math.asin(n.length() / (v1.length() * v2.length()));
+                    EditControl.prototype.getAngle = function (p1, p2, p, c2ec) {
+                        p1.subtractToRef(p, this.tv1);
+                        p2.subtractToRef(p, this.tv2);
+                        Vector3.CrossToRef(this.tv1, this.tv2, this.tv3);
+                        var angle = Math.asin(this.tv3.length() / (this.tv1.length() * this.tv2.length()));
                         //camera looking down from front of plane or looking up from behind plane
-                        if ((Vector3.Dot(n, cN) < 0)) {
+                        if ((Vector3.Dot(this.tv3, c2ec) > 0)) {
                             angle = -1 * angle;
                         }
                         return angle;

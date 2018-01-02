@@ -42,7 +42,7 @@ namespace org.ssatguru.babylonjs.component {
         private axesLen: number=0.4;
         private axesScale: number=1;
         //how close to an axis should we get before we can pck it 
-        private pickWidth:number=0.02;
+        private pickWidth: number=0.02;
         private redMat: StandardMaterial;
         private greenMat: StandardMaterial;
         private blueMat: StandardMaterial;
@@ -220,7 +220,7 @@ namespace org.ssatguru.babylonjs.component {
             this.callActionListener(at);
             this.callActionEndListener(at);
         }
-        
+
         /**
          * detach the edit control from the mesh and dispose off all
          * resources created by the edit control
@@ -235,7 +235,7 @@ namespace org.ssatguru.babylonjs.component {
         }
         private prevState: String="";
         private hidden: boolean=false;
-        
+
         /**
          * hide the edit control. use show() to unhide the control.
          */
@@ -274,7 +274,7 @@ namespace org.ssatguru.babylonjs.component {
             else if(this.prevState=="R") this.enableRotation();
             else if(this.prevState=="S") this.enableScaling();
         }
-        
+
         /**
          * check if the editcontrol was hidden using the hide() methods
          */
@@ -556,7 +556,7 @@ namespace org.ssatguru.babylonjs.component {
             //this.pickPlane=this.getPickPlane(this.axisPicked);
 
             let newPos: Vector3=this.getPosOnPickPlane();
-            
+
             if(newPos==null) return;
 
             if(this.rotEnabled) {
@@ -604,26 +604,35 @@ namespace org.ssatguru.babylonjs.component {
                     }
                 }
             } else if(this.rotEnabled) {
+                this.rotate2=false;
                 //get the position of camera in the edit control frame of reference
                 this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                 Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
                 let c=this.ecTOcamera;
-                //if camera is too close to the rotation plane then donot rotate
+                //if camera is too close to the rotation plane then use alternate rotation process
                 switch(n) {
                     case "X":
-                        if(Math.abs(c.x)<0.2) return null;
-                        else return this.pZY;
+                        if(Math.abs(c.x)<0.2) {
+                            this.rotate2=true;
+                            return this.pALL;
+                        }else return this.pZY;
                     case "Y":
-                        if(Math.abs(c.y)<0.2) return null;
-                        else return this.pXZ;
+                        if(Math.abs(c.y)<0.2) {
+                            this.rotate2=true;
+                            return this.pALL;
+                        }else return this.pXZ;
                     case "Z":
-                        if(Math.abs(c.z)<0.2) return null;
-                        else return this.pYX;
+                        if(Math.abs(c.z)<0.2) {
+                            this.rotate2=true;
+                            return this.pALL;
+                        }else return this.pYX;
                     default:
                         return this.pALL;
                 }
             } else return null;
         }
+        //rotate differently if camera is too close to the rotation plane
+        private rotate2: boolean=false;
 
         private doTranslation(diff: Vector3) {
             this.transBy.x=0; this.transBy.y=0; this.transBy.z=0;
@@ -819,19 +828,113 @@ namespace org.ssatguru.babylonjs.component {
 
         private eulerian: boolean=false;
         private snapRA: number=0;
+        private doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
+            let angle: number=0;
+            
+            //rotation axis
+            let rAxis: Vector3;
+            if(axis==this.rX) rAxis=this.local? this.localX:Axis.X;
+            else if(axis==this.rY) rAxis=this.local? this.localY:Axis.Y;
+            else if(axis==this.rZ) rAxis=this.local? this.localZ:Axis.Z;
+            this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
+
+            /**
+             * A)first find the angle and the direction (clockwise or anticlockwise) by which the user was trying to rotate
+             * from the user(camera) perspective
+             */
+            if(this.rotate2) {
+                angle=this.getAngle2(prevPos,newPos,this.mainCamera.position,this.cameraTOec,rAxis);
+            } else {
+                angle=this.getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),this.cameraTOec);
+            }
+            
+            /**
+             * B)then rotate based on users(camera) postion and orientation in the local/world space
+             * 
+             */
+            this.cameraTOec.normalize();
+            if(axis==this.rX) {
+                if(this.snapR) {
+                    this.snapRX+=angle;
+                    angle=0;
+                    if(Math.abs(this.snapRX)>=this.rotSnap) {
+                        if((this.snapRX>0)) angle=this.rotSnap; else angle=-this.rotSnap;
+                        this.snapRX=0;
+                    }
+                }
+                if(angle!==0) {
+                    if(Vector3.Dot(rAxis,this.cameraTOec)>=0) angle=-1*angle;
+                    mesh.rotate(rAxis,angle,Space.WORLD);
+                }
+            } else if(axis==this.rY) {
+                if(this.snapR) {
+                    this.snapRY+=angle;
+                    angle=0;
+                    if(Math.abs(this.snapRY)>=this.rotSnap) {
+                        if((this.snapRY>0)) angle=this.rotSnap; else angle=-this.rotSnap;
+                        this.snapRY=0;
+                    }
+                }
+                if(angle!==0) {
+                    if(angle!==0) {
+                        if(Vector3.Dot(rAxis,this.cameraTOec)>=0) angle=-1*angle;
+                        mesh.rotate(rAxis,angle,Space.WORLD);
+                    }
+                }
+            } else if(axis==this.rZ) {
+                if(this.snapR) {
+                    this.snapRZ+=angle;
+                    angle=0;
+                    if(Math.abs(this.snapRZ)>=this.rotSnap) {
+                        if(this.snapRZ>0) angle=this.rotSnap; else angle=-this.rotSnap;
+                        this.snapRZ=0;
+                    }
+                }
+                if(angle!==0) {
+                    if(angle!==0) {
+                        if(Vector3.Dot(rAxis,this.cameraTOec)>=0) angle=-1*angle;
+                        mesh.rotate(rAxis,angle,Space.WORLD);
+                    }
+                }
+            } else if(axis==this.rAll) {
+                if(this.snapR) {
+                    this.snapRA+=angle;
+                    angle=0;
+                    if(Math.abs(this.snapRA)>=this.rotSnap) {
+                        if(this.snapRA>0) angle=this.rotSnap; else angle=-this.rotSnap;
+                        this.snapRA=0;
+                    }
+                }
+                if(angle!==0) {
+                    if(!this.scene.useRightHandedSystem) angle=-angle;
+                    mesh.rotate(this.cameraTOec,angle,Space.WORLD);
+                }
+            }
+            this.setLocalAxes(this.mesh);
+            //we angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
+            if(this.eulerian&&angle!=0) {
+                mesh.rotation=mesh.rotationQuaternion.toEulerAngles();
+                mesh.rotationQuaternion=null;
+            }
+        }
+        
+        //TODO REMOVE
         //vector normal to camera in world frame of reference
         private cN: Vector3=new Vector3(0,0,0);
         //rotation axis based on camera orientation
         private rotAxis: Vector3=new Vector3(0,0,0);
-        private doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
+        private doRotation_old(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
             //donot want to type this.cN everywhere
             let cN: Vector3=this.cN;
-            
+            let angle: number=0;
             Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,cN);
-            
             //first find the angle and the direction (clockwise or anticlockwise) by which the user was trying to rotate
             //from the user(camera) perspective
-            let angle: number=EditControl.getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),cN);
+            if(this.rotate2) {
+                angle=this.getAngle2(prevPos,newPos,mesh.getAbsolutePivotPoint(),cN,this.localX);
+            } else {
+                angle=this.getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),cN);
+            }
 
             //then rotate based on users(camera) postion and orientation in the local/world space
             if(axis==this.rX) {
@@ -916,7 +1019,6 @@ namespace org.ssatguru.babylonjs.component {
                 mesh.rotationQuaternion=null;
             }
         }
-
         private getPosOnPickPlane(): Vector3 {
             let pickinfo: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
                 return mesh==this.pickedPlane;
@@ -1259,7 +1361,7 @@ namespace org.ssatguru.babylonjs.component {
         private createTransAxes() {
             let r: number=this.pickWidth*2*this.axesScale;
             let l: number=this.axesLen*this.axesScale;
-            
+
             this.tCtl=new Mesh("tarnsCtl",this.scene);
 
             //pickable invisible boxes around axes lines
@@ -1323,11 +1425,11 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndX=Mesh.CreateCylinder("tEndX",cl,0,cr,6,1,this.scene);
             this.tEndY=this.tEndX.clone("tEndY");
             this.tEndZ=this.tEndX.clone("tEndZ");
-            
+
             this.tEndXZ=this.createTriangle("XZ",cr*1.75,this.scene);
             this.tEndZY=this.tEndXZ.clone("ZY");
             this.tEndYX=this.tEndXZ.clone("YX");
-            
+
             this.tEndAll=MeshBuilder.CreatePolyhedron("tEndAll",{type: 1,size: cr/2},this.scene);
 
             this.tEndX.rotation.x=1.57;
@@ -1531,7 +1633,7 @@ namespace org.ssatguru.babylonjs.component {
                 points[p]=new Vector3(x,0,z);
                 p++;
             }
-            let tube: Mesh=Mesh.CreateTube("",points,this.pickWidth*this.axesScale,3,null,BABYLON.Mesh.NO_CAP,this.scene);
+            let tube: Mesh=Mesh.CreateTube("",points,this.pickWidth*this.axesScale*2,3,null,BABYLON.Mesh.NO_CAP,this.scene);
             return tube;
         }
 
@@ -1557,7 +1659,7 @@ namespace org.ssatguru.babylonjs.component {
         private createScaleAxes() {
             let r: number=this.pickWidth*2*this.axesScale;
             let l: number=this.axesLen*this.axesScale;
-            
+
             this.sCtl=new Mesh("sCtl",this.scene);
 
             //pickable , invisible part
@@ -1617,11 +1719,11 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndX=Mesh.CreateBox("",cr,this.scene);
             this.sEndY=this.sEndX.clone("");
             this.sEndZ=this.sEndX.clone("");
-            
+
             this.sEndXZ=this.createTriangle("XZ",cr*1.75,this.scene);
             this.sEndZY=this.sEndXZ.clone("ZY");
             this.sEndYX=this.sEndXZ.clone("YX");
-            
+
             this.sEndAll=MeshBuilder.CreatePolyhedron("sEndAll",{type: 1,size: cr/2},this.scene);
 
             this.sEndXZ.rotation.x=-1.57;
@@ -1639,7 +1741,7 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndX.position.z=l-cr/2;
             this.sEndY.position.z=l-cr/2;
             this.sEndZ.position.z=l-cr/2;
-            
+
             this.sEndX.material=this.redMat;
             this.sEndY.material=this.greenMat;
             this.sEndZ.material=this.blueMat;
@@ -1733,19 +1835,91 @@ namespace org.ssatguru.babylonjs.component {
             this.scaleSnap=r;
         }
 
+        //few temp vectors & matrix
+        tv1: Vector3=new Vector3(0,0,0);
+        tv2: Vector3=new Vector3(0,0,0);
+        tv3: Vector3=new Vector3(0,0,0);
+        tm: Matrix=new Matrix();
+        private getAngle2(p1: Vector3,p2: Vector3,cameraPos: Vector3,c2ec: Vector3,mN: Vector3): number {
+            /**
+             * A) find out if the camera is above , below, left, right of the rotation plane
+             */
+            //project "camera to ec" vector onto mesh normal to get distance to rotation plane
+            let d: number=Vector3.Dot(c2ec,mN);
+            //scale mesh normal by above ammount to get vector to rotation plane
+            mN.scaleToRef(d,this.tv1);
+            //get the point of intersection of vector from camera perpendicular to rotation plane
+            cameraPos.addToRef(this.tv1,this.tv2);
+            let i: Vector3=this.tv2;//save some typing
+            //find the co-ordinate of this point in the cameras frame of reference
+            this.mainCamera.getWorldMatrix().invertToRef(this.tm);
+            Vector3.TransformCoordinatesToRef(this.tv2,this.tm,this.tv2);
+            //find in which quadarant the point (and thus the rotation plane) is in the camera xy plane
+            let q: number=0; //(1=x y,2=-x y,3=-x -y,4=x -y)
+            if(i.x>=0&&i.y>=0) q=1;
+            else if(i.x<=0&&i.y>=0) q=2;
+            else if(i.x<=0&&i.y<=0) q=3;
+            else if(i.x>=0&&i.y<=0) q=4;
+            
+            /**
+             * B) find out if the user moved pointer up,down, right, left
+             */
+
+            //find movement vector in camera frame of reference
+            Vector3.TransformCoordinatesToRef(p1,this.tm,this.tv1);
+            Vector3.TransformCoordinatesToRef(p2,this.tm,this.tv2);
+            this.tv2.subtractInPlace(this.tv1);
+            let mv: Vector3=this.tv2; //save some typing
+            //for now lets set the angle magnitutde same as amount by which the mouse moved
+            let angle: number=mv.length();
+
+            let m: String="";//(u ,d ,r,l)
+            if(mv.x>=0&&mv.y>=0) {
+                if(mv.x>=mv.y) m="r"; else m="u";
+            } else if(mv.x<=0&&mv.y>=0) {
+                if(-mv.x>=mv.y) m="l"; else m="u";
+            } else if(mv.x<=0&&mv.y<=0) {
+                if(-mv.x>=-mv.y) m="l"; else m="d";
+            } else if(mv.x>=0&&mv.y<=0) {
+                if(mv.x>=-mv.y) m="r"; else m="d";
+            }
+            
+            /**
+             * C) decide if the user was trying to rotate clockwise (+1) or anti-clockwise(-1)
+             */
+             
+            let r: number=0;
+            //if mouse moved down /up and rotation plane is on  right or left side of user
+            if(m=="d") {
+                if(q==1||q==4) r=1;
+                else r=-1;
+            } else if(m=="u") {
+                if(q==1||q==4) r=-1;
+                else r=1;
+                //if mouse moved right/left and  rotation plane is above or below user
+            } else if(m=="r") {
+                if(q==2||q==1) r=1;
+                else r=-1;
+            } else if(m=="l") {
+                if(q==2||q==1) r=-1;
+                else r=1;
+            }
+
+            return r*angle;
+        }
 
         /**
          * finds the angle subtended from points p1 to p2 around the point p
          * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
-         * to figure this out it checks the orientation of the user(camera)normal with the rotation normal
+         * to figure this check the orientation of the user(camera)to ec vector with the rotation normal vector
          */
-        private static getAngle(p1: Vector3,p2: Vector3,p: Vector3,cN: Vector3): number {
-            let v1: Vector3=p1.subtract(p);
-            let v2: Vector3=p2.subtract(p);
-            let n: Vector3=Vector3.Cross(v1,v2);
-            let angle: number=Math.asin(n.length()/(v1.length()*v2.length()));
+        private getAngle(p1: Vector3,p2: Vector3,p: Vector3,c2ec: Vector3): number {
+            p1.subtractToRef(p,this.tv1);
+            p2.subtractToRef(p,this.tv2);
+            Vector3.CrossToRef(this.tv1,this.tv2,this.tv3);
+            let angle: number=Math.asin(this.tv3.length()/(this.tv1.length()*this.tv2.length()));
             //camera looking down from front of plane or looking up from behind plane
-            if((Vector3.Dot(n,cN)<0)) {
+            if((Vector3.Dot(this.tv3,c2ec)>0)) {
                 angle=-1*angle;
             }
             return angle;
