@@ -17,7 +17,10 @@ It currently supports
 * Scale size of control
 * undo, redo
 
-For a demo head on over to <a href="https://ssatguru.github.io/BabylonJS-EditControl/demo" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/demo </a>
+For a demo of stable version, head on over to <a href="https://ssatguru.github.io/BabylonJS-EditControl/demo" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/demo </a>
+
+For preview of the latest see <a href="https://ssatguru.github.io/BabylonJS-EditControl/test" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/test </a>
+
 ## Quick start
 
 1) add the following dependencies 
