@@ -525,19 +525,22 @@ var org;
                     EditControl.prototype.callActionListener = function (at) {
                         //call actionListener if registered
                         if (this.actionListener != null) {
-                            window.setTimeout(this.actionListener, 0, at);
+                            //window.setTimeout(this.actionListener,0,at);
+                            this.actionListener(at);
                         }
                     };
                     EditControl.prototype.callActionStartListener = function (at) {
                         //call actionListener if registered
                         if (this.actionStartListener != null) {
-                            window.setTimeout(this.actionStartListener, 0, at);
+                            //                window.setTimeout(this.actionStartListener,0,at);
+                            this.actionStartListener(at);
                         }
                     };
                     EditControl.prototype.callActionEndListener = function (at) {
                         //call actionListener if registered
                         if (this.actionEndListener != null) {
-                            window.setTimeout(this.actionEndListener, 0, at);
+                            //                window.setTimeout(this.actionEndListener,0,at);
+                            this.actionEndListener(at);
                         }
                     };
                     EditControl.prototype.onPointerMove = function (evt) {

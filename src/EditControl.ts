@@ -522,20 +522,26 @@ namespace org.ssatguru.babylonjs.component {
         private callActionListener(at: number) {
             //call actionListener if registered
             if(this.actionListener!=null) {
-                window.setTimeout(this.actionListener,0,at);
+                //window.setTimeout(this.actionListener,0,at);
+                this.actionListener(at);
             }
+            
         }
         private callActionStartListener(at: number) {
             //call actionListener if registered
             if(this.actionStartListener!=null) {
-                window.setTimeout(this.actionStartListener,0,at);
+//                window.setTimeout(this.actionStartListener,0,at);
+                this.actionStartListener(at);
             }
+            
         }
         private callActionEndListener(at: number) {
             //call actionListener if registered
             if(this.actionEndListener!=null) {
-                window.setTimeout(this.actionEndListener,0,at);
+//                window.setTimeout(this.actionEndListener,0,at);
+                this.actionEndListener(at);
             }
+            
         }
 
         private prevPos: Vector3;
