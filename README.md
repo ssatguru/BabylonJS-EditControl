@@ -107,7 +107,7 @@ editControl.returnEuler(true); // Optional. This will return rotation in euler i
 
 editControl.enableScaling();
 ```
-#### To disable Translation, Rotation or Scaling controls (just displays x,y,z axis)
+#### To hide Translation, Rotation or Scaling controls (just displays x,y,z axis)
 ```
 editControl.disableTranslation();
 editControl.disableRotation();
