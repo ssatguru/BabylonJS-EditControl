@@ -38,13 +38,10 @@ See INSTALL below to find where you can get "EditControl.js".
 	var EditControl = org.ssatguru.babylonjs.component.EditControl;
 	//create edit control (mesh to attach to, active camera, canvas, scale of editcontrol)
 	editControl = new EditControl(box,camera, canvas, 0.75);
-	//enable translation controls
+	//to show translation controls
 	editControl.enableTranslation();
 	//set transalation snap value in meters
 	editControl.setTransSnapValue(0.5);
-	//set rotational snap value in radians
-	editControl.setRotSnapValue(3.14/18);
-
 ```
 
 see demo.html for a working example
