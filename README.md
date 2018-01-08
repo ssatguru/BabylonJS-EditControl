@@ -97,7 +97,7 @@ Takes five parms
 * eulerian - true/false. Optional. Default false. True indicates that rotation of the mesh is in euler. 
 If rotation is unresponsive then it is possible that the rotation may not have been initialized to either a eulerian or quaternion value.
 
-#### To enable Translation, Rotation or Scaling controls
+#### To show Translation, Rotation or Scaling controls
 ```
 editControl.enableTranslation();
 
