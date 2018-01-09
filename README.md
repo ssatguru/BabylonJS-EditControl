@@ -19,7 +19,10 @@ It currently supports
 
 For a demo of stable version, head on over to <a href="https://ssatguru.github.io/BabylonJS-EditControl/demo" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/demo </a>
 
-For preview of the latest see <a href="https://ssatguru.github.io/BabylonJS-EditControl/test" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/test </a>
+For preview of the latest see <a href="https://ssatguru.github.io/BabylonJS-EditControl/test" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/test </a>  
+
+For a list of know issues, shortcomings and planned enhancements see <a href="https://github.com/ssatguru/BabylonJS-EditControl/issues" target="_blank"> https://github.com/ssatguru/BabylonJS-EditControl/issues  </a>  
+
 
 ## Quick start
 
