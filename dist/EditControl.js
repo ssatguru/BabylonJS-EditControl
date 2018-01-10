@@ -187,12 +187,67 @@ var org;
                             this.rZ.rotation.z = -rotZ - Math.PI;
                         }
                     };
+                    EditControl.prototype.rotPlanarGuides = function (XZ, ZY, YX) {
+                        if (this.local) {
+                            this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                            Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
+                        }
+                        else {
+                            this.mainCamera.position.subtractToRef(this.ecRoot.position, this.ecTOcamera);
+                        }
+                        var ec = this.ecTOcamera;
+                        XZ.rotation.x = 0;
+                        XZ.rotation.y = 0;
+                        XZ.rotation.z = 0;
+                        ZY.rotation.x = 0;
+                        ZY.rotation.y = 0;
+                        ZY.rotation.z = 0;
+                        YX.rotation.x = 0;
+                        YX.rotation.y = 0;
+                        YX.rotation.z = 0;
+                        if (ec.x <= 0 && ec.y >= 0 && ec.z >= 0) {
+                            XZ.rotation.z = 3.14;
+                            YX.rotation.y = 3.14;
+                        }
+                        else if (ec.x <= 0 && ec.y >= 0 && ec.z <= 0) {
+                            XZ.rotation.y = 3.14;
+                            ZY.rotation.y = 3.14;
+                            YX.rotation.y = 3.14;
+                        }
+                        else if (ec.x >= 0 && ec.y >= 0 && ec.z <= 0) {
+                            XZ.rotation.x = 3.14;
+                            ZY.rotation.y = 3.14;
+                        }
+                        else if (ec.x >= 0 && ec.y <= 0 && ec.z >= 0) {
+                            ZY.rotation.z = 3.14;
+                            YX.rotation.x = 3.14;
+                        }
+                        else if (ec.x <= 0 && ec.y <= 0 && ec.z >= 0) {
+                            XZ.rotation.z = 3.14;
+                            ZY.rotation.z = 3.14;
+                            YX.rotation.z = 3.14;
+                        }
+                        else if (ec.x <= 0 && ec.y <= 0 && ec.z <= 0) {
+                            XZ.rotation.y = 3.14;
+                            ZY.rotation.x = 3.14;
+                            YX.rotation.z = 3.14;
+                        }
+                        else if (ec.x >= 0 && ec.y <= 0 && ec.z <= 0) {
+                            XZ.rotation.x = 3.14;
+                            ZY.rotation.x = 3.14;
+                            YX.rotation.x = 3.14;
+                        }
+                    };
                     EditControl.prototype.renderLoopProcess = function () {
                         this.ecRoot.position = this.mesh.getAbsolutePivotPoint();
                         this.setAxesScale();
                         this.setAxesRotation();
                         if (this.rotEnabled)
                             this.rotRotGuides();
+                        else if (this.transEnabled)
+                            this.rotPlanarGuides(this.tXZ, this.tZY, this.tYX);
+                        else if (this.scaleEnabled)
+                            this.rotPlanarGuides(this.sXZ, this.sZY, this.sYX);
                         //check pointer over axes only during pointer moves
                         //this.onPointerOver();
                     };
@@ -1344,8 +1399,10 @@ var org;
                         this.tY = this.tX.clone("Y");
                         this.tZ = this.tX.clone("Z");
                         this.tXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this.scene);
-                        this.tZY = this.tXZ.clone("ZY");
-                        this.tYX = this.tXZ.clone("YX");
+                        this.tZY = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, this.scene);
+                        this.tYX = MeshBuilder.CreatePlane("YX", { size: r * 2 }, this.scene);
+                        //this.tZY=this.tXZ.clone("ZY");
+                        //this.tYX=this.tXZ.clone("YX");
                         this.tXZ.rotation.x = 1.57;
                         this.tZY.rotation.y = -1.57;
                         this.tXZ.position.x = r;
@@ -1354,6 +1411,9 @@ var org;
                         this.tZY.position.y = r;
                         this.tYX.position.y = r;
                         this.tYX.position.x = r;
+                        this.tXZ.bakeCurrentTransformIntoVertices();
+                        this.tZY.bakeCurrentTransformIntoVertices();
+                        this.tYX.bakeCurrentTransformIntoVertices();
                         this.tAll = Mesh.CreateBox("ALL", r * 2, this.scene);
                         this.tX.parent = this.tCtl;
                         this.tY.parent = this.tCtl;
@@ -1395,9 +1455,18 @@ var org;
                         this.tEndX.rotation.x = 1.57;
                         this.tEndY.rotation.x = 1.57;
                         this.tEndZ.rotation.x = 1.57;
-                        this.tEndXZ.rotation.x = -1.57;
-                        this.tEndZY.rotation.x = -1.57;
+                        //            this.tEndXZ.rotation.x=-1.57;
+                        //            this.tEndZY.rotation.x=-1.57;
+                        //            this.tEndYX.rotation.x=-1.57;
+                        //            
+                        this.tEndZY.rotation.z = 1.57;
                         this.tEndYX.rotation.x = -1.57;
+                        this.tEndXZ.position.x = r;
+                        this.tEndXZ.position.z = r;
+                        this.tEndZY.position.z = r;
+                        this.tEndZY.position.y = r;
+                        this.tEndYX.position.y = r;
+                        this.tEndYX.position.x = r;
                         this.tEndX.parent = this.tX;
                         this.tEndY.parent = this.tY;
                         this.tEndZ.parent = this.tZ;
@@ -1582,8 +1651,10 @@ var org;
                         this.sY = this.sX.clone("Y");
                         this.sZ = this.sX.clone("Z");
                         this.sXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this.scene);
-                        this.sZY = this.sXZ.clone("ZY");
-                        this.sYX = this.sXZ.clone("YX");
+                        this.sZY = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, this.scene);
+                        this.sYX = MeshBuilder.CreatePlane("YX", { size: r * 2 }, this.scene);
+                        //this.sZY=this.sXZ.clone("ZY");
+                        //this.sYX=this.sXZ.clone("YX");
                         this.sXZ.rotation.x = 1.57;
                         this.sZY.rotation.y = -1.57;
                         this.sXZ.position.x = r;
@@ -1592,6 +1663,9 @@ var org;
                         this.sZY.position.y = r;
                         this.sYX.position.y = r;
                         this.sYX.position.x = r;
+                        this.sXZ.bakeCurrentTransformIntoVertices();
+                        this.sZY.bakeCurrentTransformIntoVertices();
+                        this.sYX.bakeCurrentTransformIntoVertices();
                         this.sAll = Mesh.CreateBox("ALL", r * 2, this.scene);
                         this.sX.parent = this.sCtl;
                         this.sY.parent = this.sCtl;
@@ -1627,9 +1701,17 @@ var org;
                         this.sEndZY = this.sEndXZ.clone("ZY");
                         this.sEndYX = this.sEndXZ.clone("YX");
                         this.sEndAll = MeshBuilder.CreatePolyhedron("sEndAll", { type: 1, size: cr / 2 }, this.scene);
-                        this.sEndXZ.rotation.x = -1.57;
-                        this.sEndZY.rotation.x = -1.57;
+                        //            this.sEndXZ.rotati            on.x=-1.57;
+                        //            this.sEndZY.rotati            on.x=-1.57;
+                        //            this.sEndYX.rotation.x=-1.57;
+                        this.sEndZY.rotation.z = 1.57;
                         this.sEndYX.rotation.x = -1.57;
+                        this.sEndXZ.position.x = r;
+                        this.sEndXZ.position.z = r;
+                        this.sEndZY.position.z = r;
+                        this.sEndZY.position.y = r;
+                        this.sEndYX.position.y = r;
+                        this.sEndYX.position.x = r;
                         this.sEndX.parent = this.sX;
                         this.sEndY.parent = this.sY;
                         this.sEndZ.parent = this.sZ;

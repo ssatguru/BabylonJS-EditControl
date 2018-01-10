@@ -41,6 +41,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private ecMatrix;
         private ecTOcamera;
         private rotRotGuides();
+        private rotPlanarGuides(XZ, ZY, YX);
         private renderLoopProcess();
         switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;

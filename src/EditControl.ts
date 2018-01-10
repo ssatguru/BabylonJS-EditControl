@@ -156,7 +156,6 @@ namespace org.ssatguru.babylonjs.component {
                 this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
             }
 
-
             let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
             if(this.ecTOcamera.z>=0) {
                 this.rX.rotation.x=-rotX;
@@ -179,11 +178,64 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
+        private rotPlanarGuides(XZ: Mesh,ZY: Mesh,YX: Mesh) {
+            if(this.local) {
+                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
+            } else {
+                this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
+            }
+            let ec: Vector3=this.ecTOcamera;
+
+            XZ.rotation.x=0;
+            XZ.rotation.y=0;
+            XZ.rotation.z=0;
+
+            ZY.rotation.x=0;
+            ZY.rotation.y=0;
+            ZY.rotation.z=0;
+
+            YX.rotation.x=0;
+            YX.rotation.y=0;
+            YX.rotation.z=0;
+
+            if(ec.x<=0&&ec.y>=0&&ec.z>=0) {
+                XZ.rotation.z=3.14;
+                YX.rotation.y=3.14;
+            } else if(ec.x<=0&&ec.y>=0&&ec.z<=0) {
+                XZ.rotation.y=3.14;
+                ZY.rotation.y=3.14;
+                YX.rotation.y=3.14;
+            } else if(ec.x>=0&&ec.y>=0&&ec.z<=0) {
+                XZ.rotation.x=3.14;
+                ZY.rotation.y=3.14;
+            } else if(ec.x>=0&&ec.y<=0&&ec.z>=0) {
+                ZY.rotation.z=3.14;
+                YX.rotation.x=3.14;
+            } else if(ec.x<=0&&ec.y<=0&&ec.z>=0) {
+                XZ.rotation.z=3.14;
+                ZY.rotation.z=3.14;
+                YX.rotation.z=3.14;
+            } else if(ec.x<=0&&ec.y<=0&&ec.z<=0) {
+                XZ.rotation.y=3.14;
+                ZY.rotation.x=3.14;
+                YX.rotation.z=3.14;
+            } else if(ec.x>=0&&ec.y<=0&&ec.z<=0) {
+                XZ.rotation.x=3.14;
+                ZY.rotation.x=3.14;
+                YX.rotation.x=3.14;
+            }
+        }
+
         private renderLoopProcess() {
             this.ecRoot.position=this.mesh.getAbsolutePivotPoint();
             this.setAxesScale();
             this.setAxesRotation();
+
             if(this.rotEnabled) this.rotRotGuides();
+            else if(this.transEnabled) this.rotPlanarGuides(this.tXZ,this.tZY,this.tYX);
+            else if(this.scaleEnabled) this.rotPlanarGuides(this.sXZ,this.sZY,this.sYX);
+
             //check pointer over axes only during pointer moves
             //this.onPointerOver();
         }
@@ -525,23 +577,23 @@ namespace org.ssatguru.babylonjs.component {
                 //window.setTimeout(this.actionListener,0,at);
                 this.actionListener(at);
             }
-            
+
         }
         private callActionStartListener(at: number) {
             //call actionListener if registered
             if(this.actionStartListener!=null) {
-//                window.setTimeout(this.actionStartListener,0,at);
+                //                window.setTimeout(this.actionStartListener,0,at);
                 this.actionStartListener(at);
             }
-            
+
         }
         private callActionEndListener(at: number) {
             //call actionListener if registered
             if(this.actionEndListener!=null) {
-//                window.setTimeout(this.actionEndListener,0,at);
+                //                window.setTimeout(this.actionEndListener,0,at);
                 this.actionEndListener(at);
             }
-            
+
         }
 
         private prevPos: Vector3;
@@ -621,17 +673,17 @@ namespace org.ssatguru.babylonjs.component {
                         if(Math.abs(c.x)<0.2) {
                             this.rotate2=true;
                             return this.pALL;
-                        }else return this.pZY;
+                        } else return this.pZY;
                     case "Y":
                         if(Math.abs(c.y)<0.2) {
                             this.rotate2=true;
                             return this.pALL;
-                        }else return this.pXZ;
+                        } else return this.pXZ;
                     case "Z":
                         if(Math.abs(c.z)<0.2) {
                             this.rotate2=true;
                             return this.pALL;
-                        }else return this.pYX;
+                        } else return this.pYX;
                     default:
                         return this.pALL;
                 }
@@ -836,7 +888,7 @@ namespace org.ssatguru.babylonjs.component {
         private snapRA: number=0;
         private doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
             let angle: number=0;
-            
+
             //rotation axis
             let rAxis: Vector3;
             if(axis==this.rX) rAxis=this.local? this.localX:Axis.X;
@@ -853,7 +905,7 @@ namespace org.ssatguru.babylonjs.component {
             } else {
                 angle=this.getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),this.cameraTOec);
             }
-            
+
             /**
              * B)then rotate based on users(camera) postion and orientation in the local/world space
              * 
@@ -922,7 +974,7 @@ namespace org.ssatguru.babylonjs.component {
                 mesh.rotationQuaternion=null;
             }
         }
-        
+
         //TODO REMOVE
         //vector normal to camera in world frame of reference
         private cN: Vector3=new Vector3(0,0,0);
@@ -1376,8 +1428,10 @@ namespace org.ssatguru.babylonjs.component {
             this.tZ=this.tX.clone("Z");
 
             this.tXZ=MeshBuilder.CreatePlane("XZ",{size: r*2},this.scene);
-            this.tZY=this.tXZ.clone("ZY");
-            this.tYX=this.tXZ.clone("YX");
+            this.tZY=MeshBuilder.CreatePlane("ZY",{size: r*2},this.scene);
+            this.tYX=MeshBuilder.CreatePlane("YX",{size: r*2},this.scene);
+            //this.tZY=this.tXZ.clone("ZY");
+            //this.tYX=this.tXZ.clone("YX");
 
             this.tXZ.rotation.x=1.57;
             this.tZY.rotation.y=-1.57;
@@ -1390,6 +1444,10 @@ namespace org.ssatguru.babylonjs.component {
 
             this.tYX.position.y=r;
             this.tYX.position.x=r;
+
+            this.tXZ.bakeCurrentTransformIntoVertices();
+            this.tZY.bakeCurrentTransformIntoVertices();
+            this.tYX.bakeCurrentTransformIntoVertices();
 
             this.tAll=Mesh.CreateBox("ALL",r*2,this.scene);
 
@@ -1440,9 +1498,21 @@ namespace org.ssatguru.babylonjs.component {
             this.tEndX.rotation.x=1.57;
             this.tEndY.rotation.x=1.57;
             this.tEndZ.rotation.x=1.57;
-            this.tEndXZ.rotation.x=-1.57;
-            this.tEndZY.rotation.x=-1.57;
+            //            this.tEndXZ.rotation.x=-1.57;
+            //            this.tEndZY.rotation.x=-1.57;
+            //            this.tEndYX.rotation.x=-1.57;
+            //            
+            this.tEndZY.rotation.z=1.57;
             this.tEndYX.rotation.x=-1.57;
+
+            this.tEndXZ.position.x=r;
+            this.tEndXZ.position.z=r;
+
+            this.tEndZY.position.z=r;
+            this.tEndZY.position.y=r;
+
+            this.tEndYX.position.y=r;
+            this.tEndYX.position.x=r;
 
             this.tEndX.parent=this.tX;
             this.tEndY.parent=this.tY;
@@ -1674,8 +1744,10 @@ namespace org.ssatguru.babylonjs.component {
             this.sZ=this.sX.clone("Z");
 
             this.sXZ=MeshBuilder.CreatePlane("XZ",{size: r*2},this.scene);
-            this.sZY=this.sXZ.clone("ZY");
-            this.sYX=this.sXZ.clone("YX");
+            this.sZY=MeshBuilder.CreatePlane("ZY",{size: r*2},this.scene);
+            this.sYX=MeshBuilder.CreatePlane("YX",{size: r*2},this.scene);
+            //this.sZY=this.sXZ.clone("ZY");
+            //this.sYX=this.sXZ.clone("YX");
 
             this.sXZ.rotation.x=1.57;
             this.sZY.rotation.y=-1.57;
@@ -1688,6 +1760,10 @@ namespace org.ssatguru.babylonjs.component {
 
             this.sYX.position.y=r;
             this.sYX.position.x=r;
+
+            this.sXZ.bakeCurrentTransformIntoVertices();
+            this.sZY.bakeCurrentTransformIntoVertices();
+            this.sYX.bakeCurrentTransformIntoVertices();            
 
             this.sAll=Mesh.CreateBox("ALL",r*2,this.scene);
 
@@ -1731,9 +1807,21 @@ namespace org.ssatguru.babylonjs.component {
 
             this.sEndAll=MeshBuilder.CreatePolyhedron("sEndAll",{type: 1,size: cr/2},this.scene);
 
-            this.sEndXZ.rotation.x=-1.57;
-            this.sEndZY.rotation.x=-1.57;
+//            this.sEndXZ.rotati            on.x=-1.57;
+//            this.sEndZY.rotati            on.x=-1.57;
+//            this.sEndYX.rotation.x=-1.57;
+
+            this.sEndZY.rotation.z=1.57;
             this.sEndYX.rotation.x=-1.57;
+
+            this.sEndXZ.position.x=r;
+            this.sEndXZ.position.z=r;
+
+            this.sEndZY.position.z=r;
+            this.sEndZY.position.y=r;
+
+            this.sEndYX.position.y=r;
+            this.sEndYX.position.x=r;
 
             this.sEndX.parent=this.sX;
             this.sEndY.parent=this.sY;
@@ -1865,7 +1953,7 @@ namespace org.ssatguru.babylonjs.component {
             else if(i.x<=0&&i.y>=0) q=2;
             else if(i.x<=0&&i.y<=0) q=3;
             else if(i.x>=0&&i.y<=0) q=4;
-            
+
             /**
              * B) find out if the user moved pointer up,down, right, left
              */
@@ -1888,11 +1976,11 @@ namespace org.ssatguru.babylonjs.component {
             } else if(mv.x>=0&&mv.y<=0) {
                 if(mv.x>=-mv.y) m="r"; else m="d";
             }
-            
+
             /**
              * C) decide if the user was trying to rotate clockwise (+1) or anti-clockwise(-1)
              */
-             
+
             let r: number=0;
             //if mouse moved down /up and rotation plane is on  right or left side of user
             if(m=="d") {
