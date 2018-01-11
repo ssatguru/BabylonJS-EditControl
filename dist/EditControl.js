@@ -36,15 +36,14 @@ var org;
                         this.pickWidth = 0.02;
                         //axes visibility
                         this.visibility = 0.75;
+                        this.ecMatrix = new Matrix();
+                        //edit control to camera vector
+                        this.ecTOcamera = new Vector3(0, 0, 0);
                         //how far away from camera should the edit control appear to be
                         this.distFromCamera = 2;
                         //vector from camera to edit control
                         this.cameraTOec = new Vector3(0, 0, 0);
                         this.cameraNormal = new Vector3(0, 0, 0);
-                        //rotate the rotation guides so that they are facing the camera
-                        this.ecMatrix = new Matrix();
-                        //edit control to camera vector
-                        this.ecTOcamera = new Vector3(0, 0, 0);
                         this.prevState = "";
                         this.hidden = false;
                         this.actionListener = null;
@@ -134,6 +133,29 @@ var org;
                             }
                         }
                     };
+                    EditControl.prototype.renderLoopProcess = function () {
+                        this.ecRoot.position = this.mesh.getAbsolutePivotPoint();
+                        if (this.local) {
+                            this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                            Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
+                            //pALL is child of ecRoot hence lookAt in local space
+                            this.pALL.lookAt(this.ecTOcamera, 0, 0, 0, Space.LOCAL);
+                        }
+                        else {
+                            this.mainCamera.position.subtractToRef(this.ecRoot.position, this.ecTOcamera);
+                            this.pALL.lookAt(this.mainCamera.position, 0, 0, 0, Space.WORLD);
+                        }
+                        this.setAxesScale();
+                        this.setAxesRotation();
+                        if (this.rotEnabled)
+                            this.rotRotGuides();
+                        else if (this.transEnabled)
+                            this.rotPlanarGuides(this.tXZ, this.tZY, this.tYX);
+                        else if (this.scaleEnabled)
+                            this.rotPlanarGuides(this.sXZ, this.sZY, this.sYX);
+                        //check pointer over axes only during pointer moves
+                        //this.onPointerOver();
+                    };
                     EditControl.prototype.setAxesScale = function () {
                         this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
                         Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
@@ -155,16 +177,8 @@ var org;
                             }
                         }
                     };
+                    //rotate the rotation guides so that they are facing the camera
                     EditControl.prototype.rotRotGuides = function () {
-                        if (this.local) {
-                            this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                            Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
-                            this.pALL.lookAt(this.ecTOcamera, 0, 0, 0, Space.LOCAL);
-                        }
-                        else {
-                            this.mainCamera.position.subtractToRef(this.ecRoot.position, this.ecTOcamera);
-                            this.pALL.lookAt(this.mainCamera.position, 0, 0, 0, Space.WORLD);
-                        }
                         var rotX = Math.atan(this.ecTOcamera.y / this.ecTOcamera.z);
                         if (this.ecTOcamera.z >= 0) {
                             this.rX.rotation.x = -rotX;
@@ -188,13 +202,6 @@ var org;
                         }
                     };
                     EditControl.prototype.rotPlanarGuides = function (XZ, ZY, YX) {
-                        if (this.local) {
-                            this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                            Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
-                        }
-                        else {
-                            this.mainCamera.position.subtractToRef(this.ecRoot.position, this.ecTOcamera);
-                        }
                         var ec = this.ecTOcamera;
                         XZ.rotation.x = 0;
                         XZ.rotation.y = 0;
@@ -237,19 +244,6 @@ var org;
                             ZY.rotation.x = 3.14;
                             YX.rotation.x = 3.14;
                         }
-                    };
-                    EditControl.prototype.renderLoopProcess = function () {
-                        this.ecRoot.position = this.mesh.getAbsolutePivotPoint();
-                        this.setAxesScale();
-                        this.setAxesRotation();
-                        if (this.rotEnabled)
-                            this.rotRotGuides();
-                        else if (this.transEnabled)
-                            this.rotPlanarGuides(this.tXZ, this.tZY, this.tYX);
-                        else if (this.scaleEnabled)
-                            this.rotPlanarGuides(this.sXZ, this.sZY, this.sYX);
-                        //check pointer over axes only during pointer moves
-                        //this.onPointerOver();
                     };
                     EditControl.prototype.switchTo = function (mesh, eulerian) {
                         mesh.computeWorldMatrix(true);
@@ -714,18 +708,21 @@ var org;
                                 this.transBy.x = Vector3.Dot(diff, this.localX) / (this.localX.length() * this.mesh.scaling.x);
                             else
                                 this.transBy.x = diff.x;
+                            //                this.transBy.x=diff.x;
                         }
                         if ((n == "Y") || (n == "ZY") || (n == "YX") || (n == "ALL")) {
                             if (this.local)
                                 this.transBy.y = Vector3.Dot(diff, this.localY) / (this.localY.length() * this.mesh.scaling.y);
                             else
                                 this.transBy.y = diff.y;
+                            //                this.transBy.y=diff.y;
                         }
                         if ((n == "Z") || (n == "XZ") || (n == "ZY") || (n == "ALL")) {
                             if (this.local)
                                 this.transBy.z = Vector3.Dot(diff, this.localZ) / (this.localZ.length() * this.mesh.scaling.z);
                             else
                                 this.transBy.z = diff.z;
+                            //                this.transBy.z=diff.z;
                         }
                         this.transWithSnap(this.mesh, this.transBy, this.local);
                         // bound the translation
@@ -783,9 +780,13 @@ var org;
                         if (local) {
                             //locallyTranslate moves the mesh wrt the absolute location not pivotlocation :(
                             //this.mesh.locallyTranslate(trans);
+                            //
                             this.mesh.translate(Axis.X, trans.x, Space.LOCAL);
                             this.mesh.translate(Axis.Y, trans.y, Space.LOCAL);
                             this.mesh.translate(Axis.Z, trans.z, Space.LOCAL);
+                            //                this.mesh.translate(this.localX,trans.x,Space.WORLD);
+                            //                this.mesh.translate(this.localY,trans.y,Space.WORLD);
+                            //                this.mesh.translate(this.localZ,trans.z,Space.WORLD);
                         }
                         else {
                             this.mesh.position.addInPlace(trans);
@@ -798,12 +799,15 @@ var org;
                         var n = this.axisPicked.name;
                         if ((n == "X") || (n == "XZ") || (n == "YX")) {
                             this.scale.x = Vector3.Dot(diff, this.localX) / this.localX.length();
+                            //                this.scale.x=diff.x;
                         }
                         if ((n == "Y") || (n == "ZY") || (n == "YX")) {
                             this.scale.y = Vector3.Dot(diff, this.localY) / this.localY.length();
+                            //                this.scale.y = diff.y;
                         }
                         if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
                             this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
+                            //                this.scale.z=diff.z;
                         }
                         //as the mesh becomes large reduce the amount by which we scale.
                         var bbd = this.boundingDimesion;

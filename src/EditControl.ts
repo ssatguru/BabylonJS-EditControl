@@ -112,6 +112,34 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
         }
+        
+        private ecMatrix: Matrix=new Matrix();
+        //edit control to camera vector
+        private ecTOcamera: Vector3=new Vector3(0,0,0);
+        private renderLoopProcess() {
+            this.ecRoot.position=this.mesh.getAbsolutePivotPoint();
+            
+            if(this.local) {
+                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
+                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
+                //pALL is child of ecRoot hence lookAt in local space
+                this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
+            } else {
+                this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
+                this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
+            }
+            
+            this.setAxesScale();
+            this.setAxesRotation();
+
+            if(this.rotEnabled) this.rotRotGuides();
+            else if(this.transEnabled) this.rotPlanarGuides(this.tXZ,this.tZY,this.tYX);
+            else if(this.scaleEnabled) this.rotPlanarGuides(this.sXZ,this.sZY,this.sYX);
+
+            //check pointer over axes only during pointer moves
+            //this.onPointerOver();
+        }
+        
 
         //how far away from camera should the edit control appear to be
         private distFromCamera: number=2;
@@ -143,19 +171,8 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         //rotate the rotation guides so that they are facing the camera
-        private ecMatrix: Matrix=new Matrix();
-        //edit control to camera vector
-        private ecTOcamera: Vector3=new Vector3(0,0,0);
+       
         private rotRotGuides() {
-            if(this.local) {
-                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
-                this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
-            } else {
-                this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
-                this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
-            }
-
             let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
             if(this.ecTOcamera.z>=0) {
                 this.rX.rotation.x=-rotX;
@@ -179,12 +196,6 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private rotPlanarGuides(XZ: Mesh,ZY: Mesh,YX: Mesh) {
-            if(this.local) {
-                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
-            } else {
-                this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
-            }
             let ec: Vector3=this.ecTOcamera;
 
             XZ.rotation.x=0;
@@ -226,19 +237,8 @@ namespace org.ssatguru.babylonjs.component {
                 YX.rotation.x=3.14;
             }
         }
-
-        private renderLoopProcess() {
-            this.ecRoot.position=this.mesh.getAbsolutePivotPoint();
-            this.setAxesScale();
-            this.setAxesRotation();
-
-            if(this.rotEnabled) this.rotRotGuides();
-            else if(this.transEnabled) this.rotPlanarGuides(this.tXZ,this.tZY,this.tYX);
-            else if(this.scaleEnabled) this.rotPlanarGuides(this.sXZ,this.sZY,this.sYX);
-
-            //check pointer over axes only during pointer moves
-            //this.onPointerOver();
-        }
+        
+        
 
         public switchTo(mesh: Mesh,eulerian?: boolean) {
             mesh.computeWorldMatrix(true);
@@ -698,14 +698,17 @@ namespace org.ssatguru.babylonjs.component {
             if((n=="X")||(n=="XZ")||(n=="YX")||(n=="ALL")) {
                 if(this.local) this.transBy.x=Vector3.Dot(diff,this.localX)/(this.localX.length()*this.mesh.scaling.x);
                 else this.transBy.x=diff.x;
+//                this.transBy.x=diff.x;
             }
             if((n=="Y")||(n=="ZY")||(n=="YX")||(n=="ALL")) {
                 if(this.local) this.transBy.y=Vector3.Dot(diff,this.localY)/(this.localY.length()*this.mesh.scaling.y);
                 else this.transBy.y=diff.y;
+//                this.transBy.y=diff.y;
             }
             if((n=="Z")||(n=="XZ")||(n=="ZY")||(n=="ALL")) {
                 if(this.local) this.transBy.z=Vector3.Dot(diff,this.localZ)/(this.localZ.length()*this.mesh.scaling.z);
                 else this.transBy.z=diff.z;
+//                this.transBy.z=diff.z;
             }
             this.transWithSnap(this.mesh,this.transBy,this.local);
 
@@ -755,9 +758,15 @@ namespace org.ssatguru.babylonjs.component {
             if(local) {
                 //locallyTranslate moves the mesh wrt the absolute location not pivotlocation :(
                 //this.mesh.locallyTranslate(trans);
+                //
                 this.mesh.translate(Axis.X,trans.x,Space.LOCAL);
                 this.mesh.translate(Axis.Y,trans.y,Space.LOCAL);
                 this.mesh.translate(Axis.Z,trans.z,Space.LOCAL);
+                
+//                this.mesh.translate(this.localX,trans.x,Space.WORLD);
+//                this.mesh.translate(this.localY,trans.y,Space.WORLD);
+//                this.mesh.translate(this.localZ,trans.z,Space.WORLD);
+                
             } else {
                 this.mesh.position.addInPlace(trans);
             }
@@ -778,12 +787,15 @@ namespace org.ssatguru.babylonjs.component {
             let n: string=this.axisPicked.name;
             if((n=="X")||(n=="XZ")||(n=="YX")) {
                 this.scale.x=Vector3.Dot(diff,this.localX)/this.localX.length();
+//                this.scale.x=diff.x;
             }
             if((n=="Y")||(n=="ZY")||(n=="YX")) {
                 this.scale.y=Vector3.Dot(diff,this.localY)/this.localY.length();
+//                this.scale.y = diff.y;
             }
             if((n=="Z")||(n=="XZ")||(n=="ZY")) {
                 this.scale.z=Vector3.Dot(diff,this.localZ)/this.localZ.length();
+//                this.scale.z=diff.z;
             }
 
             //as the mesh becomes large reduce the amount by which we scale.
