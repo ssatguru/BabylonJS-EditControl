@@ -108,11 +108,11 @@ declare namespace org.ssatguru.babylonjs.component {
         private snapRY;
         private snapRZ;
         private onPointerMove(evt);
-        private snapTV;
-        private transBy;
-        private getPickPlane(axis);
         private rotate2;
+        private getPickPlane(axis);
+        private transBy;
         private doTranslation(diff);
+        private snapTV;
         private transWithSnap(mesh, trans, local);
         private snapS;
         private snapSX;
@@ -130,9 +130,6 @@ declare namespace org.ssatguru.babylonjs.component {
         private eulerian;
         private snapRA;
         private doRotation(mesh, axis, newPos, prevPos);
-        private cN;
-        private rotAxis;
-        private doRotation_old(mesh, axis, newPos, prevPos);
         private getPosOnPickPlane();
         private hideBaxis();
         private setAxesVisiblity(v);
