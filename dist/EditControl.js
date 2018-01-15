@@ -36,6 +36,8 @@ var org;
                         this.pickWidth = 0.02;
                         //axes visibility
                         this.visibility = 0.75;
+                        //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
+                        this.lhsRhs = false;
                         this.ecMatrix = new Matrix();
                         //edit control to camera vector
                         this.ecTOcamera = new Vector3(0, 0, 0);
@@ -97,6 +99,9 @@ var org;
                         this.actHist = new ActHist(mesh, 10);
                         mesh.computeWorldMatrix(true);
                         this.boundingDimesion = this.getBoundingDimension(mesh);
+                        this.setLocalAxes(mesh);
+                        this.lhsRhs = this.check_LHS_RHS(mesh);
+                        //build the edit control axes
                         this.ecRoot = new Mesh("EditControl", this.scene);
                         this.ecRoot.rotationQuaternion = Quaternion.Identity();
                         this.ecRoot.visibility = 0;
@@ -104,6 +109,7 @@ var org;
                         this.createMaterials(this.scene);
                         var guideAxes = this.createCommonAxes();
                         guideAxes.parent = this.ecRoot;
+                        //build the pickplanes
                         var pickPlanes = this.createPickPlanes();
                         pickPlanes.parent = this.ecRoot;
                         this.pointerdown = function (evt) { return _this.onPointerDown(evt); };
@@ -115,7 +121,6 @@ var org;
                         canvas.addEventListener("pointerdown", this.pointerdown, false);
                         canvas.addEventListener("pointerup", this.pointerup, false);
                         canvas.addEventListener("pointermove", this.pointermove, false);
-                        this.setLocalAxes(mesh);
                         this.renderer = function () { return _this.renderLoopProcess(); };
                         this.scene.registerBeforeRender(this.renderer);
                     }
@@ -706,13 +711,27 @@ var org;
                             this.transBy.y = 0;
                             this.transBy.z = 0;
                             if ((n == "X") || (n == "XZ") || (n == "YX")) {
-                                this.transBy.x = diff.x;
+                                if (this.local)
+                                    this.transBy.x = Vector3.Dot(diff, this.localX) / this.localX.length();
+                                else
+                                    this.transBy.x = diff.x;
+                                //                    if (this.lhsRhs){
+                                //                        this.transBy.x=-diff.x;
+                                //                    }else{
+                                //                        this.transBy.x=diff.x;
+                                //                    }
                             }
                             if ((n == "Y") || (n == "ZY") || (n == "YX")) {
-                                this.transBy.y = diff.y;
+                                if (this.local)
+                                    this.transBy.y = Vector3.Dot(diff, this.localY) / this.localY.length();
+                                else
+                                    this.transBy.y = diff.y;
                             }
                             if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
-                                this.transBy.z = diff.z;
+                                if (this.local)
+                                    this.transBy.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
+                                else
+                                    this.transBy.z = diff.z;
                             }
                         }
                         this.transWithSnap(this.mesh, this.transBy, this.local);
@@ -789,13 +808,15 @@ var org;
                         this.scale.z = 0;
                         var n = this.axisPicked.name;
                         if ((n == "X") || (n == "XZ") || (n == "YX")) {
-                            this.scale.x = diff.x;
+                            this.scale.x = Vector3.Dot(diff, this.localX) / this.localX.length();
+                            if (this.lhsRhs)
+                                this.scale.x = -this.scale.x;
                         }
                         if ((n == "Y") || (n == "ZY") || (n == "YX")) {
-                            this.scale.y = diff.y;
+                            this.scale.y = Vector3.Dot(diff, this.localY) / this.localY.length();
                         }
                         if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
-                            this.scale.z = diff.z;
+                            this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
                         }
                         //as the mesh becomes large reduce the amount by which we scale.
                         var bbd = this.boundingDimesion;
@@ -807,7 +828,10 @@ var org;
                             //if up then scale up else scale down
                             var s = Vector3.Dot(diff, this.mainCamera.upVector);
                             s = s / Math.max(bbd.x, bbd.y, bbd.z);
-                            this.scale.copyFromFloats(s, s, s);
+                            if (this.lhsRhs)
+                                this.scale.copyFromFloats(s, -s, s);
+                            else
+                                this.scale.copyFromFloats(s, s, s);
                         }
                         else {
                             var inPlane = false;
@@ -842,12 +866,18 @@ var org;
                                 var s = Vector3.Dot(diff, this.cameraTOec);
                                 if (s > 0) {
                                     this.scale.x = -Math.abs(this.scale.x);
-                                    this.scale.y = -Math.abs(this.scale.y);
+                                    if (this.lhsRhs)
+                                        this.scale.y = Math.abs(this.scale.y);
+                                    else
+                                        this.scale.y = -Math.abs(this.scale.y);
                                     this.scale.z = -Math.abs(this.scale.z);
                                 }
                                 else {
                                     this.scale.x = Math.abs(this.scale.x);
-                                    this.scale.y = Math.abs(this.scale.y);
+                                    if (this.lhsRhs)
+                                        this.scale.y = -Math.abs(this.scale.y);
+                                    else
+                                        this.scale.y = Math.abs(this.scale.y);
                                     this.scale.z = Math.abs(this.scale.z);
                                 }
                             }
@@ -1240,7 +1270,12 @@ var org;
                         this.hideBaxis();
                         //the small axis
                         var al = this.axesLen * this.axesScale * 0.75;
-                        this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(al, 0, 0)], this.scene);
+                        if (this.lhsRhs) {
+                            this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(-al, 0, 0)], this.scene);
+                        }
+                        else {
+                            this.xaxis = Mesh.CreateLines("xAxis", [new Vector3(0, 0, 0), new Vector3(al, 0, 0)], this.scene);
+                        }
                         this.yaxis = Mesh.CreateLines("yAxis", [new Vector3(0, 0, 0), new Vector3(0, al, 0)], this.scene);
                         this.zaxis = Mesh.CreateLines("zAxis", [new Vector3(0, 0, 0), new Vector3(0, 0, al)], this.scene);
                         //lines are now pickable too
@@ -1318,7 +1353,12 @@ var org;
                         this.tZY.parent = this.tCtl;
                         this.tYX.parent = this.tCtl;
                         this.tAll.parent = this.tCtl;
-                        this.tX.rotation.y = 1.57;
+                        if (this.lhsRhs) {
+                            this.tX.rotation.y = -1.57;
+                        }
+                        else {
+                            this.tX.rotation.y = 1.57;
+                        }
                         this.tY.rotation.x -= 1.57;
                         this.tX.visibility = 0;
                         this.tY.visibility = 0;
@@ -1570,7 +1610,12 @@ var org;
                         this.sXZ.parent = this.sCtl;
                         this.sZY.parent = this.sCtl;
                         this.sYX.parent = this.sCtl;
-                        this.sX.rotation.y = 1.57;
+                        if (this.lhsRhs) {
+                            this.sX.rotation.y = -1.57;
+                        }
+                        else {
+                            this.sX.rotation.y = 1.57;
+                        }
                         this.sY.rotation.x -= 1.57;
                         this.sX.visibility = 0;
                         this.sY.visibility = 0;
@@ -1653,6 +1698,22 @@ var org;
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 0, this.localX);
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 4, this.localY);
                         Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 8, this.localZ);
+                    };
+                    /**
+                     * checks if a have left hand , right hand issue.
+                     * In other words if a mesh is a LHS mesh in RHS system or
+                     * a RHS mesh in LHS system
+                     * The X axis will be reversed in such cases.
+                     * thus Cross product of X and Y should be inverse of Z.
+                     *
+                     */
+                    EditControl.prototype.check_LHS_RHS = function (mesh) {
+                        var actualZ = Vector3.Cross(this.localX, this.localY);
+                        //same direction or opposite direction of Z
+                        if (Vector3.Dot(actualZ, this.localZ) < 0)
+                            return true;
+                        else
+                            return false;
                     };
                     /**
                      * set how transparent the axes are

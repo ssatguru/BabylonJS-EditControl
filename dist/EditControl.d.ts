@@ -31,6 +31,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private pointerup;
         private pointermove;
         private visibility;
+        private lhsRhs;
         constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean);
         private checkQuaternion();
         private ecMatrix;
@@ -226,6 +227,15 @@ declare namespace org.ssatguru.babylonjs.component {
         private localY;
         private localZ;
         private setLocalAxes(mesh);
+        /**
+         * checks if a have left hand , right hand issue.
+         * In other words if a mesh is a LHS mesh in RHS system or
+         * a RHS mesh in LHS system
+         * The X axis will be reversed in such cases.
+         * thus Cross product of X and Y should be inverse of Z.
+         *
+         */
+        private check_LHS_RHS(mesh);
         /**
          * set how transparent the axes are
          * 0 to 1
