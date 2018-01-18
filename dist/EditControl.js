@@ -146,7 +146,7 @@ var org;
                             this.pALL.lookAt(this.mainCamera.position, 0, 0, 0, Space.WORLD);
                         }
                         this.setAxesScale();
-                        this.setAxesRotation();
+                        this._setAxesRotation();
                         if (this.rotEnabled)
                             this.rotRotGuides();
                         else if (this.transEnabled)
@@ -166,14 +166,20 @@ var org;
                         Vector3.FromFloatsToRef(s, s, s, this.ecRoot.scaling);
                         //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
                     };
-                    EditControl.prototype.setAxesRotation = function () {
+                    EditControl.prototype._setAxesRotation = function () {
                         if (this.local) {
-                            if (this.eulerian) {
-                                var rot = this.mesh.rotation;
-                                this.ecRoot.rotationQuaternion.copyFrom(BABYLON.Quaternion.RotationYawPitchRoll(rot.y, rot.x, rot.z));
+                            if (this.mesh.parent == null) {
+                                if (this.eulerian) {
+                                    var rot = this.mesh.rotation;
+                                    Quaternion.RotationYawPitchRollToRef(rot.y, rot.x, rot.z, this.ecRoot.rotationQuaternion);
+                                }
+                                else {
+                                    this.ecRoot.rotationQuaternion.copyFrom(this.mesh.rotationQuaternion);
+                                }
                             }
                             else {
-                                this.ecRoot.rotationQuaternion = this.mesh.rotationQuaternion;
+                                this.mesh.getWorldMatrix().getRotationMatrixToRef(this.tm);
+                                Quaternion.FromRotationMatrixToRef(this.tm, this.ecRoot.rotationQuaternion);
                             }
                         }
                     };
@@ -799,7 +805,12 @@ var org;
                             this.mesh.translate(this.tv3, trans.z, Space.WORLD);
                         }
                         else {
-                            this.mesh.position.addInPlace(trans);
+                            if (this.mesh.parent == null) {
+                                this.mesh.position.addInPlace(trans);
+                            }
+                            else {
+                                this.mesh.setAbsolutePosition(trans.addInPlace(this.mesh.absolutePosition));
+                            }
                         }
                     };
                     EditControl.prototype.doScaling = function (diff) {

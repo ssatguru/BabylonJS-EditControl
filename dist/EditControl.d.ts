@@ -41,7 +41,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private cameraTOec;
         private cameraNormal;
         private setAxesScale();
-        private setAxesRotation();
+        private _setAxesRotation();
         private rotRotGuides();
         private rotPlanarGuides(XZ, ZY, YX);
         switchTo(mesh: Mesh, eulerian?: boolean): void;
