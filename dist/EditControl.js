@@ -100,7 +100,7 @@ var org;
                         mesh.computeWorldMatrix(true);
                         this.boundingDimesion = this.getBoundingDimension(mesh);
                         this.setLocalAxes(mesh);
-                        this.lhsRhs = this.check_LHS_RHS(mesh);
+                        //this.lhsRhs=this.check_LHS_RHS(mesh);
                         //build the edit control axes
                         this.ecRoot = new Mesh("EditControl", this.scene);
                         this.ecRoot.rotationQuaternion = Quaternion.Identity();
@@ -820,14 +820,19 @@ var org;
                         var n = this.axisPicked.name;
                         if ((n == "X") || (n == "XZ") || (n == "YX")) {
                             this.scale.x = Vector3.Dot(diff, this.localX) / this.localX.length();
-                            if (this.lhsRhs)
+                            if (this.mesh.scaling.x < 0)
                                 this.scale.x = -this.scale.x;
+                            //if(this.lhsRhs) this.scale.x=-this.scale.x;
                         }
                         if ((n == "Y") || (n == "ZY") || (n == "YX")) {
                             this.scale.y = Vector3.Dot(diff, this.localY) / this.localY.length();
+                            if (this.mesh.scaling.y < 0)
+                                this.scale.y = -this.scale.y;
                         }
                         if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
                             this.scale.z = Vector3.Dot(diff, this.localZ) / this.localZ.length();
+                            if (this.mesh.scaling.z < 0)
+                                this.scale.z = -this.scale.z;
                         }
                         //as the mesh becomes large reduce the amount by which we scale.
                         var bbd = this.boundingDimesion;
@@ -875,21 +880,28 @@ var org;
                                 //if towards then scale up else scale down
                                 this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
                                 var s = Vector3.Dot(diff, this.cameraTOec);
+                                this.scale.x = Math.abs(this.scale.x);
+                                this.scale.y = Math.abs(this.scale.y);
+                                this.scale.z = Math.abs(this.scale.z);
                                 if (s > 0) {
-                                    this.scale.x = -Math.abs(this.scale.x);
-                                    if (this.lhsRhs)
-                                        this.scale.y = Math.abs(this.scale.y);
-                                    else
-                                        this.scale.y = -Math.abs(this.scale.y);
-                                    this.scale.z = -Math.abs(this.scale.z);
+                                    if (this.mesh.scaling.x > 0)
+                                        this.scale.x = -this.scale.x;
+                                    //if(this.lhsRhs) this.scale.y=Math.abs(this.scale.y);
+                                    if (this.mesh.scaling.y > 0)
+                                        this.scale.y = -this.scale.y;
+                                    if (this.mesh.scaling.z > 0)
+                                        this.scale.z = -this.scale.z;
                                 }
                                 else {
-                                    this.scale.x = Math.abs(this.scale.x);
-                                    if (this.lhsRhs)
-                                        this.scale.y = -Math.abs(this.scale.y);
-                                    else
-                                        this.scale.y = Math.abs(this.scale.y);
-                                    this.scale.z = Math.abs(this.scale.z);
+                                    //this.scale.x=Math.abs(this.scale.x);
+                                    //if(this.lhsRhs) this.scale.y=-Math.abs(this.scale.y);
+                                    //else this.scale.y=Math.abs(this.scale.y);
+                                    if (this.mesh.scaling.x < 0)
+                                        this.scale.x = -this.scale.x;
+                                    if (this.mesh.scaling.y < 0)
+                                        this.scale.y = -this.scale.y;
+                                    if (this.mesh.scaling.z < 0)
+                                        this.scale.z = -this.scale.z;
                                 }
                             }
                         }
@@ -905,6 +917,7 @@ var org;
                             this.mesh.scaling.y = Math.min(this.mesh.scaling.y, this.scaleBoundsMax.y);
                             this.mesh.scaling.z = Math.min(this.mesh.scaling.z, this.scaleBoundsMax.z);
                         }
+                        this.setLocalAxes(this.mesh);
                     };
                     EditControl.prototype.scaleWithSnap = function (mesh, p) {
                         if (this.snapS) {
@@ -1699,16 +1712,16 @@ var org;
                     ;
                     ;
                     /*
-                     * This would be called during rotation as the local axes direction would have changed
+                     * This would be called after rotation or scaling as the local axes direction or length might have changed
                      * We need to set the local axis as these are used in all three modes to figure out
                      * direction of mouse move wrt the axes
                      * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
                      */
                     EditControl.prototype.setLocalAxes = function (mesh) {
                         var meshMatrix = mesh.getWorldMatrix();
-                        Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 0, this.localX);
-                        Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 4, this.localY);
-                        Vector3.FromFloatArrayToRef(meshMatrix.asArray(), 8, this.localZ);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this.localX);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this.localY);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this.localZ);
                     };
                     /**
                      * checks if a have left hand , right hand issue.
