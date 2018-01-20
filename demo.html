@@ -172,6 +172,7 @@
 
 
         <script type="text/javascript">
+            var showHelp,switchSpace;
             function main(){
                 var camera;
                 var editControl;
@@ -214,7 +215,7 @@
                 var eulerButton = document.getElementById("euler");
 
 
-                var showHelp = function(){
+                showHelp = function(){
                     var el = document.getElementById("overlay");
                     el.style.visibility = (el.style.visibility=="visible")?"hidden"
                             :"visible";

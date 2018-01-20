@@ -2,7 +2,6 @@
 declare namespace org.ssatguru.babylonjs.component {
     import AbstractMesh = BABYLON.AbstractMesh;
     import Camera = BABYLON.Camera;
-    import Matrix = BABYLON.Matrix;
     import Mesh = BABYLON.Mesh;
     import Quaternion = BABYLON.Quaternion;
     import Vector3 = BABYLON.Vector3;
@@ -19,49 +18,48 @@ declare namespace org.ssatguru.babylonjs.component {
      *
      */
     class EditControl {
-        private mesh;
-        private canvas;
-        private scene;
-        private mainCamera;
-        private ecRoot;
-        private local;
-        private snapT;
-        private snapR;
-        private transSnap;
-        private rotSnap;
-        private axesLen;
-        private axesScale;
-        private pickWidth;
-        private redMat;
-        private greenMat;
-        private blueMat;
-        private whiteMat;
-        private yellowMat;
-        private actHist;
-        private renderer;
-        private pointerdown;
-        private pointerup;
-        private pointermove;
-        private visibility;
-        private lhsRhs;
+        private _mesh;
+        private _canvas;
+        private _scene;
+        private _mainCamera;
+        private _ecRoot;
+        private _local;
+        private _snapT;
+        private _snapR;
+        private _transSnap;
+        private _rotSnap;
+        private _axesLen;
+        private _axesScale;
+        private _pickWidth;
+        private _redMat;
+        private _greenMat;
+        private _blueMat;
+        private _whiteMat;
+        private _yellowMat;
+        private _actHist;
+        private _renderer;
+        private _pointerdown;
+        private _pointerup;
+        private _pointermove;
+        private _visibility;
         constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean);
-        private checkQuaternion();
-        private ecMatrix;
-        private ecTOcamera;
-        private renderLoopProcess();
+        private _checkQuaternion();
+        private _ecMatrix;
+        private _ecTOcamera;
+        private _renderLoopProcess();
         /**
          * sets rotaion of edit control to that of the mesh
          */
         private _setECRotation();
-        private distFromCamera;
-        private cameraTOec;
-        private cameraNormal;
-        private setECScale();
-        private rotRotGuides();
+        private _distFromCamera;
+        private _cameraTOec;
+        private _cameraNormal;
+        private _setECScale();
+        private _rotRotGuides();
         /**
          * rotate the planar guide so that they are facing the camera
          */
-        private rotPlanarGuides(XZ, ZY, YX);
+        private _rotPlanarGuides(XZ, ZY, YX);
         switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;
         undo(): void;
@@ -71,14 +69,14 @@ declare namespace org.ssatguru.babylonjs.component {
          * resources created by the edit control
          */
         detach(): void;
-        private prevState;
-        private hidden;
+        private _prevState;
+        private _hidden;
         /**
          * hide the edit control. use show() to unhide the control.
          */
         hide(): void;
-        private hideCommonAxes();
-        private showCommonAxes();
+        private _hideCommonAxes();
+        private _showCommonAxes();
         /**
          * unhide the editcontrol hidden using the hide() method
          */
@@ -87,10 +85,10 @@ declare namespace org.ssatguru.babylonjs.component {
          * check if the editcontrol was hidden using the hide() methods
          */
         isHidden(): boolean;
-        private disposeAll();
-        private actionListener;
-        private actionStartListener;
-        private actionEndListener;
+        private _disposeAll();
+        private _actionListener;
+        private _actionStartListener;
+        private _actionEndListener;
         addActionListener(actionListener: (actionType: number) => void): void;
         removeActionListener(): void;
         addActionStartListener(actionStartListener: (actionType: number) => void): void;
@@ -98,153 +96,149 @@ declare namespace org.ssatguru.babylonjs.component {
         addActionEndListener(actionEndListener: (actionType: number) => void): void;
         removeActionEndListener(): void;
         removeAllActionListeners(): void;
-        private pDown;
-        private axisPicked;
-        private onPointerDown(evt);
-        private setEditing(editing);
+        private _pDown;
+        private _axisPicked;
+        private _onPointerDown(evt);
+        private _setEditing(editing);
         isEditing(): boolean;
         /**
          * no camera movement during edit
          */
-        private detachCamera(cam, can);
-        private prevOverMesh;
-        private pointerIsOver;
+        private _detachCamera(cam, can);
+        private _prevOverMesh;
+        private _pointerIsOver;
         isPointerOver(): boolean;
-        private savedMat;
-        private savedCol;
-        private onPointerOver();
-        private clearPrevOverMesh();
-        private restoreColor(mesh);
-        private editing;
-        private onPointerUp(evt);
-        private actionType;
-        private setActionType();
-        private callActionListener(at);
-        private callActionStartListener(at);
-        private callActionEndListener(at);
-        private prevPos;
-        private snapRX;
-        private snapRY;
-        private snapRZ;
-        private onPointerMove(evt);
-        private rotate2;
-        private getPickPlane(axis);
-        private transBy;
-        private doTranslation(diff);
-        private snapTV;
-        private transWithSnap(mesh, trans, local);
-        private snapS;
-        private snapSX;
-        private snapSY;
-        private snapSZ;
-        private snapSA;
-        private snapSV;
-        private scaleSnap;
-        private scale;
-        private doScaling(diff);
-        private scaleWithSnap(mesh, p);
-        private localX;
-        private localY;
-        private localZ;
-        private setLocalAxes(mesh);
-        private boundingDimesion;
-        private getBoundingDimension(mesh);
+        private _savedMat;
+        private _savedCol;
+        private _onPointerOver();
+        private _clearPrevOverMesh();
+        private _restoreColor(mesh);
+        private _editing;
+        private _onPointerUp(evt);
+        private _actionType;
+        private _setActionType();
+        private _callActionListener(at);
+        private _callActionStartListener(at);
+        private _callActionEndListener(at);
+        private _prevPos;
+        private _snapRX;
+        private _snapRY;
+        private _snapRZ;
+        private _onPointerMove(evt);
+        private _rotate2;
+        private _getPickPlane(axis);
+        private _transBy;
+        private _doTranslation(diff);
+        private _snapTV;
+        private _transWithSnap(mesh, trans, local);
+        private _snapS;
+        private _snapSV;
+        private _scaleSnap;
+        private _scale;
+        private _doScaling(diff);
+        private _scaleWithSnap(mesh, p);
+        private _localX;
+        private _localY;
+        private _localZ;
+        private _setLocalAxes(mesh);
+        private _boundingDimesion;
+        private _getBoundingDimension(mesh);
         refreshBoundingInfo(): void;
-        private eulerian;
-        private snapRA;
-        private doRotation(mesh, axis, newPos, prevPos);
-        private getPosOnPickPlane();
-        private hideBaxis();
-        private setAxesVisiblity(v);
+        private _eulerian;
+        private _snapRA;
+        private _doRotation(mesh, axis, newPos, prevPos);
+        private _getPosOnPickPlane();
+        private _hideBaxis();
+        private _setAxesVisiblity(v);
         getRotationQuaternion(): Quaternion;
         getPosition(): Vector3;
-        private transEnabled;
+        private _transEnabled;
         isTranslationEnabled(): boolean;
         enableTranslation(): void;
         disableTranslation(): void;
-        private rotEnabled;
+        private _rotEnabled;
         isRotationEnabled(): boolean;
         returnEuler(euler: boolean): void;
         enableRotation(): void;
         disableRotation(): void;
-        private scaleEnabled;
+        private _scaleEnabled;
         isScalingEnabled(): boolean;
         enableScaling(): void;
         disableScaling(): void;
-        private scaleBoundsMin;
-        private scaleBoundsMax;
+        private _scaleBoundsMin;
+        private _scaleBoundsMax;
         setScaleBounds(min?: Vector3, max?: Vector3): void;
         removeScaleBounds(): void;
-        private transBoundsMin;
-        private transBoundsMax;
+        private _transBoundsMin;
+        private _transBoundsMax;
         setTransBounds(min?: Vector3, max?: Vector3): void;
         removeTransBounds(): void;
-        private rotBoundsMin;
-        private rotBoundsMax;
+        private _rotBoundsMin;
+        private _rotBoundsMax;
         setRotBounds(min?: Vector3, max?: Vector3): void;
         removeRotBounds(): void;
-        private bXaxis;
-        private bYaxis;
-        private bZaxis;
-        private xaxis;
-        private yaxis;
-        private zaxis;
-        private createCommonAxes();
-        private pickedPlane;
-        private pALL;
-        private pXZ;
-        private pZY;
-        private pYX;
-        private createPickPlanes();
-        private tCtl;
-        private tX;
-        private tY;
-        private tZ;
-        private tXZ;
-        private tZY;
-        private tYX;
-        private tAll;
-        private tEndX;
-        private tEndY;
-        private tEndZ;
-        private tEndXZ;
-        private tEndZY;
-        private tEndYX;
-        private tEndAll;
-        private createTransAxes();
-        private createTriangle(name, w, scene);
-        private rCtl;
-        private rX;
-        private rY;
-        private rZ;
-        private rAll;
-        private rEndX;
-        private rEndY;
-        private rEndZ;
-        private rEndAll;
-        private rEndAll2;
-        private guideSize;
+        private _bXaxis;
+        private _bYaxis;
+        private _bZaxis;
+        private _xaxis;
+        private _yaxis;
+        private _zaxis;
+        private _createCommonAxes();
+        private _pickedPlane;
+        private _pALL;
+        private _pXZ;
+        private _pZY;
+        private _pYX;
+        private _createPickPlanes();
+        private _tCtl;
+        private _tX;
+        private _tY;
+        private _tZ;
+        private _tXZ;
+        private _tZY;
+        private _tYX;
+        private _tAll;
+        private _tEndX;
+        private _tEndY;
+        private _tEndZ;
+        private _tEndXZ;
+        private _tEndZY;
+        private _tEndYX;
+        private _tEndAll;
+        private _createTransAxes();
+        private _createTriangle(name, w, scene);
+        private _rCtl;
+        private _rX;
+        private _rY;
+        private _rZ;
+        private _rAll;
+        private _rEndX;
+        private _rEndY;
+        private _rEndZ;
+        private _rEndAll;
+        private _rEndAll2;
+        private _guideSize;
         setRotGuideFull(y: boolean): void;
-        private createRotAxes();
-        private extrudeBox(w, l);
-        private createCircle(r, t, double);
-        private createTube(r, t?);
-        private sCtl;
-        private sX;
-        private sY;
-        private sZ;
-        private sXZ;
-        private sZY;
-        private sYX;
-        private sAll;
-        private sEndX;
-        private sEndY;
-        private sEndZ;
-        private sEndXZ;
-        private sEndZY;
-        private sEndYX;
-        private sEndAll;
-        private createScaleAxes();
+        private _createRotAxes();
+        private _extrudeBox(w, l);
+        private _createCircle(r, t, double);
+        private _createTube(r, t?);
+        private _sCtl;
+        private _sX;
+        private _sY;
+        private _sZ;
+        private _sXZ;
+        private _sZY;
+        private _sYX;
+        private _sAll;
+        private _sEndX;
+        private _sEndY;
+        private _sEndZ;
+        private _sEndXZ;
+        private _sEndZY;
+        private _sEndYX;
+        private _sEndAll;
+        private _createScaleAxes();
         /**
          * checks if a have left hand , right hand issue.
          * In other words if a mesh is a LHS mesh in RHS system or
@@ -253,7 +247,7 @@ declare namespace org.ssatguru.babylonjs.component {
          * thus Cross product of X and Y should be inverse of Z.
          *
          */
-        private check_LHS_RHS(mesh);
+        private _check_LHS_RHS(mesh);
         /**
          * set how transparent the axes are
          * 0 to 1
@@ -267,27 +261,27 @@ declare namespace org.ssatguru.babylonjs.component {
         setTransSnap(s: boolean): void;
         setRotSnap(s: boolean): void;
         setScaleSnap(s: boolean): void;
-        private tSnap;
+        private _tSnap;
         setTransSnapValue(t: number): void;
         setRotSnapValue(r: number): void;
         /**
          * use this to set the scale snap value
          */
         setScaleSnapValue(r: number): void;
-        tv1: Vector3;
-        tv2: Vector3;
-        tv3: Vector3;
-        tm: Matrix;
-        private getAngle2(p1, p2, cameraPos, c2ec, mN);
+        private _tv1;
+        private _tv2;
+        private _tv3;
+        private _tm;
+        private _getAngle2(p1, p2, cameraPos, c2ec, mN);
         /**
          * finds the angle subtended from points p1 to p2 around the point p
          * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
          * to figure this check the orientation of the user(camera)to ec vector with the rotation normal vector
          */
-        private getAngle(p1, p2, p, c2ec);
-        private createMaterials(scene);
-        private disposeMaterials();
-        private static getStandardMaterial(name, col, scene);
+        private _getAngle(p1, p2, p, c2ec);
+        private _createMaterials(scene);
+        private _disposeMaterials();
+        private static _getStandardMaterial(name, col, scene);
     }
     class ActHist {
         private mesh;
@@ -302,11 +296,11 @@ declare namespace org.ssatguru.babylonjs.component {
         redo(): number;
     }
     class Act {
-        private p;
-        private rQ;
-        private rE;
-        private s;
-        private at;
+        private _p;
+        private _rQ;
+        private _rE;
+        private _s;
+        private _at;
         constructor(mesh: AbstractMesh, at: number);
         getActionType(): number;
         perform(mesh: AbstractMesh): void;

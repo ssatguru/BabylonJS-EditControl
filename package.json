@@ -1,27 +1,28 @@
 {
   "name": "babylonjs-editcontrol",
   "version": "3.0.1",
-  "description" : "A transform control for Babylonjs mesh",
+  "description": "A transform control for Babylonjs mesh",
   "repository": {
     "type": "git",
     "url": "git://github.com/ssatguru/BabylonJS-EditControl.git"
   },
   "keywords": [
-    "babylonjs","transform control"
+    "babylonjs",
+    "transform control"
   ],
   "author": "satguru <ssatguru@gmail.com>",
   "license": "Apache-2.0",
   "contributors": [],
   "main": "dist/EditControl.min.js",
-  "types": "dist/EditControl.d.ts",   
+  "types": "dist/EditControl.d.ts",
   "dependencies": {},
   "devDependencies": {
     "babylonjs": "^3.1.0",
-    "uglify-js": "^2.8.22"
+    "uglify-js": "^3.3.7"
   },
   "scripts": {
     "compile": "tsc -p src",
-    "min": "uglifyjs dist/EditControl.js -o dist/EditControl.min.js -mc",
+    "min": "uglifyjs dist/EditControl.js -o dist/EditControl.min.js -m --mangle-props  regex=/^_/ -c --warn",
     "build": "npm run compile && npm run min"
   }
 }

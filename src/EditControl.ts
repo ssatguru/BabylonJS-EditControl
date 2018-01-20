@@ -40,128 +40,128 @@ namespace org.ssatguru.babylonjs.component {
      */
 
     export class EditControl {
-        private mesh: Mesh;
+        private _mesh: Mesh;
 
-        private canvas: HTMLCanvasElement;
-        private scene: Scene;
-        private mainCamera: Camera;
+        private _canvas: HTMLCanvasElement;
+        private _scene: Scene;
+        private _mainCamera: Camera;
         //root of the edit control
-        private ecRoot: Mesh;
-        private local: boolean=true;
-        private snapT: boolean=false;
-        private snapR: boolean=false;
-        private transSnap: number=1;
-        private rotSnap: number=Math.PI/18;
-        private axesLen: number=0.4;
-        private axesScale: number=1;
+        private _ecRoot: Mesh;
+        private _local: boolean=true;
+        private _snapT: boolean=false;
+        private _snapR: boolean=false;
+        private _transSnap: number=1;
+        private _rotSnap: number=Math.PI/18;
+        private _axesLen: number=0.4;
+        private _axesScale: number=1;
         //how close to an axis should we get before we can pick it 
-        private pickWidth: number=0.02;
-        private redMat: StandardMaterial;
-        private greenMat: StandardMaterial;
-        private blueMat: StandardMaterial;
-        private whiteMat: StandardMaterial;
-        private yellowMat: StandardMaterial;
-        private actHist: ActHist;
-        private renderer: () => void;
-        private pointerdown: EventListener;
-        private pointerup: EventListener;
-        private pointermove: EventListener;
+        private _pickWidth: number=0.02;
+        private _redMat: StandardMaterial;
+        private _greenMat: StandardMaterial;
+        private _blueMat: StandardMaterial;
+        private _whiteMat: StandardMaterial;
+        private _yellowMat: StandardMaterial;
+        private _actHist: ActHist;
+        private _renderer: () => void;
+        private _pointerdown: EventListener;
+        private _pointerup: EventListener;
+        private _pointermove: EventListener;
         //axes visibility
-        private visibility: number=0.75;
+        private _visibility: number=0.75;
 
         //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
-        private lhsRhs: boolean=false;
+        //private lhsRhs: boolean=false;
 
         public constructor(mesh: Mesh,camera: Camera,canvas: HTMLCanvasElement,scale: number,eulerian?: boolean) {
-            this.mesh=mesh;
-            this.mainCamera=camera;
-            this.canvas=canvas;
-            this.axesScale=scale;
+            this._mesh=mesh;
+            this._mainCamera=camera;
+            this._canvas=canvas;
+            this._axesScale=scale;
 
             if(eulerian!==null) {
-                this.eulerian=eulerian;
+                this._eulerian=eulerian;
             } else {
-                this.eulerian=false;
+                this._eulerian=false;
             }
-            this.checkQuaternion();
+            this._checkQuaternion();
 
-            this.scene=mesh.getScene();
-            this.actHist=new ActHist(mesh,10);
+            this._scene=mesh.getScene();
+            this._actHist=new ActHist(mesh,10);
 
             mesh.computeWorldMatrix(true);
-            this.boundingDimesion=this.getBoundingDimension(mesh);
-            this.setLocalAxes(mesh);
+            this._boundingDimesion=this._getBoundingDimension(mesh);
+            this._setLocalAxes(mesh);
             //this.lhsRhs=this.check_LHS_RHS(mesh);
 
             //build the edit control axes
-            this.ecRoot=new Mesh("EditControl",this.scene);
-            this.ecRoot.rotationQuaternion=Quaternion.Identity();
-            this.ecRoot.visibility=0;
-            this.ecRoot.isPickable=false;
+            this._ecRoot=new Mesh("EditControl",this._scene);
+            this._ecRoot.rotationQuaternion=Quaternion.Identity();
+            this._ecRoot.visibility=0;
+            this._ecRoot.isPickable=false;
 
-            this.createMaterials(this.scene);
+            this._createMaterials(this._scene);
 
-            let guideAxes: Mesh=this.createCommonAxes();
-            guideAxes.parent=this.ecRoot;
+            let guideAxes: Mesh=this._createCommonAxes();
+            guideAxes.parent=this._ecRoot;
 
             //build the pickplanes
-            let pickPlanes: Mesh=this.createPickPlanes();
-            pickPlanes.parent=this.ecRoot;
+            let pickPlanes: Mesh=this._createPickPlanes();
+            pickPlanes.parent=this._ecRoot;
 
-            this.pointerdown=(evt) => {return this.onPointerDown(evt)};
-            this.pointerup=(evt) => {return this.onPointerUp(evt)};
-            this.pointermove=(evt) => {return this.onPointerMove(evt)};
+            this._pointerdown=(evt) => {return this._onPointerDown(evt)};
+            this._pointerup=(evt) => {return this._onPointerUp(evt)};
+            this._pointermove=(evt) => {return this._onPointerMove(evt)};
 
             //use canvas rather than scene to handle pointer events
             //scene cannot have mutiple eventlisteners for an event
             //with canvas one will have to do ones own pickinfo generattion.
 
-            canvas.addEventListener("pointerdown",this.pointerdown,false);
-            canvas.addEventListener("pointerup",this.pointerup,false);
-            canvas.addEventListener("pointermove",this.pointermove,false);
+            canvas.addEventListener("pointerdown",this._pointerdown,false);
+            canvas.addEventListener("pointerup",this._pointerup,false);
+            canvas.addEventListener("pointermove",this._pointermove,false);
 
 
-            this.renderer=() => {return this.renderLoopProcess()};
-            this.scene.registerBeforeRender(this.renderer);
+            this._renderer=() => {return this._renderLoopProcess()};
+            this._scene.registerBeforeRender(this._renderer);
         }
 
         //make sure that if eulerian is set to false then mesh's rotation is in quaternion
         //throw error and exit if not so.
-        private checkQuaternion() {
-            if(!this.eulerian) {
-                if((this.mesh.rotationQuaternion==null)||(this.mesh.rotationQuaternion==undefined)) {
+        private _checkQuaternion() {
+            if(!this._eulerian) {
+                if((this._mesh.rotationQuaternion==null)||(this._mesh.rotationQuaternion==undefined)) {
                     throw "Error: Eulerian is set to false but the mesh's rotationQuaternion is not set.";
                 }
             }
         }
 
-        private ecMatrix: Matrix=new Matrix();
+        private _ecMatrix: Matrix=new Matrix();
         //edit control to camera vector
-        private ecTOcamera: Vector3=new Vector3(0,0,0);
-        private renderLoopProcess() {
+        private _ecTOcamera: Vector3=new Vector3(0,0,0);
+        private _renderLoopProcess() {
             
             //sync the edit control position and rotation with that of mesh
-            this.ecRoot.position=this.mesh.getAbsolutePivotPoint();
+            this._ecRoot.position=this._mesh.getAbsolutePivotPoint();
             this._setECRotation();
             
             //scale the EditControl so it seems at the same distance from camera/user
-            this.setECScale();
+            this._setECScale();
             
             //rotate the free move,rotate,scale pick plane to face the camera/user
-            if(this.local) {
-                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
+            if(this._local) {
+                this._ecRoot.getWorldMatrix().invertToRef(this._ecMatrix);
+                Vector3.TransformCoordinatesToRef(this._mainCamera.position,this._ecMatrix,this._ecTOcamera);
                 //note pALL is child of ecRoot hence lookAt in local space
-                this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
+                this._pALL.lookAt(this._ecTOcamera,0,0,0,Space.LOCAL);
             } else {
-                this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
-                this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
+                this._mainCamera.position.subtractToRef(this._ecRoot.position,this._ecTOcamera);
+                this._pALL.lookAt(this._mainCamera.position,0,0,0,Space.WORLD);
             }
             
             //rotate the rotation and planar guide to face the camera/user
-            if(this.rotEnabled) this.rotRotGuides();
-            else if(this.transEnabled) this.rotPlanarGuides(this.tXZ,this.tZY,this.tYX);
-            else if(this.scaleEnabled) this.rotPlanarGuides(this.sXZ,this.sZY,this.sYX);
+            if(this._rotEnabled) this._rotRotGuides();
+            else if(this._transEnabled) this._rotPlanarGuides(this._tXZ,this._tZY,this._tYX);
+            else if(this._scaleEnabled) this._rotPlanarGuides(this._sXZ,this._sZY,this._sYX);
 
             //check pointer over axes only during pointer moves
             //this.onPointerOver();
@@ -171,69 +171,69 @@ namespace org.ssatguru.babylonjs.component {
          * sets rotaion of edit control to that of the mesh
          */
         private _setECRotation() {
-            if(this.local) {
-                if(this.mesh.parent==null) {
-                    if(this.eulerian) {
-                        let rot: Vector3=this.mesh.rotation;
-                        Quaternion.RotationYawPitchRollToRef(rot.y,rot.x,rot.z,this.ecRoot.rotationQuaternion);
+            if(this._local) {
+                if(this._mesh.parent==null) {
+                    if(this._eulerian) {
+                        let rot: Vector3=this._mesh.rotation;
+                        Quaternion.RotationYawPitchRollToRef(rot.y,rot.x,rot.z,this._ecRoot.rotationQuaternion);
                     } else {
-                        this.ecRoot.rotationQuaternion.copyFrom(this.mesh.rotationQuaternion);
+                        this._ecRoot.rotationQuaternion.copyFrom(this._mesh.rotationQuaternion);
                     }
                 }else{
-                    this.mesh.getWorldMatrix().getRotationMatrixToRef(this.tm);
-                    Quaternion.FromRotationMatrixToRef(this.tm,this.ecRoot.rotationQuaternion);
+                    this._mesh.getWorldMatrix().getRotationMatrixToRef(this._tm);
+                    Quaternion.FromRotationMatrixToRef(this._tm,this._ecRoot.rotationQuaternion);
                 }
             }
         }
 
         //how far away from camera should the edit control appear to be
-        private distFromCamera: number=2;
+        private _distFromCamera: number=2;
         //vector from camera to edit control
-        private cameraTOec: Vector3=new Vector3(0,0,0);
-        private cameraNormal: Vector3=new Vector3(0,0,0);
-        private setECScale() {
-            this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
-            Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
+        private _cameraTOec: Vector3=new Vector3(0,0,0);
+        private _cameraNormal: Vector3=new Vector3(0,0,0);
+        private _setECScale() {
+            this._ecRoot.position.subtractToRef(this._mainCamera.position,this._cameraTOec);
+            Vector3.FromFloatArrayToRef(this._mainCamera.getWorldMatrix().asArray(),8,this._cameraNormal);
 
             //get distance of edit control from the camera plane 
             //project "camera to edit control" vector onto the camera normal
-            let parentOnNormal: number=Vector3.Dot(this.cameraTOec,this.cameraNormal)/this.cameraNormal.length();
+            let parentOnNormal: number=Vector3.Dot(this._cameraTOec,this._cameraNormal)/this._cameraNormal.length();
 
-            let s: number=Math.abs(parentOnNormal/this.distFromCamera);
-            Vector3.FromFloatsToRef(s,s,s,this.ecRoot.scaling);
+            let s: number=Math.abs(parentOnNormal/this._distFromCamera);
+            Vector3.FromFloatsToRef(s,s,s,this._ecRoot.scaling);
             //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
         }
   
 
         //rotate the rotation guides so that they are facing the camera
-        private rotRotGuides() {
-            let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
-            if(this.ecTOcamera.z>=0) {
-                this.rX.rotation.x=-rotX;
+        private _rotRotGuides() {
+            let rotX=Math.atan(this._ecTOcamera.y/this._ecTOcamera.z);
+            if(this._ecTOcamera.z>=0) {
+                this._rX.rotation.x=-rotX;
             } else {
-                this.rX.rotation.x=-rotX-Math.PI;
+                this._rX.rotation.x=-rotX-Math.PI;
             }
 
-            let rotY=Math.atan(this.ecTOcamera.x/this.ecTOcamera.z);
-            if(this.ecTOcamera.z>=0) {
-                this.rY.rotation.y=rotY;
+            let rotY=Math.atan(this._ecTOcamera.x/this._ecTOcamera.z);
+            if(this._ecTOcamera.z>=0) {
+                this._rY.rotation.y=rotY;
             } else {
-                this.rY.rotation.y=rotY+Math.PI;
+                this._rY.rotation.y=rotY+Math.PI;
             }
 
-            let rotZ=Math.atan(this.ecTOcamera.x/this.ecTOcamera.y);
-            if(this.ecTOcamera.y>=0) {
-                this.rZ.rotation.z=-rotZ;
+            let rotZ=Math.atan(this._ecTOcamera.x/this._ecTOcamera.y);
+            if(this._ecTOcamera.y>=0) {
+                this._rZ.rotation.z=-rotZ;
             } else {
-                this.rZ.rotation.z=-rotZ-Math.PI;
+                this._rZ.rotation.z=-rotZ-Math.PI;
             }
         }
         
         /**
          * rotate the planar guide so that they are facing the camera
          */
-        private rotPlanarGuides(XZ: Mesh,ZY: Mesh,YX: Mesh) {
-            let ec: Vector3=this.ecTOcamera;
+        private _rotPlanarGuides(XZ: Mesh,ZY: Mesh,YX: Mesh) {
+            let ec: Vector3=this._ecTOcamera;
 
             XZ.rotation.x=0;
             XZ.rotation.y=0;
@@ -279,35 +279,35 @@ namespace org.ssatguru.babylonjs.component {
 
         public switchTo(mesh: Mesh,eulerian?: boolean) {
             mesh.computeWorldMatrix(true);
-            this.mesh=mesh;
+            this._mesh=mesh;
             if(eulerian!=null) {
-                this.eulerian=eulerian;
+                this._eulerian=eulerian;
             }
-            this.checkQuaternion();
-            this.setLocalAxes(mesh);
-            this.actHist=new ActHist(mesh,10);
+            this._checkQuaternion();
+            this._setLocalAxes(mesh);
+            this._actHist=new ActHist(mesh,10);
         }
 
         public setUndoCount(c: number) {
-            this.actHist.setCapacity(c);
+            this._actHist.setCapacity(c);
         }
 
         public undo() {
-            let at: number=this.actHist.undo();
-            this.mesh.computeWorldMatrix(true);
-            this.setLocalAxes(this.mesh);
-            this.callActionStartListener(at);
-            this.callActionListener(at);
-            this.callActionEndListener(at);
+            let at: number=this._actHist.undo();
+            this._mesh.computeWorldMatrix(true);
+            this._setLocalAxes(this._mesh);
+            this._callActionStartListener(at);
+            this._callActionListener(at);
+            this._callActionEndListener(at);
         }
 
         public redo() {
-            let at: number=this.actHist.redo();
-            this.mesh.computeWorldMatrix(true);
-            this.setLocalAxes(this.mesh);
-            this.callActionStartListener(at);
-            this.callActionListener(at);
-            this.callActionEndListener(at);
+            let at: number=this._actHist.redo();
+            this._mesh.computeWorldMatrix(true);
+            this._setLocalAxes(this._mesh);
+            this._callActionStartListener(at);
+            this._callActionListener(at);
+            this._callActionEndListener(at);
         }
 
         /**
@@ -315,445 +315,442 @@ namespace org.ssatguru.babylonjs.component {
          * resources created by the edit control
          */
         public detach() {
-            this.canvas.removeEventListener("pointerdown",this.pointerdown,false);
-            this.canvas.removeEventListener("pointerup",this.pointerup,false);
-            this.canvas.removeEventListener("pointermove",this.pointermove,false);
-            this.scene.unregisterBeforeRender(this.renderer);
+            this._canvas.removeEventListener("pointerdown",this._pointerdown,false);
+            this._canvas.removeEventListener("pointerup",this._pointerup,false);
+            this._canvas.removeEventListener("pointermove",this._pointermove,false);
+            this._scene.unregisterBeforeRender(this._renderer);
             this.removeAllActionListeners();
-            this.disposeAll();
+            this._disposeAll();
         }
-        private prevState: String="";
-        private hidden: boolean=false;
+        private _prevState: String="";
+        private _hidden: boolean=false;
 
         /**
          * hide the edit control. use show() to unhide the control.
          */
         public hide() {
-            this.hidden=true;
-            if(this.transEnabled) {
-                this.prevState="T";
+            this._hidden=true;
+            if(this._transEnabled) {
+                this._prevState="T";
                 this.disableTranslation();
-            } else if(this.rotEnabled) {
-                this.prevState="R";
+            } else if(this._rotEnabled) {
+                this._prevState="R";
                 this.disableRotation();
-            } else if(this.scaleEnabled) {
-                this.prevState="S";
+            } else if(this._scaleEnabled) {
+                this._prevState="S";
                 this.disableScaling();
             }
-            this.hideCommonAxes();
+            this._hideCommonAxes();
         }
 
-        private hideCommonAxes() {
-            this.xaxis.visibility=0;
-            this.yaxis.visibility=0;
-            this.zaxis.visibility=0;
+        private _hideCommonAxes() {
+            this._xaxis.visibility=0;
+            this._yaxis.visibility=0;
+            this._zaxis.visibility=0;
         }
-        private showCommonAxes() {
-            this.xaxis.visibility=this.visibility;
-            this.yaxis.visibility=this.visibility;
-            this.zaxis.visibility=this.visibility;
+        private _showCommonAxes() {
+            this._xaxis.visibility=this._visibility;
+            this._yaxis.visibility=this._visibility;
+            this._zaxis.visibility=this._visibility;
         }
         /**
          * unhide the editcontrol hidden using the hide() method
          */
         public show() {
-            this.hidden=false;
-            this.showCommonAxes();
-            if(this.prevState=="T") this.enableTranslation();
-            else if(this.prevState=="R") this.enableRotation();
-            else if(this.prevState=="S") this.enableScaling();
+            this._hidden=false;
+            this._showCommonAxes();
+            if(this._prevState=="T") this.enableTranslation();
+            else if(this._prevState=="R") this.enableRotation();
+            else if(this._prevState=="S") this.enableScaling();
         }
 
         /**
          * check if the editcontrol was hidden using the hide() methods
          */
         public isHidden(): boolean {
-            return this.hidden;
+            return this._hidden;
         }
 
-        private disposeAll() {
-            this.ecRoot.dispose();
-            this.disposeMaterials();
-            this.actHist=null;
+        private _disposeAll() {
+            this._ecRoot.dispose();
+            this._disposeMaterials();
+            this._actHist=null;
         }
 
-        private actionListener: (actionType: number) => void=null;
-        private actionStartListener: (actionType: number) => void=null;
-        private actionEndListener: (actionType: number) => void=null;
+        private _actionListener: (actionType: number) => void=null;
+        private _actionStartListener: (actionType: number) => void=null;
+        private _actionEndListener: (actionType: number) => void=null;
 
         public addActionListener(actionListener: (actionType: number) => void) {
-            this.actionListener=actionListener;
+            this._actionListener=actionListener;
         }
         public removeActionListener() {
-            this.actionListener=null;
+            this._actionListener=null;
         }
         public addActionStartListener(actionStartListener: (actionType: number) => void) {
-            this.actionStartListener=actionStartListener;
+            this._actionStartListener=actionStartListener;
         }
         public removeActionStartListener() {
-            this.actionStartListener=null;
+            this._actionStartListener=null;
         }
         public addActionEndListener(actionEndListener: (actionType: number) => void) {
-            this.actionEndListener=actionEndListener;
+            this._actionEndListener=actionEndListener;
         }
         public removeActionEndListener() {
-            this.actionEndListener=null;
+            this._actionEndListener=null;
         }
 
         public removeAllActionListeners() {
-            this.actionListener=null;
-            this.actionStartListener=null;
-            this.actionEndListener=null;
+            this._actionListener=null;
+            this._actionStartListener=null;
+            this._actionEndListener=null;
         }
 
-        private pDown: boolean=false;
+        private _pDown: boolean=false;
 
-        private axisPicked: Mesh;
+        private _axisPicked: Mesh;
 
-        private onPointerDown(evt: Event) {
+        private _onPointerDown(evt: Event) {
             evt.preventDefault();
-            this.pDown=true;
+            this._pDown=true;
             if((<PointerEvent>evt).button!=0) return;
             //TODO: do we really need to do a pick here?
             //onPointerOver() has already done this.
-            let pickResult: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
-                if(this.transEnabled) {
-                    if((mesh==this.tX)||(mesh==this.tY)||(mesh==this.tZ)||(mesh==this.tXZ)||(mesh==this.tZY)||(mesh==this.tYX)||(mesh==this.tAll)) return true;
-                } else if((this.rotEnabled)) {
-                    if((mesh==this.rX)||(mesh==this.rY)||(mesh==this.rZ)||(mesh==this.rAll)) return true;
-                } else if((this.scaleEnabled)) {
-                    if((mesh==this.sX)||(mesh==this.sY)||(mesh==this.sZ)||(mesh==this.sXZ)||(mesh==this.sZY)||(mesh==this.sYX)||(mesh==this.sAll)) return true;
+            let pickResult: PickingInfo=this._scene.pick(this._scene.pointerX,this._scene.pointerY,(mesh) => {
+                if(this._transEnabled) {
+                    if((mesh==this._tX)||(mesh==this._tY)||(mesh==this._tZ)||(mesh==this._tXZ)||(mesh==this._tZY)||(mesh==this._tYX)||(mesh==this._tAll)) return true;
+                } else if((this._rotEnabled)) {
+                    if((mesh==this._rX)||(mesh==this._rY)||(mesh==this._rZ)||(mesh==this._rAll)) return true;
+                } else if((this._scaleEnabled)) {
+                    if((mesh==this._sX)||(mesh==this._sY)||(mesh==this._sZ)||(mesh==this._sXZ)||(mesh==this._sZY)||(mesh==this._sYX)||(mesh==this._sAll)) return true;
                 }
                 return false;
-            },null,this.mainCamera);
+            },null,this._mainCamera);
 
             if(pickResult.hit) {
                 //this.setAxesVisiblity(0);
-                this.axisPicked=<Mesh>pickResult.pickedMesh;
-                let childs: Node[]=this.axisPicked.getChildren();
+                this._axisPicked=<Mesh>pickResult.pickedMesh;
+                let childs: Node[]=this._axisPicked.getChildren();
                 if(childs.length>0) {
-                    (<Mesh>childs[0]).visibility=this.visibility;
+                    (<Mesh>childs[0]).visibility=this._visibility;
                 } else {
-                    this.axisPicked.visibility=this.visibility;
+                    this._axisPicked.visibility=this._visibility;
                 }
-                let name: string=this.axisPicked.name;
-                if((name=="X")) this.bXaxis.visibility=1;
-                else if((name=="Y")) this.bYaxis.visibility=1;
-                else if((name=="Z")) this.bZaxis.visibility=1;
+                let name: string=this._axisPicked.name;
+                if((name=="X")) this._bXaxis.visibility=1;
+                else if((name=="Y")) this._bYaxis.visibility=1;
+                else if((name=="Z")) this._bZaxis.visibility=1;
                 else if((name=="XZ")) {
-                    this.bXaxis.visibility=1;
-                    this.bZaxis.visibility=1;
+                    this._bXaxis.visibility=1;
+                    this._bZaxis.visibility=1;
                 } else if((name=="ZY")) {
-                    this.bZaxis.visibility=1;
-                    this.bYaxis.visibility=1;
+                    this._bZaxis.visibility=1;
+                    this._bYaxis.visibility=1;
                 } else if((name=="YX")) {
-                    this.bYaxis.visibility=1;
-                    this.bXaxis.visibility=1;
+                    this._bYaxis.visibility=1;
+                    this._bXaxis.visibility=1;
                 } else if((name=="ALL")) {
-                    this.bXaxis.visibility=1;
-                    this.bYaxis.visibility=1;
-                    this.bZaxis.visibility=1;
+                    this._bXaxis.visibility=1;
+                    this._bYaxis.visibility=1;
+                    this._bZaxis.visibility=1;
                 }
-                this.setEditing(true);
+                this._setEditing(true);
                 //lets find out where we are on the pickplane
-                this.pickedPlane=this.getPickPlane(this.axisPicked);
-                if(this.pickedPlane!=null) {
-                    this.prevPos=this.getPosOnPickPlane();
+                this._pickedPlane=this._getPickPlane(this._axisPicked);
+                if(this._pickedPlane!=null) {
+                    this._prevPos=this._getPosOnPickPlane();
                 } else {
-                    this.prevPos=null;
+                    this._prevPos=null;
                 }
-                window.setTimeout(((cam,can) => {return this.detachCamera(cam,can)}),0,this.mainCamera,this.canvas);
+                window.setTimeout(((cam,can) => {return this._detachCamera(cam,can)}),0,this._mainCamera,this._canvas);
             }
         }
 
-        private setEditing(editing: boolean) {
-            this.editing=editing;
+        private _setEditing(editing: boolean) {
+            this._editing=editing;
             if(editing) {
-                this.setActionType();
-                this.callActionStartListener(this.actionType);
+                this._setActionType();
+                this._callActionStartListener(this._actionType);
             } else {
-                this.callActionEndListener(this.actionType);
+                this._callActionEndListener(this._actionType);
             }
         }
 
         public isEditing(): boolean {
-            return this.editing;
+            return this._editing;
         }
 
         /**
          * no camera movement during edit
          */
-        private detachCamera(cam: Object,can: Object) {
+        private _detachCamera(cam: Object,can: Object) {
             let camera: Camera=<Camera>cam;
             let canvas: HTMLCanvasElement=<HTMLCanvasElement>can;
             camera.detachControl(canvas);
         }
 
-        private prevOverMesh: Mesh;
+        private _prevOverMesh: Mesh;
 
-        private pointerIsOver: boolean=false;
+        private _pointerIsOver: boolean=false;
 
         public isPointerOver(): boolean {
-            return this.pointerIsOver;
+            return this._pointerIsOver;
         }
-        private savedMat: Material;
-        private savedCol: Color3;
-        private onPointerOver() {
+        private _savedMat: Material;
+        private _savedCol: Color3;
+        private _onPointerOver() {
             //if(this.pDown) return;
-            let pickResult: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
-                if(this.transEnabled) {
-                    if((mesh==this.tX)||(mesh==this.tY)||(mesh==this.tZ)||(mesh==this.tXZ)||(mesh==this.tZY)||(mesh==this.tYX)||(mesh==this.tAll)) return true;
-                } else if((this.rotEnabled)) {
-                    if((mesh==this.rX)||(mesh==this.rY)||(mesh==this.rZ)||(mesh==this.rAll)) return true;
-                } else if(this.scaleEnabled) {
-                    if((mesh==this.sX)||(mesh==this.sY)||(mesh==this.sZ)||(mesh==this.sXZ)||(mesh==this.sZY)||(mesh==this.sYX)||(mesh==this.sAll)) return true;
+            let pickResult: PickingInfo=this._scene.pick(this._scene.pointerX,this._scene.pointerY,(mesh) => {
+                if(this._transEnabled) {
+                    if((mesh==this._tX)||(mesh==this._tY)||(mesh==this._tZ)||(mesh==this._tXZ)||(mesh==this._tZY)||(mesh==this._tYX)||(mesh==this._tAll)) return true;
+                } else if((this._rotEnabled)) {
+                    if((mesh==this._rX)||(mesh==this._rY)||(mesh==this._rZ)||(mesh==this._rAll)) return true;
+                } else if(this._scaleEnabled) {
+                    if((mesh==this._sX)||(mesh==this._sY)||(mesh==this._sZ)||(mesh==this._sXZ)||(mesh==this._sZY)||(mesh==this._sYX)||(mesh==this._sAll)) return true;
                 }
                 return false;
-            },null,this.mainCamera);
+            },null,this._mainCamera);
             if(pickResult.hit) {
                 //if we are still over the same axis mesh then don't do anything
-                if(<Mesh>pickResult.pickedMesh!=this.prevOverMesh) {
-                    this.pointerIsOver=true;
+                if(<Mesh>pickResult.pickedMesh!=this._prevOverMesh) {
+                    this._pointerIsOver=true;
                     //if we moved directly from one axis mesh to this then clean up the prev axis mesh
-                    this.clearPrevOverMesh();
-                    this.prevOverMesh=<Mesh>pickResult.pickedMesh;
-                    if(this.rotEnabled) {
-                        this.savedCol=(<LinesMesh>this.prevOverMesh.getChildren()[0]).color;
-                        (<LinesMesh>this.prevOverMesh.getChildren()[0]).color=Color3.White();
+                    this._clearPrevOverMesh();
+                    this._prevOverMesh=<Mesh>pickResult.pickedMesh;
+                    if(this._rotEnabled) {
+                        this._savedCol=(<LinesMesh>this._prevOverMesh.getChildren()[0]).color;
+                        (<LinesMesh>this._prevOverMesh.getChildren()[0]).color=Color3.White();
                     } else {
-                        let childs: Node[]=this.prevOverMesh.getChildren();
+                        let childs: Node[]=this._prevOverMesh.getChildren();
                         if(childs.length>0) {
-                            this.savedMat=(<Mesh>childs[0]).material;
-                            (<Mesh>childs[0]).material=this.whiteMat;
+                            this._savedMat=(<Mesh>childs[0]).material;
+                            (<Mesh>childs[0]).material=this._whiteMat;
                         } else {
-                            this.savedMat=this.prevOverMesh.material;
-                            this.prevOverMesh.material=this.whiteMat;
+                            this._savedMat=this._prevOverMesh.material;
+                            this._prevOverMesh.material=this._whiteMat;
                         }
                     }
-                    if(this.prevOverMesh.name=="X") {
-                        this.xaxis.color=Color3.White();
-                    } else if(this.prevOverMesh.name=="Y") {
-                        this.yaxis.color=Color3.White();
-                    } else if(this.prevOverMesh.name=="Z") {
-                        this.zaxis.color=Color3.White();
+                    if(this._prevOverMesh.name=="X") {
+                        this._xaxis.color=Color3.White();
+                    } else if(this._prevOverMesh.name=="Y") {
+                        this._yaxis.color=Color3.White();
+                    } else if(this._prevOverMesh.name=="Z") {
+                        this._zaxis.color=Color3.White();
                     }
                 }
             } else {
-                this.pointerIsOver=false;
-                if(this.prevOverMesh!=null) {
-                    this.restoreColor(this.prevOverMesh);
-                    this.prevOverMesh=null;
+                this._pointerIsOver=false;
+                if(this._prevOverMesh!=null) {
+                    this._restoreColor(this._prevOverMesh);
+                    this._prevOverMesh=null;
                 }
             }
         }
 
         //clean up any axis we might have been howering over before
-        private clearPrevOverMesh() {
-            if(this.prevOverMesh!=null) {
-                this.prevOverMesh.visibility=0;
-                this.restoreColor(this.prevOverMesh);
+        private _clearPrevOverMesh() {
+            if(this._prevOverMesh!=null) {
+                this._prevOverMesh.visibility=0;
+                this._restoreColor(this._prevOverMesh);
             }
         }
 
-        private restoreColor(mesh: Mesh) {
+        private _restoreColor(mesh: Mesh) {
             switch(mesh.name) {
                 case "X":
-                    this.xaxis.color=Color3.Red();
+                    this._xaxis.color=Color3.Red();
                     break;
                 case "Y":
-                    this.yaxis.color=Color3.Green();
+                    this._yaxis.color=Color3.Green();
                     break;
                 case "Z":
-                    this.zaxis.color=Color3.Blue();
+                    this._zaxis.color=Color3.Blue();
                     break;
             }
 
-            if(this.rotEnabled) {
-                (<LinesMesh>mesh.getChildren()[0]).color=this.savedCol;
+            if(this._rotEnabled) {
+                (<LinesMesh>mesh.getChildren()[0]).color=this._savedCol;
             } else {
                 let childs: Node[]=mesh.getChildren();
                 if(childs.length>0) {
-                    (<Mesh>childs[0]).material=this.savedMat;
+                    (<Mesh>childs[0]).material=this._savedMat;
                 } else {
-                    mesh.material=this.savedMat;
+                    mesh.material=this._savedMat;
                 }
             }
         }
 
-        private editing: boolean=false;
+        private _editing: boolean=false;
 
-        private onPointerUp(evt: Event) {
-            this.pDown=false;
-            if(this.editing) {
-                this.mainCamera.attachControl(this.canvas);
-                this.setEditing(false);
+        private _onPointerUp(evt: Event) {
+            this._pDown=false;
+            if(this._editing) {
+                this._mainCamera.attachControl(this._canvas);
+                this._setEditing(false);
                 //this.setAxesVisiblity(1);
-                this.hideBaxis();
-                if(this.prevOverMesh!=null) {
-                    this.restoreColor(this.prevOverMesh);
-                    this.prevOverMesh=null;
+                this._hideBaxis();
+                if(this._prevOverMesh!=null) {
+                    this._restoreColor(this._prevOverMesh);
+                    this._prevOverMesh=null;
                 }
-                this.actHist.add(this.actionType);
+                this._actHist.add(this._actionType);
             }
         }
 
-        private actionType: number;
-        private setActionType() {
-            if(this.transEnabled) {
-                this.actionType=ActionType.TRANS;
-            } else if((this.rotEnabled)) {
-                this.actionType=ActionType.ROT;
-            } else if((this.scaleEnabled)) {
-                this.actionType=ActionType.SCALE;
+        private _actionType: number;
+        private _setActionType() {
+            if(this._transEnabled) {
+                this._actionType=ActionType.TRANS;
+            } else if((this._rotEnabled)) {
+                this._actionType=ActionType.ROT;
+            } else if((this._scaleEnabled)) {
+                this._actionType=ActionType.SCALE;
             }
         }
 
-        private callActionListener(at: number) {
+        private _callActionListener(at: number) {
             //call actionListener if registered
-            if(this.actionListener!=null) {
-                //window.setTimeout(this.actionListener,0,at);
-                this.actionListener(at);
+            if(this._actionListener!=null) {
+                this._actionListener(at);
             }
 
         }
-        private callActionStartListener(at: number) {
+        private _callActionStartListener(at: number) {
             //call actionListener if registered
-            if(this.actionStartListener!=null) {
-                //                window.setTimeout(this.actionStartListener,0,at);
-                this.actionStartListener(at);
+            if(this._actionStartListener!=null) {
+                this._actionStartListener(at);
             }
 
         }
-        private callActionEndListener(at: number) {
+        private _callActionEndListener(at: number) {
             //call actionListener if registered
-            if(this.actionEndListener!=null) {
-                //                window.setTimeout(this.actionEndListener,0,at);
-                this.actionEndListener(at);
+            if(this._actionEndListener!=null) {
+                this._actionEndListener(at);
             }
 
         }
 
-        private prevPos: Vector3;
+        private _prevPos: Vector3;
 
-        private snapRX: number=0;
-        private snapRY: number=0;
-        private snapRZ: number=0;
+        private _snapRX: number=0;
+        private _snapRY: number=0;
+        private _snapRZ: number=0;
 
-        private onPointerMove(evt: Event) {
+        private _onPointerMove(evt: Event) {
 
-            if(!this.pDown) {
-                this.onPointerOver();
+            if(!this._pDown) {
+                this._onPointerOver();
                 return;
             }
-            if(!this.editing) return;
-            if(this.prevPos==null) return;
+            if(!this._editing) return;
+            if(this._prevPos==null) return;
             
-            if (this.mesh.parent != null && this.local){
+            if (this._mesh.parent != null && this._local){
                 
-                if ((<Mesh>this.mesh.parent).scaling.x != (<Mesh>this.mesh.parent).scaling.y ||
-                    (<Mesh>this.mesh.parent).scaling.y != (<Mesh>this.mesh.parent).scaling.z){
+                if ((<Mesh>this._mesh.parent).scaling.x != (<Mesh>this._mesh.parent).scaling.y ||
+                    (<Mesh>this._mesh.parent).scaling.y != (<Mesh>this._mesh.parent).scaling.z){
                     return;
                 }
             }
 
             //this.pickPlane=this.getPickPlane(this.axisPicked);
 
-            let newPos: Vector3=this.getPosOnPickPlane();
+            let newPos: Vector3=this._getPosOnPickPlane();
 
             if(newPos==null) return;
 
-            if(this.rotEnabled) {
-                this.doRotation(this.mesh,this.axisPicked,newPos,this.prevPos);
+            if(this._rotEnabled) {
+                this._doRotation(this._mesh,this._axisPicked,newPos,this._prevPos);
             } else {
-                let diff: Vector3=newPos.subtract(this.prevPos);
+                let diff: Vector3=newPos.subtract(this._prevPos);
                 if(diff.x==0&&diff.y==0&&diff.z==0) return;
-                if(this.transEnabled) {
-                    this.doTranslation(diff);
+                if(this._transEnabled) {
+                    this._doTranslation(diff);
                 } else {
-                    if(this.scaleEnabled&&this.local) this.doScaling(diff);
+                    if(this._scaleEnabled&&this._local) this._doScaling(diff);
                 }
             }
-            this.prevPos=newPos;
-            this.callActionListener(this.actionType);
+            this._prevPos=newPos;
+            this._callActionListener(this._actionType);
         }
 
 
         //rotate differently if camera is too close to the rotation plane
-        private rotate2: boolean=false;
-        private getPickPlane(axis: Mesh): Mesh {
+        private _rotate2: boolean=false;
+        private _getPickPlane(axis: Mesh): Mesh {
             let n: string=axis.name;
-            if(this.transEnabled||this.scaleEnabled) {
-                if(n=="XZ") return this.pXZ;
-                else if(n=="ZY") return this.pZY;
-                else if(n=="YX") return this.pYX;
-                else if(n=="ALL") return this.pALL;
+            if(this._transEnabled||this._scaleEnabled) {
+                if(n=="XZ") return this._pXZ;
+                else if(n=="ZY") return this._pZY;
+                else if(n=="YX") return this._pYX;
+                else if(n=="ALL") return this._pALL;
                 else {
                     //get the position of camera in the edit control frame of reference
-                    this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                    Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
-                    let c=this.ecTOcamera;
+                    this._ecRoot.getWorldMatrix().invertToRef(this._ecMatrix);
+                    Vector3.TransformCoordinatesToRef(this._mainCamera.position,this._ecMatrix,this._ecTOcamera);
+                    let c=this._ecTOcamera;
                     if(n==="X") {
                         if(Math.abs(c.y)>Math.abs(c.z)) {
-                            return this.pXZ;
-                        } else return this.pYX;
+                            return this._pXZ;
+                        } else return this._pYX;
                     } else if(n==="Z") {
                         if(Math.abs(c.y)>Math.abs(c.x)) {
-                            return this.pXZ;
-                        } else return this.pZY;
+                            return this._pXZ;
+                        } else return this._pZY;
                     } else if(n==="Y") {
                         if(Math.abs(c.z)>Math.abs(c.x)) {
-                            return this.pYX;
-                        } else return this.pZY;
+                            return this._pYX;
+                        } else return this._pZY;
                     }
                 }
-            } else if(this.rotEnabled) {
-                this.rotate2=false;
+            } else if(this._rotEnabled) {
+                this._rotate2=false;
                 //get the position of camera in the edit control frame of reference
-                this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
-                Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
-                let c=this.ecTOcamera;
+                this._ecRoot.getWorldMatrix().invertToRef(this._ecMatrix);
+                Vector3.TransformCoordinatesToRef(this._mainCamera.position,this._ecMatrix,this._ecTOcamera);
+                let c=this._ecTOcamera;
                 //if camera is too close to the rotation plane then use alternate rotation process
                 switch(n) {
                     case "X":
                         if(Math.abs(c.x)<0.2) {
-                            this.rotate2=true;
-                            return this.pALL;
-                        } else return this.pZY;
+                            this._rotate2=true;
+                            return this._pALL;
+                        } else return this._pZY;
                     case "Y":
                         if(Math.abs(c.y)<0.2) {
-                            this.rotate2=true;
-                            return this.pALL;
-                        } else return this.pXZ;
+                            this._rotate2=true;
+                            return this._pALL;
+                        } else return this._pXZ;
                     case "Z":
                         if(Math.abs(c.z)<0.2) {
-                            this.rotate2=true;
-                            return this.pALL;
-                        } else return this.pYX;
+                            this._rotate2=true;
+                            return this._pALL;
+                        } else return this._pYX;
                     default:
-                        return this.pALL;
+                        return this._pALL;
                 }
             } else return null;
         }
 
 
 
-        private transBy: Vector3=new Vector3(0,0,0);
-        private doTranslation(diff: Vector3) {
+        private _transBy: Vector3=new Vector3(0,0,0);
+        private _doTranslation(diff: Vector3) {
             
-            this.setLocalAxes(this.mesh);
+            this._setLocalAxes(this._mesh);
             
-            let n: string=this.axisPicked.name;
+            let n: string=this._axisPicked.name;
             if(n=="ALL") {
                 //TODO when translating, the orientation of pALL keeps changing
                 //TODo this is not so with rotation or scaling
                 //TODO so for translation instead of pALL maybe we should use the camera view plane for picking
-                this.transBy=diff;
+                this._transBy=diff;
             } else {
-                this.transBy.x=0; this.transBy.y=0; this.transBy.z=0;
+                this._transBy.x=0; this._transBy.y=0; this._transBy.z=0;
 
                 if((n=="X")||(n=="XZ")||(n=="YX")) {
-                    if(this.local) this.transBy.x=Vector3.Dot(diff,this.localX)/this.localX.length();
-                    else this.transBy.x=diff.x;
+                    if(this._local) this._transBy.x=Vector3.Dot(diff,this._localX)/this._localX.length();
+                    else this._transBy.x=diff.x;
                     //                    if (this.lhsRhs){
                     //                        this.transBy.x=-diff.x;
                     //                    }else{
@@ -761,55 +758,55 @@ namespace org.ssatguru.babylonjs.component {
                     //                    }
                 }
                 if((n=="Y")||(n=="ZY")||(n=="YX")) {
-                    if(this.local) this.transBy.y=Vector3.Dot(diff,this.localY)/this.localY.length();
-                    else this.transBy.y=diff.y;
+                    if(this._local) this._transBy.y=Vector3.Dot(diff,this._localY)/this._localY.length();
+                    else this._transBy.y=diff.y;
                 }
                 if((n=="Z")||(n=="XZ")||(n=="ZY")) {
-                    if(this.local) this.transBy.z=Vector3.Dot(diff,this.localZ)/this.localZ.length();
-                    else this.transBy.z=diff.z;
+                    if(this._local) this._transBy.z=Vector3.Dot(diff,this._localZ)/this._localZ.length();
+                    else this._transBy.z=diff.z;
                 }
             }
-            this.transWithSnap(this.mesh,this.transBy,this.local);
+            this._transWithSnap(this._mesh,this._transBy,this._local);
 
             // bound the translation
-            if(this.transBoundsMin) {
-                this.mesh.position.x=Math.max(this.mesh.position.x,this.transBoundsMin.x);
-                this.mesh.position.y=Math.max(this.mesh.position.y,this.transBoundsMin.y);
-                this.mesh.position.z=Math.max(this.mesh.position.z,this.transBoundsMin.z);
+            if(this._transBoundsMin) {
+                this._mesh.position.x=Math.max(this._mesh.position.x,this._transBoundsMin.x);
+                this._mesh.position.y=Math.max(this._mesh.position.y,this._transBoundsMin.y);
+                this._mesh.position.z=Math.max(this._mesh.position.z,this._transBoundsMin.z);
             }
-            if(this.transBoundsMax) {
-                this.mesh.position.x=Math.min(this.mesh.position.x,this.transBoundsMax.x);
-                this.mesh.position.y=Math.min(this.mesh.position.y,this.transBoundsMax.y);
-                this.mesh.position.z=Math.min(this.mesh.position.z,this.transBoundsMax.z);
+            if(this._transBoundsMax) {
+                this._mesh.position.x=Math.min(this._mesh.position.x,this._transBoundsMax.x);
+                this._mesh.position.y=Math.min(this._mesh.position.y,this._transBoundsMax.y);
+                this._mesh.position.z=Math.min(this._mesh.position.z,this._transBoundsMax.z);
             }
 
-            this.mesh.computeWorldMatrix(true);
+            this._mesh.computeWorldMatrix(true);
         }
 
 
 
-        private snapTV: Vector3=new Vector3(0,0,0);
-        private transWithSnap(mesh: Mesh,trans: Vector3,local: boolean) {
-            if(this.snapT) {
+        private _snapTV: Vector3=new Vector3(0,0,0);
+        private _transWithSnap(mesh: Mesh,trans: Vector3,local: boolean) {
+            if(this._snapT) {
                 let snapit: boolean=false;
-                this.snapTV.addInPlace(trans);
-                if(Math.abs(this.snapTV.x)>this.tSnap.x) {
-                    if(this.snapTV.x>0) trans.x=this.tSnap.x; else trans.x=-this.tSnap.x;
+                this._snapTV.addInPlace(trans);
+                if(Math.abs(this._snapTV.x)>this._tSnap.x) {
+                    if(this._snapTV.x>0) trans.x=this._tSnap.x; else trans.x=-this._tSnap.x;
                     snapit=true;
                 }
-                if(Math.abs(this.snapTV.y)>this.tSnap.y) {
-                    if(this.snapTV.y>0) trans.y=this.tSnap.y; else trans.y=-this.tSnap.y;
+                if(Math.abs(this._snapTV.y)>this._tSnap.y) {
+                    if(this._snapTV.y>0) trans.y=this._tSnap.y; else trans.y=-this._tSnap.y;
                     snapit=true;
                 }
-                if(Math.abs(this.snapTV.z)>this.tSnap.z) {
-                    if(this.snapTV.z>0) trans.z=this.tSnap.z; else trans.z=-this.tSnap.z;
+                if(Math.abs(this._snapTV.z)>this._tSnap.z) {
+                    if(this._snapTV.z>0) trans.z=this._tSnap.z; else trans.z=-this._tSnap.z;
                     snapit=true;
                 }
                 if(snapit) {
-                    if(Math.abs(trans.x)!==this.tSnap.x) trans.x=0;
-                    if(Math.abs(trans.y)!==this.tSnap.y) trans.y=0;
-                    if(Math.abs(trans.z)!==this.tSnap.z) trans.z=0;
-                    Vector3.FromFloatsToRef(0,0,0,this.snapTV);
+                    if(Math.abs(trans.x)!==this._tSnap.x) trans.x=0;
+                    if(Math.abs(trans.y)!==this._tSnap.y) trans.y=0;
+                    if(Math.abs(trans.z)!==this._tSnap.z) trans.z=0;
+                    Vector3.FromFloatsToRef(0,0,0,this._snapTV);
                     snapit=false;
                 } else {
                     return;
@@ -820,154 +817,149 @@ namespace org.ssatguru.babylonjs.component {
                 //locallyTranslate moves the mesh wrt the absolute location not pivotlocation :(
                 //this.mesh.locallyTranslate(trans);
                 //
-                this.localX.normalizeToRef(this.tv1);
-                this.localY.normalizeToRef(this.tv2);
-                this.localZ.normalizeToRef(this.tv3);
-                this.mesh.translate(this.tv1,trans.x,Space.WORLD);
-                this.mesh.translate(this.tv2,trans.y,Space.WORLD);
-                this.mesh.translate(this.tv3,trans.z,Space.WORLD);
+                this._localX.normalizeToRef(this._tv1);
+                this._localY.normalizeToRef(this._tv2);
+                this._localZ.normalizeToRef(this._tv3);
+                this._mesh.translate(this._tv1,trans.x,Space.WORLD);
+                this._mesh.translate(this._tv2,trans.y,Space.WORLD);
+                this._mesh.translate(this._tv3,trans.z,Space.WORLD);
 
             } else {
-                if(this.mesh.parent==null) {
-                    this.mesh.position.addInPlace(trans);
+                if(this._mesh.parent==null) {
+                    this._mesh.position.addInPlace(trans);
                 } else {
-                    this.mesh.setAbsolutePosition(trans.addInPlace(this.mesh.absolutePosition));
+                    this._mesh.setAbsolutePosition(trans.addInPlace(this._mesh.absolutePosition));
                 }
 
             }
         }
 
-        private snapS: boolean=false;
-        private snapSX: number=0;
-        private snapSY: number=0;
-        private snapSZ: number=0;
-        private snapSA: number=0;
-        private snapSV: Vector3=new Vector3(0,0,0);
-        private scaleSnap: number=0.25;
-        private scale: Vector3=new Vector3(0,0,0);
-        private doScaling(diff: Vector3) {
-            this.setLocalAxes(this.mesh);
+        private _snapS: boolean=false;
+        private _snapSV: Vector3=new Vector3(0,0,0);
+        private _scaleSnap: number=0.25;
+        private _scale: Vector3=new Vector3(0,0,0);
+        private _doScaling(diff: Vector3) {
+            this._setLocalAxes(this._mesh);
             
-            this.scale.x=0;
-            this.scale.y=0;
-            this.scale.z=0;
-            let n: string=this.axisPicked.name;
+            this._scale.x=0;
+            this._scale.y=0;
+            this._scale.z=0;
+            let n: string=this._axisPicked.name;
             if((n=="X")||(n=="XZ")||(n=="YX")) {
-                this.scale.x=Vector3.Dot(diff,this.localX)/this.localX.length();
-                if (this.mesh.scaling.x<0) this.scale.x=-this.scale.x;
+                this._scale.x=Vector3.Dot(diff,this._localX)/this._localX.length();
+                if (this._mesh.scaling.x<0) this._scale.x=-this._scale.x;
                 //if(this.lhsRhs) this.scale.x=-this.scale.x;
             }
             if((n=="Y")||(n=="ZY")||(n=="YX")) {
-                this.scale.y=Vector3.Dot(diff,this.localY)/this.localY.length();
-                if (this.mesh.scaling.y<0) this.scale.y=-this.scale.y;
+                this._scale.y=Vector3.Dot(diff,this._localY)/this._localY.length();
+                if (this._mesh.scaling.y<0) this._scale.y=-this._scale.y;
             }
             if((n=="Z")||(n=="XZ")||(n=="ZY")) {
-                this.scale.z=Vector3.Dot(diff,this.localZ)/this.localZ.length();
-                if (this.mesh.scaling.z<0) this.scale.z=-this.scale.z;
+                this._scale.z=Vector3.Dot(diff,this._localZ)/this._localZ.length();
+                if (this._mesh.scaling.z<0) this._scale.z=-this._scale.z;
             }
 
             //as the mesh becomes large reduce the amount by which we scale.
-            let bbd=this.boundingDimesion;
-            this.scale.x=this.scale.x/bbd.x;
-            this.scale.y=this.scale.y/bbd.y;
-            this.scale.z=this.scale.z/bbd.z;
+            let bbd=this._boundingDimesion;
+            this._scale.x=this._scale.x/bbd.x;
+            this._scale.y=this._scale.y/bbd.y;
+            this._scale.z=this._scale.z/bbd.z;
 
             if(n=="ALL") {
                 //project movement along camera up vector
                 //if up then scale up else scale down
-                let s: number=Vector3.Dot(diff,this.mainCamera.upVector);
+                let s: number=Vector3.Dot(diff,this._mainCamera.upVector);
                 s=s/Math.max(bbd.x,bbd.y,bbd.z);
-                if(this.lhsRhs) this.scale.copyFromFloats(s,-s,s);
-                else this.scale.copyFromFloats(s,s,s);
+                this._scale.copyFromFloats(s,s,s);
             } else {
                 let inPlane: boolean=false;
                 if(n=="XZ") {
                     inPlane=true;
-                    if(Math.abs(this.scale.x)>Math.abs(this.scale.z)) {
-                        this.scale.z=this.scale.x;
-                    } else this.scale.x=this.scale.z;
+                    if(Math.abs(this._scale.x)>Math.abs(this._scale.z)) {
+                        this._scale.z=this._scale.x;
+                    } else this._scale.x=this._scale.z;
                 } else if(n=="ZY") {
                     inPlane=true;
-                    if(Math.abs(this.scale.z)>Math.abs(this.scale.y)) {
-                        this.scale.y=this.scale.z;
-                    } else this.scale.z=this.scale.y;
+                    if(Math.abs(this._scale.z)>Math.abs(this._scale.y)) {
+                        this._scale.y=this._scale.z;
+                    } else this._scale.z=this._scale.y;
                 } else if(n=="YX") {
                     inPlane=true;
-                    if(Math.abs(this.scale.y)>Math.abs(this.scale.x)) {
-                        this.scale.x=this.scale.y;
-                    } else this.scale.y=this.scale.x;
+                    if(Math.abs(this._scale.y)>Math.abs(this._scale.x)) {
+                        this._scale.x=this._scale.y;
+                    } else this._scale.y=this._scale.x;
                 }
                 if(inPlane) {
                     //check if the mouse/pointer was moved towards camera or away from camera
                     //if towards then scale up else scale down
-                    this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
-                    let s: number=Vector3.Dot(diff,this.cameraTOec);
-                    this.scale.x=Math.abs(this.scale.x);
-                    this.scale.y=Math.abs(this.scale.y);
-                    this.scale.z=Math.abs(this.scale.z);
+                    this._ecRoot.position.subtractToRef(this._mainCamera.position,this._cameraTOec);
+                    let s: number=Vector3.Dot(diff,this._cameraTOec);
+                    this._scale.x=Math.abs(this._scale.x);
+                    this._scale.y=Math.abs(this._scale.y);
+                    this._scale.z=Math.abs(this._scale.z);
                     if(s>0) {
-                        if(this.mesh.scaling.x > 0)this.scale.x =-this.scale.x;
+                        if(this._mesh.scaling.x > 0)this._scale.x =-this._scale.x;
                         //if(this.lhsRhs) this.scale.y=Math.abs(this.scale.y);
-                        if(this.mesh.scaling.y > 0) this.scale.y=-this.scale.y;
-                        if(this.mesh.scaling.z > 0) this.scale.z=-this.scale.z;
+                        if(this._mesh.scaling.y > 0) this._scale.y=-this._scale.y;
+                        if(this._mesh.scaling.z > 0) this._scale.z=-this._scale.z;
                     } else {
                         //this.scale.x=Math.abs(this.scale.x);
                         //if(this.lhsRhs) this.scale.y=-Math.abs(this.scale.y);
                         //else this.scale.y=Math.abs(this.scale.y);
-                        if(this.mesh.scaling.x < 0) this.scale.x=-this.scale.x;
-                        if(this.mesh.scaling.y < 0) this.scale.y=-this.scale.y;
-                        if(this.mesh.scaling.z < 0) this.scale.z=-this.scale.z;
+                        if(this._mesh.scaling.x < 0) this._scale.x=-this._scale.x;
+                        if(this._mesh.scaling.y < 0) this._scale.y=-this._scale.y;
+                        if(this._mesh.scaling.z < 0) this._scale.z=-this._scale.z;
                     }
                 }
 
             }
 
-            this.scaleWithSnap(this.mesh,this.scale);
+            this._scaleWithSnap(this._mesh,this._scale);
 
             // bound the scale
-            if(this.scaleBoundsMin) {
-                this.mesh.scaling.x=Math.max(this.mesh.scaling.x,this.scaleBoundsMin.x);
-                this.mesh.scaling.y=Math.max(this.mesh.scaling.y,this.scaleBoundsMin.y);
-                this.mesh.scaling.z=Math.max(this.mesh.scaling.z,this.scaleBoundsMin.z);
+            if(this._scaleBoundsMin) {
+                this._mesh.scaling.x=Math.max(this._mesh.scaling.x,this._scaleBoundsMin.x);
+                this._mesh.scaling.y=Math.max(this._mesh.scaling.y,this._scaleBoundsMin.y);
+                this._mesh.scaling.z=Math.max(this._mesh.scaling.z,this._scaleBoundsMin.z);
             }
-            if(this.scaleBoundsMax) {
-                this.mesh.scaling.x=Math.min(this.mesh.scaling.x,this.scaleBoundsMax.x);
-                this.mesh.scaling.y=Math.min(this.mesh.scaling.y,this.scaleBoundsMax.y);
-                this.mesh.scaling.z=Math.min(this.mesh.scaling.z,this.scaleBoundsMax.z);
+            if(this._scaleBoundsMax) {
+                this._mesh.scaling.x=Math.min(this._mesh.scaling.x,this._scaleBoundsMax.x);
+                this._mesh.scaling.y=Math.min(this._mesh.scaling.y,this._scaleBoundsMax.y);
+                this._mesh.scaling.z=Math.min(this._mesh.scaling.z,this._scaleBoundsMax.z);
             }
           
         }
 
-        private scaleWithSnap(mesh: Mesh,p: Vector3) {
-            if(this.snapS) {
+        private _scaleWithSnap(mesh: Mesh,p: Vector3) {
+            if(this._snapS) {
                 let snapit: boolean=false;
-                this.snapSV.addInPlace(p);
-                if(Math.abs(this.snapSV.x)>this.scaleSnap) {
-                    if(p.x>0) p.x=this.scaleSnap; else p.x=-this.scaleSnap;
+                this._snapSV.addInPlace(p);
+                if(Math.abs(this._snapSV.x)>this._scaleSnap) {
+                    if(p.x>0) p.x=this._scaleSnap; else p.x=-this._scaleSnap;
                     snapit=true;
                 }
-                if(Math.abs(this.snapSV.y)>this.scaleSnap) {
-                    if(p.y>0) p.y=this.scaleSnap; else p.y=-this.scaleSnap;
+                if(Math.abs(this._snapSV.y)>this._scaleSnap) {
+                    if(p.y>0) p.y=this._scaleSnap; else p.y=-this._scaleSnap;
                     snapit=true;
                 }
-                if(Math.abs(this.snapSV.z)>this.scaleSnap) {
-                    if(p.z>0) p.z=this.scaleSnap; else p.z=-this.scaleSnap;
+                if(Math.abs(this._snapSV.z)>this._scaleSnap) {
+                    if(p.z>0) p.z=this._scaleSnap; else p.z=-this._scaleSnap;
                     snapit=true;
                 }
                 if(!snapit) return;
-                if((Math.abs(p.x)!==this.scaleSnap)&&(p.x!==0)) p.x=0;
-                if((Math.abs(p.y)!==this.scaleSnap)&&(p.y!==0)) p.y=0;
-                if((Math.abs(p.z)!==this.scaleSnap)&&(p.z!==0)) p.z=0;
-                Vector3.FromFloatsToRef(0,0,0,this.snapSV);
+                if((Math.abs(p.x)!==this._scaleSnap)&&(p.x!==0)) p.x=0;
+                if((Math.abs(p.y)!==this._scaleSnap)&&(p.y!==0)) p.y=0;
+                if((Math.abs(p.z)!==this._scaleSnap)&&(p.z!==0)) p.z=0;
+                Vector3.FromFloatsToRef(0,0,0,this._snapSV);
                 snapit=false;
             }
             mesh.scaling.addInPlace(p);
            
         }
         
-        private localX: Vector3=new Vector3(0,0,0);
-        private localY: Vector3=new Vector3(0,0,0);;
-        private localZ: Vector3=new Vector3(0,0,0);;
+        private _localX: Vector3=new Vector3(0,0,0);
+        private _localY: Vector3=new Vector3(0,0,0);;
+        private _localZ: Vector3=new Vector3(0,0,0);;
 
         /*
          * This would be called after rotation or scaling as the local axes direction or length might have changed
@@ -975,11 +967,11 @@ namespace org.ssatguru.babylonjs.component {
          * direction of mouse move wrt the axes
          * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
          */
-        private setLocalAxes(mesh: Mesh) {
+        private _setLocalAxes(mesh: Mesh) {
             let meshMatrix: Matrix=mesh.getWorldMatrix();
-            Vector3.FromFloatArrayToRef(meshMatrix.m,0,this.localX);
-            Vector3.FromFloatArrayToRef(meshMatrix.m,4,this.localY);
-            Vector3.FromFloatArrayToRef(meshMatrix.m,8,this.localZ);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,0,this._localX);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,4,this._localY);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,8,this._localZ);
         }
 
         /*
@@ -987,8 +979,8 @@ namespace org.ssatguru.babylonjs.component {
          * with respect to mouse movement.
          *
          */
-        private boundingDimesion: Vector3;
-        private getBoundingDimension(mesh: Mesh): Vector3 {
+        private _boundingDimesion: Vector3;
+        private _getBoundingDimension(mesh: Mesh): Vector3 {
             let bb: BoundingBox=mesh.getBoundingInfo().boundingBox;
             let bd: Vector3=bb.maximum.subtract(bb.minimum);
             if(bd.x==0) bd.x=1;
@@ -1008,109 +1000,109 @@ namespace org.ssatguru.babylonjs.component {
          *
          */
         public refreshBoundingInfo() {
-            this.boundingDimesion=this.getBoundingDimension(this.mesh);
+            this._boundingDimesion=this._getBoundingDimension(this._mesh);
         }
 
-        private eulerian: boolean=false;
-        private snapRA: number=0;
-        private doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
+        private _eulerian: boolean=false;
+        private _snapRA: number=0;
+        private _doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
             
-            this.setLocalAxes(this.mesh);
+            this._setLocalAxes(this._mesh);
             
             let angle: number=0;
 
             //rotation axis
             let rAxis: Vector3;
-            if(axis==this.rX) rAxis=this.local? this.localX:Axis.X;
-            else if(axis==this.rY) rAxis=this.local? this.localY:Axis.Y;
-            else if(axis==this.rZ) rAxis=this.local? this.localZ:Axis.Z;
-            this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
+            if(axis==this._rX) rAxis=this._local? this._localX:Axis.X;
+            else if(axis==this._rY) rAxis=this._local? this._localY:Axis.Y;
+            else if(axis==this._rZ) rAxis=this._local? this._localZ:Axis.Z;
+            this._ecRoot.position.subtractToRef(this._mainCamera.position,this._cameraTOec);
 
             /**
              * A)first find the angle and the direction (clockwise or anticlockwise) by which the user was trying to rotate
              * from the user(camera) perspective
              */
-            if(this.rotate2) {
-                angle=this.getAngle2(prevPos,newPos,this.mainCamera.position,this.cameraTOec,rAxis);
+            if(this._rotate2) {
+                angle=this._getAngle2(prevPos,newPos,this._mainCamera.position,this._cameraTOec,rAxis);
                 //TODO check why we need to handle righ hand this way
-                if (this.scene.useRightHandedSystem) angle=-angle;
+                if (this._scene.useRightHandedSystem) angle=-angle;
             } else {
-                angle=this.getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),this.cameraTOec);
+                angle=this._getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),this._cameraTOec);
             }
 
             /**
              * B)then rotate based on users(camera) postion and orientation in the local/world space
              * 
              */
-            this.cameraTOec.normalize();
-            if(axis==this.rX) {
-                if(this.snapR) {
-                    this.snapRX+=angle;
+            this._cameraTOec.normalize();
+            if(axis==this._rX) {
+                if(this._snapR) {
+                    this._snapRX+=angle;
                     angle=0;
-                    if(Math.abs(this.snapRX)>=this.rotSnap) {
-                        if((this.snapRX>0)) angle=this.rotSnap; else angle=-this.rotSnap;
-                        this.snapRX=0;
+                    if(Math.abs(this._snapRX)>=this._rotSnap) {
+                        if((this._snapRX>0)) angle=this._rotSnap; else angle=-this._rotSnap;
+                        this._snapRX=0;
                     }
                 }
                 if(angle!==0) {
-                    if(Vector3.Dot(rAxis,this.cameraTOec)>=0) angle=-1*angle;
+                    if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-1*angle;
                     mesh.rotate(rAxis,angle,Space.WORLD);
                 }
-            } else if(axis==this.rY) {
-                if(this.snapR) {
-                    this.snapRY+=angle;
+            } else if(axis==this._rY) {
+                if(this._snapR) {
+                    this._snapRY+=angle;
                     angle=0;
-                    if(Math.abs(this.snapRY)>=this.rotSnap) {
-                        if((this.snapRY>0)) angle=this.rotSnap; else angle=-this.rotSnap;
-                        this.snapRY=0;
+                    if(Math.abs(this._snapRY)>=this._rotSnap) {
+                        if((this._snapRY>0)) angle=this._rotSnap; else angle=-this._rotSnap;
+                        this._snapRY=0;
                     }
                 }
                 if(angle!==0) {
                     if(angle!==0) {
-                        if(Vector3.Dot(rAxis,this.cameraTOec)>=0) angle=-1*angle;
+                        if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-1*angle;
                         mesh.rotate(rAxis,angle,Space.WORLD);
                     }
                 }
-            } else if(axis==this.rZ) {
-                if(this.snapR) {
-                    this.snapRZ+=angle;
+            } else if(axis==this._rZ) {
+                if(this._snapR) {
+                    this._snapRZ+=angle;
                     angle=0;
-                    if(Math.abs(this.snapRZ)>=this.rotSnap) {
-                        if(this.snapRZ>0) angle=this.rotSnap; else angle=-this.rotSnap;
-                        this.snapRZ=0;
+                    if(Math.abs(this._snapRZ)>=this._rotSnap) {
+                        if(this._snapRZ>0) angle=this._rotSnap; else angle=-this._rotSnap;
+                        this._snapRZ=0;
                     }
                 }
                 if(angle!==0) {
                     if(angle!==0) {
-                        if(Vector3.Dot(rAxis,this.cameraTOec)>=0) angle=-1*angle;
+                        if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-1*angle;
                         mesh.rotate(rAxis,angle,Space.WORLD);
                     }
                 }
-            } else if(axis==this.rAll) {
-                if(this.snapR) {
-                    this.snapRA+=angle;
+            } else if(axis==this._rAll) {
+                if(this._snapR) {
+                    this._snapRA+=angle;
                     angle=0;
-                    if(Math.abs(this.snapRA)>=this.rotSnap) {
-                        if(this.snapRA>0) angle=this.rotSnap; else angle=-this.rotSnap;
-                        this.snapRA=0;
+                    if(Math.abs(this._snapRA)>=this._rotSnap) {
+                        if(this._snapRA>0) angle=this._rotSnap; else angle=-this._rotSnap;
+                        this._snapRA=0;
                     }
                 }
                 if(angle!==0) {
-                    mesh.rotate(this.cameraTOec,-angle,Space.WORLD);
+                    mesh.rotate(this._cameraTOec,-angle,Space.WORLD);
                 }
             }
             
             //if angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
-            if(this.eulerian&&angle!=0) {
+            if(this._eulerian&&angle!=0) {
                 mesh.rotation=mesh.rotationQuaternion.toEulerAngles();
                 mesh.rotationQuaternion=null;
             }
         }
 
-        private getPosOnPickPlane(): Vector3 {
-            let pickinfo: PickingInfo=this.scene.pick(this.scene.pointerX,this.scene.pointerY,(mesh) => {
-                return mesh==this.pickedPlane;
-            },null,this.mainCamera);
+        private _getPosOnPickPlane(): Vector3 {
+            let pickinfo: PickingInfo=this._scene.pick(this._scene.pointerX,this._scene.pointerY,(mesh) => {
+                return mesh==this._pickedPlane;
+            },null,this._mainCamera);
 
             if(pickinfo.hit) {
                 return pickinfo.pickedPoint;
@@ -1119,596 +1111,585 @@ namespace org.ssatguru.babylonjs.component {
             }
         }
 
-        private hideBaxis() {
-            this.bXaxis.visibility=0;
-            this.bYaxis.visibility=0;
-            this.bZaxis.visibility=0;
+        private _hideBaxis() {
+            this._bXaxis.visibility=0;
+            this._bYaxis.visibility=0;
+            this._bZaxis.visibility=0;
         }
 
-        private setAxesVisiblity(v: number) {
-            if(this.transEnabled) {
-                this.tEndX.visibility=v;
-                this.tEndY.visibility=v;
-                this.tEndZ.visibility=v;
-                this.tEndXZ.visibility=v;
-                this.tEndZY.visibility=v;
-                this.tEndYX.visibility=v;
-                this.tEndAll.visibility=v;
+        private _setAxesVisiblity(v: number) {
+            if(this._transEnabled) {
+                this._tEndX.visibility=v;
+                this._tEndY.visibility=v;
+                this._tEndZ.visibility=v;
+                this._tEndXZ.visibility=v;
+                this._tEndZY.visibility=v;
+                this._tEndYX.visibility=v;
+                this._tEndAll.visibility=v;
             }
-            if(this.rotEnabled) {
-                this.rEndX.visibility=v;
-                this.rEndY.visibility=v;
-                this.rEndZ.visibility=v;
-                this.rEndAll.visibility=v;
+            if(this._rotEnabled) {
+                this._rEndX.visibility=v;
+                this._rEndY.visibility=v;
+                this._rEndZ.visibility=v;
+                this._rEndAll.visibility=v;
             }
-            if(this.scaleEnabled) {
-                this.sEndX.visibility=v;
-                this.sEndY.visibility=v;
-                this.sEndZ.visibility=v;
-                this.sEndXZ.visibility=v;
-                this.sEndZY.visibility=v;
-                this.sEndYX.visibility=v;
-                this.sEndAll.visibility=v;
+            if(this._scaleEnabled) {
+                this._sEndX.visibility=v;
+                this._sEndY.visibility=v;
+                this._sEndZ.visibility=v;
+                this._sEndXZ.visibility=v;
+                this._sEndZY.visibility=v;
+                this._sEndYX.visibility=v;
+                this._sEndAll.visibility=v;
             }
         }
 
         public getRotationQuaternion(): Quaternion {
-            return this.ecRoot.rotationQuaternion
+            return this._ecRoot.rotationQuaternion
         }
 
         public getPosition(): Vector3 {
-            return this.ecRoot.position;
+            return this._ecRoot.position;
         }
 
-        private transEnabled: boolean=false;
+        private _transEnabled: boolean=false;
 
         public isTranslationEnabled(): boolean {
-            return this.transEnabled;
+            return this._transEnabled;
         }
 
         public enableTranslation() {
-            if((this.tX==null)) {
-                this.createTransAxes();
-                this.tCtl.parent=this.ecRoot;
+            if((this._tX==null)) {
+                this._createTransAxes();
+                this._tCtl.parent=this._ecRoot;
             }
-            this.clearPrevOverMesh();
-            if(!this.transEnabled) {
-                this.tEndX.visibility=this.visibility;
-                this.tEndY.visibility=this.visibility;
-                this.tEndZ.visibility=this.visibility;
-                this.tEndXZ.visibility=this.visibility;
-                this.tEndZY.visibility=this.visibility;
-                this.tEndYX.visibility=this.visibility;
-                this.tEndAll.visibility=this.visibility;
-                this.transEnabled=true;
+            this._clearPrevOverMesh();
+            if(!this._transEnabled) {
+                this._tEndX.visibility=this._visibility;
+                this._tEndY.visibility=this._visibility;
+                this._tEndZ.visibility=this._visibility;
+                this._tEndXZ.visibility=this._visibility;
+                this._tEndZY.visibility=this._visibility;
+                this._tEndYX.visibility=this._visibility;
+                this._tEndAll.visibility=this._visibility;
+                this._transEnabled=true;
                 this.disableRotation();
                 this.disableScaling();
             }
         }
 
         public disableTranslation() {
-            if(this.transEnabled) {
-                this.tEndX.visibility=0;
-                this.tEndY.visibility=0;
-                this.tEndZ.visibility=0;
-                this.tEndXZ.visibility=0;
-                this.tEndZY.visibility=0;
-                this.tEndYX.visibility=0;
-                this.tEndAll.visibility=0;
-                this.transEnabled=false;
+            if(this._transEnabled) {
+                this._tEndX.visibility=0;
+                this._tEndY.visibility=0;
+                this._tEndZ.visibility=0;
+                this._tEndXZ.visibility=0;
+                this._tEndZY.visibility=0;
+                this._tEndYX.visibility=0;
+                this._tEndAll.visibility=0;
+                this._transEnabled=false;
             }
         }
 
-        private rotEnabled: boolean=false;
+        private _rotEnabled: boolean=false;
 
         public isRotationEnabled(): boolean {
-            return this.rotEnabled;
+            return this._rotEnabled;
         }
 
         public returnEuler(euler: boolean) {
-            this.eulerian=euler;
+            this._eulerian=euler;
         }
 
         public enableRotation() {
             //if(this.rX==null) {
-            if(this.rCtl==null) {
-                this.createRotAxes();
-                this.rCtl.parent=this.ecRoot;
+            if(this._rCtl==null) {
+                this._createRotAxes();
+                this._rCtl.parent=this._ecRoot;
             }
-            this.clearPrevOverMesh();
-            if(!this.rotEnabled) {
-                this.rEndX.visibility=this.visibility;
-                this.rEndY.visibility=this.visibility;
-                this.rEndZ.visibility=this.visibility;
+            this._clearPrevOverMesh();
+            if(!this._rotEnabled) {
+                this._rEndX.visibility=this._visibility;
+                this._rEndY.visibility=this._visibility;
+                this._rEndZ.visibility=this._visibility;
 
-                this.rEndAll.visibility=this.visibility;
-                this.rEndAll2.visibility=this.visibility;
+                this._rEndAll.visibility=this._visibility;
+                this._rEndAll2.visibility=this._visibility;
 
-                this.rotEnabled=true;
+                this._rotEnabled=true;
                 this.disableTranslation();
                 this.disableScaling();
             }
         }
 
         public disableRotation() {
-            if(this.rotEnabled) {
-                this.rEndX.visibility=0;
-                this.rEndY.visibility=0;
-                this.rEndZ.visibility=0;
-                this.rEndAll.visibility=0;
-                this.rEndAll2.visibility=0;
-                this.rotEnabled=false;
+            if(this._rotEnabled) {
+                this._rEndX.visibility=0;
+                this._rEndY.visibility=0;
+                this._rEndZ.visibility=0;
+                this._rEndAll.visibility=0;
+                this._rEndAll2.visibility=0;
+                this._rotEnabled=false;
             }
         }
 
-        private scaleEnabled: boolean=false;
+        private _scaleEnabled: boolean=false;
 
         public isScalingEnabled(): boolean {
-            return this.scaleEnabled;
+            return this._scaleEnabled;
         }
 
         public enableScaling() {
-            if(this.sX==null) {
-                this.createScaleAxes();
-                this.sCtl.parent=this.ecRoot;
+            if(this._sX==null) {
+                this._createScaleAxes();
+                this._sCtl.parent=this._ecRoot;
             }
-            this.clearPrevOverMesh();
-            if(!this.scaleEnabled) {
-                this.sEndX.visibility=this.visibility;
-                this.sEndY.visibility=this.visibility;
-                this.sEndZ.visibility=this.visibility;
-                this.sEndXZ.visibility=this.visibility;
-                this.sEndZY.visibility=this.visibility;
-                this.sEndYX.visibility=this.visibility;
-                this.sEndAll.visibility=this.visibility;
-                this.scaleEnabled=true;
+            this._clearPrevOverMesh();
+            if(!this._scaleEnabled) {
+                this._sEndX.visibility=this._visibility;
+                this._sEndY.visibility=this._visibility;
+                this._sEndZ.visibility=this._visibility;
+                this._sEndXZ.visibility=this._visibility;
+                this._sEndZY.visibility=this._visibility;
+                this._sEndYX.visibility=this._visibility;
+                this._sEndAll.visibility=this._visibility;
+                this._scaleEnabled=true;
                 this.disableTranslation();
                 this.disableRotation();
             }
         }
 
         public disableScaling() {
-            if(this.scaleEnabled) {
-                this.sEndX.visibility=0;
-                this.sEndY.visibility=0;
-                this.sEndZ.visibility=0;
-                this.sEndXZ.visibility=0;
-                this.sEndZY.visibility=0;
-                this.sEndYX.visibility=0;
-                this.sEndAll.visibility=0;
-                this.scaleEnabled=false;
+            if(this._scaleEnabled) {
+                this._sEndX.visibility=0;
+                this._sEndY.visibility=0;
+                this._sEndZ.visibility=0;
+                this._sEndXZ.visibility=0;
+                this._sEndZY.visibility=0;
+                this._sEndYX.visibility=0;
+                this._sEndAll.visibility=0;
+                this._scaleEnabled=false;
             }
         }
 
-        private scaleBoundsMin: Vector3;
-        private scaleBoundsMax: Vector3;
+        private _scaleBoundsMin: Vector3;
+        private _scaleBoundsMax: Vector3;
 
         public setScaleBounds(min?: Vector3,max?: Vector3) {
-            this.scaleBoundsMin=min? min:null;
-            this.scaleBoundsMax=max? max:null;
-            if(this.scaleBoundsMin!=null) {
-                if(this.scaleBoundsMin.x==0) this.scaleBoundsMin.x=0.00000001;
-                if(this.scaleBoundsMin.y==0) this.scaleBoundsMin.y=0.00000001;
-                if(this.scaleBoundsMin.z==0) this.scaleBoundsMin.z=0.00000001;
+            this._scaleBoundsMin=min? min:null;
+            this._scaleBoundsMax=max? max:null;
+            if(this._scaleBoundsMin!=null) {
+                if(this._scaleBoundsMin.x==0) this._scaleBoundsMin.x=0.00000001;
+                if(this._scaleBoundsMin.y==0) this._scaleBoundsMin.y=0.00000001;
+                if(this._scaleBoundsMin.z==0) this._scaleBoundsMin.z=0.00000001;
             }
         }
 
         public removeScaleBounds() {
-            this.scaleBoundsMin=null;
-            this.scaleBoundsMax=null;
+            this._scaleBoundsMin=null;
+            this._scaleBoundsMax=null;
         }
 
 
-        private transBoundsMin: Vector3;
-        private transBoundsMax: Vector3;
+        private _transBoundsMin: Vector3;
+        private _transBoundsMax: Vector3;
 
         public setTransBounds(min?: Vector3,max?: Vector3) {
-            this.transBoundsMin=min? min:null;
-            this.transBoundsMax=max? max:null;
+            this._transBoundsMin=min? min:null;
+            this._transBoundsMax=max? max:null;
         }
 
         public removeTransBounds() {
-            this.transBoundsMin=null;
-            this.transBoundsMax=null;
+            this._transBoundsMin=null;
+            this._transBoundsMax=null;
         }
 
-        private rotBoundsMin: Vector3;
-        private rotBoundsMax: Vector3;
+        private _rotBoundsMin: Vector3;
+        private _rotBoundsMax: Vector3;
 
         public setRotBounds(min?: Vector3,max?: Vector3) {
-            this.rotBoundsMin=min? min:null;
-            this.rotBoundsMax=max? max:null;
+            this._rotBoundsMin=min? min:null;
+            this._rotBoundsMax=max? max:null;
         }
 
         public removeRotBounds() {
-            this.rotBoundsMin=null;
-            this.rotBoundsMax=null;
+            this._rotBoundsMin=null;
+            this._rotBoundsMax=null;
         }
 
-        private bXaxis: LinesMesh;
-        private bYaxis: LinesMesh;
-        private bZaxis: LinesMesh;
-        private xaxis: LinesMesh;
-        private yaxis: LinesMesh;
-        private zaxis: LinesMesh;
+        private _bXaxis: LinesMesh;
+        private _bYaxis: LinesMesh;
+        private _bZaxis: LinesMesh;
+        private _xaxis: LinesMesh;
+        private _yaxis: LinesMesh;
+        private _zaxis: LinesMesh;
 
 
         /*
          * create big and small axeses which will be shown in translate, rotate and scale mode.
          *
          */
-        private createCommonAxes(): Mesh {
+        private _createCommonAxes(): Mesh {
 
-            let guideAxes: Mesh=new Mesh("guideCtl",this.scene);
+            let guideAxes: Mesh=new Mesh("guideCtl",this._scene);
 
             //the big axes, shown when an axis is selected
-            this.bXaxis=Mesh.CreateLines("bxAxis",[new Vector3(-100,0,0),new Vector3(100,0,0)],this.scene);
-            this.bYaxis=Mesh.CreateLines("byAxis",[new Vector3(0,-100,0),new Vector3(0,100,0)],this.scene);
-            this.bZaxis=Mesh.CreateLines("bzAxis",[new Vector3(0,0,-100),new Vector3(0,0,100)],this.scene);
+            this._bXaxis=Mesh.CreateLines("bxAxis",[new Vector3(-100,0,0),new Vector3(100,0,0)],this._scene);
+            this._bYaxis=Mesh.CreateLines("byAxis",[new Vector3(0,-100,0),new Vector3(0,100,0)],this._scene);
+            this._bZaxis=Mesh.CreateLines("bzAxis",[new Vector3(0,0,-100),new Vector3(0,0,100)],this._scene);
 
             //lines are now pickable too
-            this.bXaxis.isPickable=false;
-            this.bYaxis.isPickable=false;
-            this.bZaxis.isPickable=false;
+            this._bXaxis.isPickable=false;
+            this._bYaxis.isPickable=false;
+            this._bZaxis.isPickable=false;
 
-            this.bXaxis.parent=guideAxes;
-            this.bYaxis.parent=guideAxes;
-            this.bZaxis.parent=guideAxes;
-            this.bXaxis.color=Color3.Red();
-            this.bYaxis.color=Color3.Green();
-            this.bZaxis.color=Color3.Blue();
-            this.hideBaxis();
+            this._bXaxis.parent=guideAxes;
+            this._bYaxis.parent=guideAxes;
+            this._bZaxis.parent=guideAxes;
+            this._bXaxis.color=Color3.Red();
+            this._bYaxis.color=Color3.Green();
+            this._bZaxis.color=Color3.Blue();
+            this._hideBaxis();
 
             //the small axis
-            let al: number=this.axesLen*this.axesScale*0.75;
-            if(this.lhsRhs) {
-                this.xaxis=Mesh.CreateLines("xAxis",[new Vector3(0,0,0),new Vector3(-al,0,0)],this.scene);
-            } else {
-                this.xaxis=Mesh.CreateLines("xAxis",[new Vector3(0,0,0),new Vector3(al,0,0)],this.scene);
-            }
-            this.yaxis=Mesh.CreateLines("yAxis",[new Vector3(0,0,0),new Vector3(0,al,0)],this.scene);
-            this.zaxis=Mesh.CreateLines("zAxis",[new Vector3(0,0,0),new Vector3(0,0,al)],this.scene);
+            let al: number=this._axesLen*this._axesScale*0.75;
+            this._xaxis=Mesh.CreateLines("xAxis",[new Vector3(0,0,0),new Vector3(al,0,0)],this._scene);
+            this._yaxis=Mesh.CreateLines("yAxis",[new Vector3(0,0,0),new Vector3(0,al,0)],this._scene);
+            this._zaxis=Mesh.CreateLines("zAxis",[new Vector3(0,0,0),new Vector3(0,0,al)],this._scene);
 
             //lines are now pickable too
-            this.xaxis.isPickable=false;
-            this.yaxis.isPickable=false;
-            this.zaxis.isPickable=false;
+            this._xaxis.isPickable=false;
+            this._yaxis.isPickable=false;
+            this._zaxis.isPickable=false;
 
-            this.xaxis.parent=guideAxes;
-            this.yaxis.parent=guideAxes;
-            this.zaxis.parent=guideAxes;
-            this.xaxis.color=Color3.Red();
-            this.yaxis.color=Color3.Green();
-            this.zaxis.color=Color3.Blue();
+            this._xaxis.parent=guideAxes;
+            this._yaxis.parent=guideAxes;
+            this._zaxis.parent=guideAxes;
+            this._xaxis.color=Color3.Red();
+            this._yaxis.color=Color3.Green();
+            this._zaxis.color=Color3.Blue();
 
-            this.xaxis.renderingGroupId=1;
-            this.yaxis.renderingGroupId=1;
-            this.zaxis.renderingGroupId=1;
+            this._xaxis.renderingGroupId=1;
+            this._yaxis.renderingGroupId=1;
+            this._zaxis.renderingGroupId=1;
             
              return guideAxes;
         }
         
-        private pickedPlane: Mesh;
-        private pALL: Mesh;
-        private pXZ: Mesh;
-        private pZY: Mesh;
-        private pYX: Mesh;
+        private _pickedPlane: Mesh;
+        private _pALL: Mesh;
+        private _pXZ: Mesh;
+        private _pZY: Mesh;
+        private _pYX: Mesh;
 
-        private createPickPlanes() {
-            this.pALL=Mesh.CreatePlane("pALL",5,this.scene);
-            this.pXZ=Mesh.CreatePlane("pXZ",5,this.scene);
-            this.pZY=Mesh.CreatePlane("pZY",5,this.scene);
-            this.pYX=Mesh.CreatePlane("pYX",5,this.scene);
+        private _createPickPlanes() {
+            this._pALL=Mesh.CreatePlane("pALL",5,this._scene);
+            this._pXZ=Mesh.CreatePlane("pXZ",5,this._scene);
+            this._pZY=Mesh.CreatePlane("pZY",5,this._scene);
+            this._pYX=Mesh.CreatePlane("pYX",5,this._scene);
 
-            this.pALL.isPickable=false;
-            this.pXZ.isPickable=false;
-            this.pZY.isPickable=false;
-            this.pYX.isPickable=false;
+            this._pALL.isPickable=false;
+            this._pXZ.isPickable=false;
+            this._pZY.isPickable=false;
+            this._pYX.isPickable=false;
 
-            this.pALL.visibility=0;
-            this.pXZ.visibility=0;
-            this.pZY.visibility=0;
-            this.pYX.visibility=0;
+            this._pALL.visibility=0;
+            this._pXZ.visibility=0;
+            this._pZY.visibility=0;
+            this._pYX.visibility=0;
 
-            this.pALL.renderingGroupId=1;
-            this.pXZ.renderingGroupId=1;
-            this.pZY.renderingGroupId=1;
-            this.pYX.renderingGroupId=1;
+            this._pALL.renderingGroupId=1;
+            this._pXZ.renderingGroupId=1;
+            this._pZY.renderingGroupId=1;
+            this._pYX.renderingGroupId=1;
 
-            this.pALL.lookAt(this.mainCamera.position);
-            this.pXZ.rotate(Axis.X,1.57);
-            this.pZY.rotate(Axis.Y,1.57);
+            this._pALL.lookAt(this._mainCamera.position);
+            this._pXZ.rotate(Axis.X,1.57);
+            this._pZY.rotate(Axis.Y,1.57);
 
-            let pickPlanes: Mesh=new Mesh("pickPlanes",this.scene);
-            this.pALL.parent=pickPlanes;
-            this.pXZ.parent=pickPlanes;
-            this.pZY.parent=pickPlanes;
-            this.pYX.parent=pickPlanes;
+            let pickPlanes: Mesh=new Mesh("pickPlanes",this._scene);
+            this._pALL.parent=pickPlanes;
+            this._pXZ.parent=pickPlanes;
+            this._pZY.parent=pickPlanes;
+            this._pYX.parent=pickPlanes;
 
             return pickPlanes;
 
 
         }
 
-        private tCtl: Mesh;
+        private _tCtl: Mesh;
 
-        private tX: Mesh;
-        private tY: Mesh;
-        private tZ: Mesh;
+        private _tX: Mesh;
+        private _tY: Mesh;
+        private _tZ: Mesh;
 
-        private tXZ: Mesh;
-        private tZY: Mesh;
-        private tYX: Mesh;
+        private _tXZ: Mesh;
+        private _tZY: Mesh;
+        private _tYX: Mesh;
 
-        private tAll: Mesh;
+        private _tAll: Mesh;
 
-        private tEndX: Mesh;
-        private tEndY: Mesh;
-        private tEndZ: Mesh;
-        private tEndXZ: Mesh;
-        private tEndZY: Mesh;
-        private tEndYX: Mesh;
-        private tEndAll: Mesh;
+        private _tEndX: Mesh;
+        private _tEndY: Mesh;
+        private _tEndZ: Mesh;
+        private _tEndXZ: Mesh;
+        private _tEndZY: Mesh;
+        private _tEndYX: Mesh;
+        private _tEndAll: Mesh;
 
-        private createTransAxes() {
-            let r: number=this.pickWidth*2*this.axesScale;
-            let l: number=this.axesLen*this.axesScale;
+        private _createTransAxes() {
+            let r: number=this._pickWidth*2*this._axesScale;
+            let l: number=this._axesLen*this._axesScale;
 
-            this.tCtl=new Mesh("tarnsCtl",this.scene);
+            this._tCtl=new Mesh("tarnsCtl",this._scene);
 
             //pickable invisible boxes around axes lines
-            this.tX=this.extrudeBox(r/2,l);
-            this.tX.name="X";
-            this.tY=this.tX.clone("Y");
-            this.tZ=this.tX.clone("Z");
+            this._tX=this._extrudeBox(r/2,l);
+            this._tX.name="X";
+            this._tY=this._tX.clone("Y");
+            this._tZ=this._tX.clone("Z");
 
-            this.tXZ=MeshBuilder.CreatePlane("XZ",{size: r*2},this.scene);
-            this.tZY=MeshBuilder.CreatePlane("ZY",{size: r*2},this.scene);
-            this.tYX=MeshBuilder.CreatePlane("YX",{size: r*2},this.scene);
+            this._tXZ=MeshBuilder.CreatePlane("XZ",{size: r*2},this._scene);
+            this._tZY=MeshBuilder.CreatePlane("ZY",{size: r*2},this._scene);
+            this._tYX=MeshBuilder.CreatePlane("YX",{size: r*2},this._scene);
             //this.tZY=this.tXZ.clone("ZY");
             //this.tYX=this.tXZ.clone("YX");
 
-            this.tXZ.rotation.x=1.57;
-            this.tZY.rotation.y=-1.57;
+            this._tXZ.rotation.x=1.57;
+            this._tZY.rotation.y=-1.57;
 
-            this.tXZ.position.x=r;
-            this.tXZ.position.z=r;
+            this._tXZ.position.x=r;
+            this._tXZ.position.z=r;
 
-            this.tZY.position.z=r;
-            this.tZY.position.y=r;
+            this._tZY.position.z=r;
+            this._tZY.position.y=r;
 
-            this.tYX.position.y=r;
-            this.tYX.position.x=r;
+            this._tYX.position.y=r;
+            this._tYX.position.x=r;
 
-            this.tXZ.bakeCurrentTransformIntoVertices();
-            this.tZY.bakeCurrentTransformIntoVertices();
-            this.tYX.bakeCurrentTransformIntoVertices();
+            this._tXZ.bakeCurrentTransformIntoVertices();
+            this._tZY.bakeCurrentTransformIntoVertices();
+            this._tYX.bakeCurrentTransformIntoVertices();
 
-            this.tAll=Mesh.CreateBox("ALL",r*2,this.scene);
+            this._tAll=Mesh.CreateBox("ALL",r*2,this._scene);
 
-            this.tX.parent=this.tCtl;
-            this.tY.parent=this.tCtl;
-            this.tZ.parent=this.tCtl;
-            this.tXZ.parent=this.tCtl;
-            this.tZY.parent=this.tCtl;
-            this.tYX.parent=this.tCtl;
-            this.tAll.parent=this.tCtl;
+            this._tX.parent=this._tCtl;
+            this._tY.parent=this._tCtl;
+            this._tZ.parent=this._tCtl;
+            this._tXZ.parent=this._tCtl;
+            this._tZY.parent=this._tCtl;
+            this._tYX.parent=this._tCtl;
+            this._tAll.parent=this._tCtl;
 
-            if(this.lhsRhs) {
-                this.tX.rotation.y=-1.57;
-            } else {
-                this.tX.rotation.y=1.57;
-            }
-            this.tY.rotation.x-=1.57;
-
-            this.tX.visibility=0;
-            this.tY.visibility=0;
-            this.tZ.visibility=0;
-            this.tXZ.visibility=0;
-            this.tZY.visibility=0;
-            this.tYX.visibility=0;
-            this.tAll.visibility=0;
+            this._tX.rotation.y=1.57;
+            this._tY.rotation.x-=1.57;
+            
+            this._tX.visibility=0;
+            this._tY.visibility=0;
+            this._tZ.visibility=0;
+            this._tXZ.visibility=0;
+            this._tZY.visibility=0;
+            this._tYX.visibility=0;
+            this._tAll.visibility=0;
 
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function
-            this.tX.isPickable=false;
-            this.tY.isPickable=false;
-            this.tZ.isPickable=false;
-            this.tXZ.isPickable=false;
-            this.tZY.isPickable=false;
-            this.tYX.isPickable=false;
-            this.tAll.isPickable=false;
+            this._tX.isPickable=false;
+            this._tY.isPickable=false;
+            this._tZ.isPickable=false;
+            this._tXZ.isPickable=false;
+            this._tZY.isPickable=false;
+            this._tYX.isPickable=false;
+            this._tAll.isPickable=false;
 
             //non pickable but visible cones at end of axes lines
             //cone length
             let cl: number=l/5;
             //cone base radius
             let cr: number=r;
-            this.tEndX=Mesh.CreateCylinder("tEndX",cl,0,cr,6,1,this.scene);
-            this.tEndY=this.tEndX.clone("tEndY");
-            this.tEndZ=this.tEndX.clone("tEndZ");
+            this._tEndX=Mesh.CreateCylinder("tEndX",cl,0,cr,6,1,this._scene);
+            this._tEndY=this._tEndX.clone("tEndY");
+            this._tEndZ=this._tEndX.clone("tEndZ");
 
-            this.tEndXZ=this.createTriangle("XZ",cr*1.75,this.scene);
-            this.tEndZY=this.tEndXZ.clone("ZY");
-            this.tEndYX=this.tEndXZ.clone("YX");
+            this._tEndXZ=this._createTriangle("XZ",cr*1.75,this._scene);
+            this._tEndZY=this._tEndXZ.clone("ZY");
+            this._tEndYX=this._tEndXZ.clone("YX");
 
-            this.tEndAll=MeshBuilder.CreatePolyhedron("tEndAll",{type: 1,size: cr/2},this.scene);
+            this._tEndAll=MeshBuilder.CreatePolyhedron("tEndAll",{type: 1,size: cr/2},this._scene);
 
-            this.tEndX.rotation.x=1.57;
-            this.tEndY.rotation.x=1.57;
-            this.tEndZ.rotation.x=1.57;
-            //            this.tEndXZ.rotation.x=-1.57;
-            //            this.tEndZY.rotation.x=-1.57;
-            //            this.tEndYX.rotation.x=-1.57;
-            //            
-            this.tEndZY.rotation.z=1.57;
-            this.tEndYX.rotation.x=-1.57;
+            this._tEndX.rotation.x=1.57;
+            this._tEndY.rotation.x=1.57;
+            this._tEndZ.rotation.x=1.57;
 
-            this.tEndXZ.position.x=r;
-            this.tEndXZ.position.z=r;
+            this._tEndZY.rotation.z=1.57;
+            this._tEndYX.rotation.x=-1.57;
 
-            this.tEndZY.position.z=r;
-            this.tEndZY.position.y=r;
+            this._tEndXZ.position.x=r;
+            this._tEndXZ.position.z=r;
 
-            this.tEndYX.position.y=r;
-            this.tEndYX.position.x=r;
+            this._tEndZY.position.z=r;
+            this._tEndZY.position.y=r;
 
-            this.tEndX.parent=this.tX;
-            this.tEndY.parent=this.tY;
-            this.tEndZ.parent=this.tZ;
-            this.tEndXZ.parent=this.tXZ;
-            this.tEndZY.parent=this.tZY;
-            this.tEndYX.parent=this.tYX;
-            this.tEndAll.parent=this.tAll;
+            this._tEndYX.position.y=r;
+            this._tEndYX.position.x=r;
 
-            this.tEndX.position.z=l-cl/2;
-            this.tEndY.position.z=l-cl/2;
-            this.tEndZ.position.z=l-cl/2;
+            this._tEndX.parent=this._tX;
+            this._tEndY.parent=this._tY;
+            this._tEndZ.parent=this._tZ;
+            this._tEndXZ.parent=this._tXZ;
+            this._tEndZY.parent=this._tZY;
+            this._tEndYX.parent=this._tYX;
+            this._tEndAll.parent=this._tAll;
 
-            this.tEndX.material=this.redMat;
-            this.tEndY.material=this.greenMat;
-            this.tEndZ.material=this.blueMat;
-            this.tEndXZ.material=this.greenMat;
-            this.tEndZY.material=this.redMat;
-            this.tEndYX.material=this.blueMat;
-            this.tEndAll.material=this.yellowMat;
+            this._tEndX.position.z=l-cl/2;
+            this._tEndY.position.z=l-cl/2;
+            this._tEndZ.position.z=l-cl/2;
 
-            this.tEndX.renderingGroupId=2;
-            this.tEndY.renderingGroupId=2;
-            this.tEndZ.renderingGroupId=2;
-            this.tEndXZ.renderingGroupId=2;
-            this.tEndZY.renderingGroupId=2;
-            this.tEndYX.renderingGroupId=2;
-            this.tEndAll.renderingGroupId=2;
+            this._tEndX.material=this._redMat;
+            this._tEndY.material=this._greenMat;
+            this._tEndZ.material=this._blueMat;
+            this._tEndXZ.material=this._greenMat;
+            this._tEndZY.material=this._redMat;
+            this._tEndYX.material=this._blueMat;
+            this._tEndAll.material=this._yellowMat;
 
-            this.tEndX.isPickable=false;
-            this.tEndY.isPickable=false;
-            this.tEndZ.isPickable=false;
-            this.tEndXZ.isPickable=false;
-            this.tEndZY.isPickable=false;
-            this.tEndYX.isPickable=false;
-            this.tEndAll.isPickable=false;
+            this._tEndX.renderingGroupId=2;
+            this._tEndY.renderingGroupId=2;
+            this._tEndZ.renderingGroupId=2;
+            this._tEndXZ.renderingGroupId=2;
+            this._tEndZY.renderingGroupId=2;
+            this._tEndYX.renderingGroupId=2;
+            this._tEndAll.renderingGroupId=2;
+
+            this._tEndX.isPickable=false;
+            this._tEndY.isPickable=false;
+            this._tEndZ.isPickable=false;
+            this._tEndXZ.isPickable=false;
+            this._tEndZY.isPickable=false;
+            this._tEndYX.isPickable=false;
+            this._tEndAll.isPickable=false;
         }
 
-        private createTriangle(name: string,w: number,scene: Scene) {
+        private _createTriangle(name: string,w: number,scene: Scene) {
             let p: Path2=new Path2(w/2,-w/2).addLineTo(w/2,w/2).addLineTo(-w/2,w/2).addLineTo(w/2,-w/2);
             let s=new BABYLON.PolygonMeshBuilder(name,p,scene)
             let t=s.build();
             return t;
         }
 
-        private rCtl: Mesh;
+        private _rCtl: Mesh;
 
-        private rX: Mesh;
-        private rY: Mesh;
-        private rZ: Mesh;
-        private rAll: Mesh;
+        private _rX: Mesh;
+        private _rY: Mesh;
+        private _rZ: Mesh;
+        private _rAll: Mesh;
 
-        private rEndX: LinesMesh;
-        private rEndY: LinesMesh;
-        private rEndZ: LinesMesh;
-        private rEndAll: LinesMesh;
-        private rEndAll2: LinesMesh;
+        private _rEndX: LinesMesh;
+        private _rEndY: LinesMesh;
+        private _rEndZ: LinesMesh;
+        private _rEndAll: LinesMesh;
+        private _rEndAll2: LinesMesh;
 
-        private guideSize: number=180;
+        private _guideSize: number=180;
 
         public setRotGuideFull(y: boolean) {
-            if(y) this.guideSize=360;
-            else this.guideSize=180;
-            if(this.rCtl!=null) {
-                this.rCtl.dispose();
-                this.rAll.dispose();
-                this.rCtl=null;
+            if(y) this._guideSize=360;
+            else this._guideSize=180;
+            if(this._rCtl!=null) {
+                this._rCtl.dispose();
+                this._rAll.dispose();
+                this._rCtl=null;
                 this.enableRotation();
             }
         }
 
-        private createRotAxes() {
-            let d: number=this.axesLen*this.axesScale*2;
-            this.rCtl=new Mesh("rotCtl",this.scene);
+        private _createRotAxes() {
+            let d: number=this._axesLen*this._axesScale*2;
+            this._rCtl=new Mesh("rotCtl",this._scene);
 
             //pickable invisible torus around the rotation circles
-            this.rX=this.createTube(d/2,this.guideSize);
-            this.rX.name="X";
+            this._rX=this._createTube(d/2,this._guideSize);
+            this._rX.name="X";
 
-            this.rY=this.createTube(d/2,this.guideSize);
-            this.rY.name="Y";
+            this._rY=this._createTube(d/2,this._guideSize);
+            this._rY.name="Y";
 
-            this.rZ=this.createTube(d/2,this.guideSize);
-            this.rZ.name="Z";
+            this._rZ=this._createTube(d/2,this._guideSize);
+            this._rZ.name="Z";
 
-            this.rAll=this.createTube(d/1.75,360);
-            this.rAll.name="ALL";
+            this._rAll=this._createTube(d/1.75,360);
+            this._rAll.name="ALL";
 
-            this.rX.rotation.z=1.57;
-            this.rZ.rotation.x=-1.57;
-            this.rX.bakeCurrentTransformIntoVertices();
-            this.rZ.bakeCurrentTransformIntoVertices();
+            this._rX.rotation.z=1.57;
+            this._rZ.rotation.x=-1.57;
+            this._rX.bakeCurrentTransformIntoVertices();
+            this._rZ.bakeCurrentTransformIntoVertices();
 
-            this.rAll.rotation.x=1.57;
+            this._rAll.rotation.x=1.57;
 
-            this.rX.parent=this.rCtl;
-            this.rY.parent=this.rCtl;
-            this.rZ.parent=this.rCtl;
-            this.rAll.parent=this.pALL;
+            this._rX.parent=this._rCtl;
+            this._rY.parent=this._rCtl;
+            this._rZ.parent=this._rCtl;
+            this._rAll.parent=this._pALL;
 
-            this.rX.visibility=0;
-            this.rY.visibility=0;
-            this.rZ.visibility=0;
-            this.rAll.visibility=0;
+            this._rX.visibility=0;
+            this._rY.visibility=0;
+            this._rZ.visibility=0;
+            this._rAll.visibility=0;
 
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function
-            this.rX.isPickable=false;
-            this.rY.isPickable=false;
-            this.rZ.isPickable=false;
-            this.rAll.isPickable=false;
+            this._rX.isPickable=false;
+            this._rY.isPickable=false;
+            this._rZ.isPickable=false;
+            this._rAll.isPickable=false;
 
             //non pickable but visible circles
             let cl: number=d;
-            this.rEndX=this.createCircle(cl/2,this.guideSize,false);
-            this.rEndY=this.rEndX.clone("");
-            this.rEndZ=this.rEndX.clone("");
-            this.rEndAll=this.createCircle(cl/1.75,360,false);
-            this.rEndAll2=this.createCircle(cl/2,360,false);
+            this._rEndX=this._createCircle(cl/2,this._guideSize,false);
+            this._rEndY=this._rEndX.clone("");
+            this._rEndZ=this._rEndX.clone("");
+            this._rEndAll=this._createCircle(cl/1.75,360,false);
+            this._rEndAll2=this._createCircle(cl/2,360,false);
 
-            this.rEndX.parent=this.rX;
-            this.rEndY.parent=this.rY;
-            this.rEndZ.parent=this.rZ;
+            this._rEndX.parent=this._rX;
+            this._rEndY.parent=this._rY;
+            this._rEndZ.parent=this._rZ;
 
-            this.rEndX.rotation.z=1.57;
-            this.rEndZ.rotation.x=-1.57;
+            this._rEndX.rotation.z=1.57;
+            this._rEndZ.rotation.x=-1.57;
 
-            this.rEndAll.parent=this.rAll;
-            this.rEndAll2.parent=this.rAll;
+            this._rEndAll.parent=this._rAll;
+            this._rEndAll2.parent=this._rAll;
 
 
-            this.rEndX.color=Color3.Red();
-            this.rEndY.color=Color3.Green();
-            this.rEndZ.color=Color3.Blue();
-            this.rEndAll.color=Color3.Yellow();
-            this.rEndAll2.color=Color3.Gray();
+            this._rEndX.color=Color3.Red();
+            this._rEndY.color=Color3.Green();
+            this._rEndZ.color=Color3.Blue();
+            this._rEndAll.color=Color3.Yellow();
+            this._rEndAll2.color=Color3.Gray();
 
-            this.rEndX.renderingGroupId=2;
-            this.rEndY.renderingGroupId=2;
-            this.rEndZ.renderingGroupId=2;
-            this.rEndAll.renderingGroupId=2;
-            this.rEndAll2.renderingGroupId=2;
+            this._rEndX.renderingGroupId=2;
+            this._rEndY.renderingGroupId=2;
+            this._rEndZ.renderingGroupId=2;
+            this._rEndAll.renderingGroupId=2;
+            this._rEndAll2.renderingGroupId=2;
 
-            this.rEndX.isPickable=false;
-            this.rEndY.isPickable=false;
-            this.rEndZ.isPickable=false;
-            this.rEndAll.isPickable=false;
+            this._rEndX.isPickable=false;
+            this._rEndY.isPickable=false;
+            this._rEndZ.isPickable=false;
+            this._rEndAll.isPickable=false;
         }
 
-        private extrudeBox(w: number,l: number): Mesh {
+        private _extrudeBox(w: number,l: number): Mesh {
             let shape: Vector3[]=[new Vector3(w,w,0),new Vector3(-w,w,0),new Vector3(-w,-w,0),new Vector3(w,-w,0),new Vector3(w,w,0)];
             let path: Vector3[]=[new Vector3(0,0,0),new Vector3(0,0,l)];
-            let box: Mesh=Mesh.ExtrudeShape("",shape,path,1,0,2,this.scene);
+            let box: Mesh=Mesh.ExtrudeShape("",shape,path,1,0,2,this._scene);
             return box;
         }
 
-        private createCircle(r: number,t: number,double: boolean): LinesMesh {
+        private _createCircle(r: number,t: number,double: boolean): LinesMesh {
             if(t===null) t=360;
             let points: Vector3[]=[];
             let x: number;
@@ -1730,11 +1711,11 @@ namespace org.ssatguru.babylonjs.component {
                     p++;
                 }
             }
-            let circle: LinesMesh=Mesh.CreateLines("",points,this.scene);
+            let circle: LinesMesh=Mesh.CreateLines("",points,this._scene);
             return circle;
         }
 
-        private createTube(r: number,t?: number): Mesh {
+        private _createTube(r: number,t?: number): Mesh {
             if(t===null) t=360;
             let points: Vector3[]=[];
             let x: number;
@@ -1747,160 +1728,153 @@ namespace org.ssatguru.babylonjs.component {
                 points[p]=new Vector3(x,0,z);
                 p++;
             }
-            let tube: Mesh=Mesh.CreateTube("",points,this.pickWidth*this.axesScale*2,3,null,BABYLON.Mesh.NO_CAP,this.scene);
+            let tube: Mesh=Mesh.CreateTube("",points,this._pickWidth*this._axesScale*2,3,null,BABYLON.Mesh.NO_CAP,this._scene);
             return tube;
         }
 
 
-        private sCtl: Mesh;
-        private sX: Mesh;
-        private sY: Mesh;
-        private sZ: Mesh;
-        private sXZ: Mesh;
-        private sZY: Mesh;
-        private sYX: Mesh;
-        private sAll: Mesh;
+        private _sCtl: Mesh;
+        private _sX: Mesh;
+        private _sY: Mesh;
+        private _sZ: Mesh;
+        private _sXZ: Mesh;
+        private _sZY: Mesh;
+        private _sYX: Mesh;
+        private _sAll: Mesh;
 
-        private sEndX: Mesh;
-        private sEndY: Mesh;
-        private sEndZ: Mesh;
-        private sEndXZ: Mesh;
-        private sEndZY: Mesh;
-        private sEndYX: Mesh;
-        private sEndAll: Mesh;
+        private _sEndX: Mesh;
+        private _sEndY: Mesh;
+        private _sEndZ: Mesh;
+        private _sEndXZ: Mesh;
+        private _sEndZY: Mesh;
+        private _sEndYX: Mesh;
+        private _sEndAll: Mesh;
 
 
-        private createScaleAxes() {
-            let r: number=this.pickWidth*2*this.axesScale;
-            let l: number=this.axesLen*this.axesScale;
+        private _createScaleAxes() {
+            let r: number=this._pickWidth*2*this._axesScale;
+            let l: number=this._axesLen*this._axesScale;
 
-            this.sCtl=new Mesh("sCtl",this.scene);
+            this._sCtl=new Mesh("sCtl",this._scene);
 
             //pickable , invisible part
-            this.sX=this.extrudeBox(r/2,l);
-            this.sX.name="X";
-            this.sY=this.sX.clone("Y");
-            this.sZ=this.sX.clone("Z");
+            this._sX=this._extrudeBox(r/2,l);
+            this._sX.name="X";
+            this._sY=this._sX.clone("Y");
+            this._sZ=this._sX.clone("Z");
 
-            this.sXZ=MeshBuilder.CreatePlane("XZ",{size: r*2},this.scene);
-            this.sZY=MeshBuilder.CreatePlane("ZY",{size: r*2},this.scene);
-            this.sYX=MeshBuilder.CreatePlane("YX",{size: r*2},this.scene);
+            this._sXZ=MeshBuilder.CreatePlane("XZ",{size: r*2},this._scene);
+            this._sZY=MeshBuilder.CreatePlane("ZY",{size: r*2},this._scene);
+            this._sYX=MeshBuilder.CreatePlane("YX",{size: r*2},this._scene);
             //this.sZY=this.sXZ.clone("ZY");
             //this.sYX=this.sXZ.clone("YX");
 
-            this.sXZ.rotation.x=1.57;
-            this.sZY.rotation.y=-1.57;
+            this._sXZ.rotation.x=1.57;
+            this._sZY.rotation.y=-1.57;
 
-            this.sXZ.position.x=r;
-            this.sXZ.position.z=r;
+            this._sXZ.position.x=r;
+            this._sXZ.position.z=r;
 
-            this.sZY.position.z=r;
-            this.sZY.position.y=r;
+            this._sZY.position.z=r;
+            this._sZY.position.y=r;
 
-            this.sYX.position.y=r;
-            this.sYX.position.x=r;
+            this._sYX.position.y=r;
+            this._sYX.position.x=r;
 
-            this.sXZ.bakeCurrentTransformIntoVertices();
-            this.sZY.bakeCurrentTransformIntoVertices();
-            this.sYX.bakeCurrentTransformIntoVertices();
+            this._sXZ.bakeCurrentTransformIntoVertices();
+            this._sZY.bakeCurrentTransformIntoVertices();
+            this._sYX.bakeCurrentTransformIntoVertices();
 
-            this.sAll=Mesh.CreateBox("ALL",r*2,this.scene);
+            this._sAll=Mesh.CreateBox("ALL",r*2,this._scene);
 
-            this.sX.parent=this.sCtl;
-            this.sY.parent=this.sCtl;
-            this.sZ.parent=this.sCtl;
-            this.sAll.parent=this.sCtl;
-            this.sXZ.parent=this.sCtl;
-            this.sZY.parent=this.sCtl;
-            this.sYX.parent=this.sCtl;
+            this._sX.parent=this._sCtl;
+            this._sY.parent=this._sCtl;
+            this._sZ.parent=this._sCtl;
+            this._sAll.parent=this._sCtl;
+            this._sXZ.parent=this._sCtl;
+            this._sZY.parent=this._sCtl;
+            this._sYX.parent=this._sCtl;
 
-            if(this.lhsRhs) {
-                this.sX.rotation.y=-1.57;
-            } else {
-                this.sX.rotation.y=1.57;
-            }
-            this.sY.rotation.x-=1.57;
-            this.sX.visibility=0;
-            this.sY.visibility=0;
-            this.sZ.visibility=0;
-            this.sXZ.visibility=0;
-            this.sZY.visibility=0;
-            this.sYX.visibility=0;
-            this.sAll.visibility=0;
+            this._sX.rotation.y=1.57;
+            this._sY.rotation.x-=1.57;
+            
+            this._sX.visibility=0;
+            this._sY.visibility=0;
+            this._sZ.visibility=0;
+            this._sXZ.visibility=0;
+            this._sZY.visibility=0;
+            this._sYX.visibility=0;
+            this._sAll.visibility=0;
 
             //do not want clients picking this
             //we will pick using mesh filter in scene.pick function
-            this.sX.isPickable=false;
-            this.sY.isPickable=false;
-            this.sZ.isPickable=false;
-            this.sXZ.isPickable=false;
-            this.sZY.isPickable=false;
-            this.sYX.isPickable=false;
-            this.sAll.isPickable=false;
+            this._sX.isPickable=false;
+            this._sY.isPickable=false;
+            this._sZ.isPickable=false;
+            this._sXZ.isPickable=false;
+            this._sZY.isPickable=false;
+            this._sYX.isPickable=false;
+            this._sAll.isPickable=false;
 
             //non pickable visible boxes at end of axes
             let cr: number=r;
-            this.sEndX=Mesh.CreateBox("",cr,this.scene);
-            this.sEndY=this.sEndX.clone("");
-            this.sEndZ=this.sEndX.clone("");
+            this._sEndX=Mesh.CreateBox("",cr,this._scene);
+            this._sEndY=this._sEndX.clone("");
+            this._sEndZ=this._sEndX.clone("");
 
-            this.sEndXZ=this.createTriangle("XZ",cr*1.75,this.scene);
-            this.sEndZY=this.sEndXZ.clone("ZY");
-            this.sEndYX=this.sEndXZ.clone("YX");
+            this._sEndXZ=this._createTriangle("XZ",cr*1.75,this._scene);
+            this._sEndZY=this._sEndXZ.clone("ZY");
+            this._sEndYX=this._sEndXZ.clone("YX");
 
-            this.sEndAll=MeshBuilder.CreatePolyhedron("sEndAll",{type: 1,size: cr/2},this.scene);
+            this._sEndAll=MeshBuilder.CreatePolyhedron("sEndAll",{type: 1,size: cr/2},this._scene);
 
-            //            this.sEndXZ.rotati            on.x=-1.57;
-            //            this.sEndZY.rotati            on.x=-1.57;
-            //            this.sEndYX.rotation.x=-1.57;
+            this._sEndZY.rotation.z=1.57;
+            this._sEndYX.rotation.x=-1.57;
 
-            this.sEndZY.rotation.z=1.57;
-            this.sEndYX.rotation.x=-1.57;
+            this._sEndXZ.position.x=r;
+            this._sEndXZ.position.z=r;
 
-            this.sEndXZ.position.x=r;
-            this.sEndXZ.position.z=r;
+            this._sEndZY.position.z=r;
+            this._sEndZY.position.y=r;
 
-            this.sEndZY.position.z=r;
-            this.sEndZY.position.y=r;
+            this._sEndYX.position.y=r;
+            this._sEndYX.position.x=r;
 
-            this.sEndYX.position.y=r;
-            this.sEndYX.position.x=r;
+            this._sEndX.parent=this._sX;
+            this._sEndY.parent=this._sY;
+            this._sEndZ.parent=this._sZ;
+            this._sEndXZ.parent=this._sXZ;
+            this._sEndZY.parent=this._sZY;
+            this._sEndYX.parent=this._sYX;
+            this._sEndAll.parent=this._sAll;
 
-            this.sEndX.parent=this.sX;
-            this.sEndY.parent=this.sY;
-            this.sEndZ.parent=this.sZ;
-            this.sEndXZ.parent=this.sXZ;
-            this.sEndZY.parent=this.sZY;
-            this.sEndYX.parent=this.sYX;
-            this.sEndAll.parent=this.sAll;
+            this._sEndX.position.z=l-cr/2;
+            this._sEndY.position.z=l-cr/2;
+            this._sEndZ.position.z=l-cr/2;
 
-            this.sEndX.position.z=l-cr/2;
-            this.sEndY.position.z=l-cr/2;
-            this.sEndZ.position.z=l-cr/2;
+            this._sEndX.material=this._redMat;
+            this._sEndY.material=this._greenMat;
+            this._sEndZ.material=this._blueMat;
+            this._sEndXZ.material=this._greenMat;
+            this._sEndZY.material=this._redMat;
+            this._sEndYX.material=this._blueMat;
+            this._sEndAll.material=this._yellowMat;
 
-            this.sEndX.material=this.redMat;
-            this.sEndY.material=this.greenMat;
-            this.sEndZ.material=this.blueMat;
-            this.sEndXZ.material=this.greenMat;
-            this.sEndZY.material=this.redMat;
-            this.sEndYX.material=this.blueMat;
-            this.sEndAll.material=this.yellowMat;
+            this._sEndX.renderingGroupId=2;
+            this._sEndY.renderingGroupId=2;
+            this._sEndZ.renderingGroupId=2;
+            this._sEndXZ.renderingGroupId=2;
+            this._sEndZY.renderingGroupId=2;
+            this._sEndYX.renderingGroupId=2;
+            this._sEndAll.renderingGroupId=2;
 
-            this.sEndX.renderingGroupId=2;
-            this.sEndY.renderingGroupId=2;
-            this.sEndZ.renderingGroupId=2;
-            this.sEndXZ.renderingGroupId=2;
-            this.sEndZY.renderingGroupId=2;
-            this.sEndYX.renderingGroupId=2;
-            this.sEndAll.renderingGroupId=2;
-
-            this.sEndX.isPickable=false;
-            this.sEndY.isPickable=false;
-            this.sEndZ.isPickable=false;
-            this.sEndXZ.isPickable=false;
-            this.sEndZY.isPickable=false;
-            this.sEndYX.isPickable=false;
-            this.sEndAll.isPickable=false;
+            this._sEndX.isPickable=false;
+            this._sEndY.isPickable=false;
+            this._sEndZ.isPickable=false;
+            this._sEndXZ.isPickable=false;
+            this._sEndZY.isPickable=false;
+            this._sEndYX.isPickable=false;
+            this._sEndAll.isPickable=false;
         }
 
         
@@ -1913,10 +1887,10 @@ namespace org.ssatguru.babylonjs.component {
          * thus Cross product of X and Y should be inverse of Z.
          * 
          */
-        private check_LHS_RHS(mesh: Mesh) {
-            let actualZ=Vector3.Cross(this.localX,this.localY);
+        private _check_LHS_RHS(mesh: Mesh) {
+            let actualZ=Vector3.Cross(this._localX,this._localY);
             //same direction or opposite direction of Z
-            if(Vector3.Dot(actualZ,this.localZ)<0) return true;
+            if(Vector3.Dot(actualZ,this._localZ)<0) return true;
             else return false;
         }
 
@@ -1928,68 +1902,68 @@ namespace org.ssatguru.babylonjs.component {
          * default is 0.75
          */
         public setVisibility(v: number) {
-            this.visibility=v;
+            this._visibility=v;
         }
         public setLocal(l: boolean) {
-            if(this.local==l) return;
-            this.local=l;
+            if(this._local==l) return;
+            this._local=l;
             if(!l) {
-                this.ecRoot.rotationQuaternion=Quaternion.Identity();
+                this._ecRoot.rotationQuaternion=Quaternion.Identity();
             }
         }
 
         public isLocal(): boolean {
-            return this.local;
+            return this._local;
         }
 
         public setTransSnap(s: boolean) {
-            this.snapT=s;
+            this._snapT=s;
         }
 
         public setRotSnap(s: boolean) {
-            this.snapR=s;
+            this._snapR=s;
         }
 
         public setScaleSnap(s: boolean) {
-            this.snapS=s;
+            this._snapS=s;
         }
 
-        private tSnap: Vector3=new Vector3(this.transSnap,this.transSnap,this.transSnap);
+        private _tSnap: Vector3=new Vector3(this._transSnap,this._transSnap,this._transSnap);
         public setTransSnapValue(t: number) {
-            this.tSnap.copyFromFloats(t,t,t);
-            this.transSnap=t;
+            this._tSnap.copyFromFloats(t,t,t);
+            this._transSnap=t;
         }
 
         public setRotSnapValue(r: number) {
-            this.rotSnap=r;
+            this._rotSnap=r;
         }
 
         /**
          * use this to set the scale snap value
          */
         public setScaleSnapValue(r: number) {
-            this.scaleSnap=r;
+            this._scaleSnap=r;
         }
 
         //few temp vectors & matrix
-        tv1: Vector3=new Vector3(0,0,0);
-        tv2: Vector3=new Vector3(0,0,0);
-        tv3: Vector3=new Vector3(0,0,0);
-        tm: Matrix=new Matrix();
-        private getAngle2(p1: Vector3,p2: Vector3,cameraPos: Vector3,c2ec: Vector3,mN: Vector3): number {
+        private _tv1: Vector3=new Vector3(0,0,0);
+        private _tv2: Vector3=new Vector3(0,0,0);
+        private _tv3: Vector3=new Vector3(0,0,0);
+        private _tm: Matrix=new Matrix();
+        private _getAngle2(p1: Vector3,p2: Vector3,cameraPos: Vector3,c2ec: Vector3,mN: Vector3): number {
             /**
              * A) find out if the camera is above , below, left, right of the rotation plane
              */
             //project "camera to ec" vector onto mesh normal to get distance to rotation plane
             let d: number=Vector3.Dot(c2ec,mN);
             //scale mesh normal by above ammount to get vector to rotation plane
-            mN.scaleToRef(d,this.tv1);
+            mN.scaleToRef(d,this._tv1);
             //get the point of intersection of vector from camera perpendicular to rotation plane
-            cameraPos.addToRef(this.tv1,this.tv2);
-            let i: Vector3=this.tv2;//save some typing
+            cameraPos.addToRef(this._tv1,this._tv2);
+            let i: Vector3=this._tv2;//save some typing
             //find the co-ordinate of this point in the cameras frame of reference
-            this.mainCamera.getWorldMatrix().invertToRef(this.tm);
-            Vector3.TransformCoordinatesToRef(this.tv2,this.tm,this.tv2);
+            this._mainCamera.getWorldMatrix().invertToRef(this._tm);
+            Vector3.TransformCoordinatesToRef(this._tv2,this._tm,this._tv2);
             //find in which quadarant the point (and thus the rotation plane) is in the camera xy plane
             let q: number=0; //(1=x y,2=-x y,3=-x -y,4=x -y)
             if(i.x>=0&&i.y>=0) q=1;
@@ -2002,10 +1976,10 @@ namespace org.ssatguru.babylonjs.component {
              */
 
             //find movement vector in camera frame of reference
-            Vector3.TransformCoordinatesToRef(p1,this.tm,this.tv1);
-            Vector3.TransformCoordinatesToRef(p2,this.tm,this.tv2);
-            this.tv2.subtractInPlace(this.tv1);
-            let mv: Vector3=this.tv2; //save some typing
+            Vector3.TransformCoordinatesToRef(p1,this._tm,this._tv1);
+            Vector3.TransformCoordinatesToRef(p2,this._tm,this._tv2);
+            this._tv2.subtractInPlace(this._tv1);
+            let mv: Vector3=this._tv2; //save some typing
             //for now lets set the angle magnitutde same as amount by which the mouse moved
             let angle: number=mv.length();
 
@@ -2049,36 +2023,36 @@ namespace org.ssatguru.babylonjs.component {
          * checks if the user was trying to rotate clockwise (+ve in LHS) or anticlockwise (-ve in LHS)
          * to figure this check the orientation of the user(camera)to ec vector with the rotation normal vector
          */
-        private getAngle(p1: Vector3,p2: Vector3,p: Vector3,c2ec: Vector3): number {
-            p1.subtractToRef(p,this.tv1);
-            p2.subtractToRef(p,this.tv2);
-            Vector3.CrossToRef(this.tv1,this.tv2,this.tv3);
-            let angle: number=Math.asin(this.tv3.length()/(this.tv1.length()*this.tv2.length()));
+        private _getAngle(p1: Vector3,p2: Vector3,p: Vector3,c2ec: Vector3): number {
+            p1.subtractToRef(p,this._tv1);
+            p2.subtractToRef(p,this._tv2);
+            Vector3.CrossToRef(this._tv1,this._tv2,this._tv3);
+            let angle: number=Math.asin(this._tv3.length()/(this._tv1.length()*this._tv2.length()));
             //camera looking down from front of plane or looking up from behind plane
-            if((Vector3.Dot(this.tv3,c2ec)>0)) {
+            if((Vector3.Dot(this._tv3,c2ec)>0)) {
                 angle=-1*angle;
             }
             return angle;
         }
 
 
-        private createMaterials(scene: Scene) {
-            this.redMat=EditControl.getStandardMaterial("redMat",Color3.Red(),scene);
-            this.greenMat=EditControl.getStandardMaterial("greenMat",Color3.Green(),scene);
-            this.blueMat=EditControl.getStandardMaterial("blueMat",Color3.Blue(),scene);
-            this.whiteMat=EditControl.getStandardMaterial("whiteMat",Color3.White(),scene);
-            this.yellowMat=EditControl.getStandardMaterial("whiteMat",Color3.Yellow(),scene);
+        private _createMaterials(scene: Scene) {
+            this._redMat=EditControl._getStandardMaterial("redMat",Color3.Red(),scene);
+            this._greenMat=EditControl._getStandardMaterial("greenMat",Color3.Green(),scene);
+            this._blueMat=EditControl._getStandardMaterial("blueMat",Color3.Blue(),scene);
+            this._whiteMat=EditControl._getStandardMaterial("whiteMat",Color3.White(),scene);
+            this._yellowMat=EditControl._getStandardMaterial("whiteMat",Color3.Yellow(),scene);
         }
 
-        private disposeMaterials() {
-            this.redMat.dispose();
-            this.greenMat.dispose();
-            this.blueMat.dispose();
-            this.whiteMat.dispose();
-            this.yellowMat.dispose();
+        private _disposeMaterials() {
+            this._redMat.dispose();
+            this._greenMat.dispose();
+            this._blueMat.dispose();
+            this._whiteMat.dispose();
+            this._yellowMat.dispose();
         }
 
-        private static getStandardMaterial(name: string,col: Color3,scene: Scene): StandardMaterial {
+        private static _getStandardMaterial(name: string,col: Color3,scene: Scene): StandardMaterial {
             let mat: StandardMaterial=new StandardMaterial(name,scene);
             mat.emissiveColor=col;
             mat.diffuseColor=Color3.Black();
@@ -2153,57 +2127,57 @@ namespace org.ssatguru.babylonjs.component {
     }
 
     export class Act {
-        private p: Vector3;
+        private _p: Vector3;
 
-        private rQ: Quaternion;
-        private rE: Vector3;
+        private _rQ: Quaternion;
+        private _rE: Vector3;
 
-        private s: Vector3;
+        private _s: Vector3;
 
         //actiontype
-        private at: number;
+        private _at: number;
 
         public constructor(mesh: AbstractMesh,at: number) {
-            this.p=mesh.position.clone();
+            this._p=mesh.position.clone();
             //if (mesh.rotationQuaternion == null) {
             if(mesh.rotationQuaternion==null) {
-                this.rQ=null;
-                this.rE=mesh.rotation.clone();
+                this._rQ=null;
+                this._rE=mesh.rotation.clone();
             } else {
-                this.rQ=mesh.rotationQuaternion.clone();
-                this.rE=null;
+                this._rQ=mesh.rotationQuaternion.clone();
+                this._rE=null;
             }
-            this.s=mesh.scaling.clone();
-            this.at=at;
+            this._s=mesh.scaling.clone();
+            this._at=at;
         }
 
         public getActionType(): number {
-            return this.at;
+            return this._at;
         }
 
         public perform(mesh: AbstractMesh) {
-            mesh.position.copyFrom(this.p)
+            mesh.position.copyFrom(this._p)
             //check if we are doing euler or quaternion now
             //also check what were we doing when the rotation value
             //was captured and set value accordingly
             if(mesh.rotationQuaternion==null) {
-                if(this.rE!=null) {
+                if(this._rE!=null) {
                     //mesh.rotation = this.rE.clone();
-                    mesh.rotation.copyFrom(this.rE);
+                    mesh.rotation.copyFrom(this._rE);
                 } else {
                     //mesh.rotation = this.r.toEulerAngles();
-                    mesh.rotation.copyFrom(this.rQ.toEulerAngles());
+                    mesh.rotation.copyFrom(this._rQ.toEulerAngles());
                 }
             } else {
-                if(this.rQ!=null) {
-                    mesh.rotationQuaternion.copyFrom(this.rQ);
+                if(this._rQ!=null) {
+                    mesh.rotationQuaternion.copyFrom(this._rQ);
                 } else {
                     //TODO use BABYLON.Quaternion.RotationYawPitchRoll(rot.y, rot.x, rot.z) instead of toQuaternion.
                     //mesh.rotationQuaternion.copyFrom(this.rE.toQuaternion());
-                    mesh.rotationQuaternion.copyFrom(Quaternion.RotationYawPitchRoll(this.rE.y,this.rE.x,this.rE.z));
+                    mesh.rotationQuaternion.copyFrom(Quaternion.RotationYawPitchRoll(this._rE.y,this._rE.x,this._rE.z));
                 }
             }
-            mesh.scaling.copyFrom(this.s);
+            mesh.scaling.copyFrom(this._s);
         }
     }
 }

@@ -184,6 +184,7 @@
 
 
         <script type="text/javascript">
+            var switchBox,showHelp,switchSpace;
             function main(){
                 
                 var box;
@@ -233,14 +234,14 @@
                 var eulerButton = document.getElementById("euler");
 
 
-                var showHelp = function(){
+                showHelp = function(){
                     var el = document.getElementById("overlay");
                     el.style.visibility = (el.style.visibility=="visible")?"hidden"
                             :"visible";
                 }
 
 
-                function switchBox(){
+                switchBox = function(){
                     if(selectBox1.checked){
                         editControl = ec1;
                         box = box1;
