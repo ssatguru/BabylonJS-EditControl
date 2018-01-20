@@ -25,6 +25,19 @@ namespace org.ssatguru.babylonjs.component {
         ROT=1,
         SCALE=2
     }
+    
+    /**
+     * Draws a transform widget at the mesh's location (its pivot location).
+     * The widget transforms(translates,rotates and scales) the mesh based on user
+     * interactions with the widget.
+     * The widget shows the mesh position and rotation at any time. 
+     * The widget follows the mesh constantly. 
+     * Note: An alternate approach would have been for the mesh to follow the widget.
+     * The problem with the alternate approach - syncing the transforms
+     * if the mesh was being transformed by entities other than the widget say physics 
+     * or script for example.
+     * 
+     */
 
     export class EditControl {
         private mesh: Mesh;
@@ -41,7 +54,7 @@ namespace org.ssatguru.babylonjs.component {
         private rotSnap: number=Math.PI/18;
         private axesLen: number=0.4;
         private axesScale: number=1;
-        //how close to an axis should we get before we can pck it 
+        //how close to an axis should we get before we can pick it 
         private pickWidth: number=0.02;
         private redMat: StandardMaterial;
         private greenMat: StandardMaterial;
@@ -126,21 +139,26 @@ namespace org.ssatguru.babylonjs.component {
         //edit control to camera vector
         private ecTOcamera: Vector3=new Vector3(0,0,0);
         private renderLoopProcess() {
+            
+            //sync the edit control position and rotation with that of mesh
             this.ecRoot.position=this.mesh.getAbsolutePivotPoint();
-
+            this._setECRotation();
+            
+            //scale the EditControl so it seems at the same distance from camera/user
+            this.setECScale();
+            
+            //rotate the free move,rotate,scale pick plane to face the camera/user
             if(this.local) {
                 this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                 Vector3.TransformCoordinatesToRef(this.mainCamera.position,this.ecMatrix,this.ecTOcamera);
-                //pALL is child of ecRoot hence lookAt in local space
+                //note pALL is child of ecRoot hence lookAt in local space
                 this.pALL.lookAt(this.ecTOcamera,0,0,0,Space.LOCAL);
             } else {
                 this.mainCamera.position.subtractToRef(this.ecRoot.position,this.ecTOcamera);
                 this.pALL.lookAt(this.mainCamera.position,0,0,0,Space.WORLD);
             }
-
-            this.setAxesScale();
-            this._setAxesRotation();
-
+            
+            //rotate the rotation and planar guide to face the camera/user
             if(this.rotEnabled) this.rotRotGuides();
             else if(this.transEnabled) this.rotPlanarGuides(this.tXZ,this.tZY,this.tYX);
             else if(this.scaleEnabled) this.rotPlanarGuides(this.sXZ,this.sZY,this.sYX);
@@ -149,26 +167,10 @@ namespace org.ssatguru.babylonjs.component {
             //this.onPointerOver();
         }
 
-
-        //how far away from camera should the edit control appear to be
-        private distFromCamera: number=2;
-        //vector from camera to edit control
-        private cameraTOec: Vector3=new Vector3(0,0,0);
-        private cameraNormal: Vector3=new Vector3(0,0,0);
-        private setAxesScale() {
-            this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
-            Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
-
-            //get distance of edit control from the camera plane 
-            //project "camera to edit control" vector onto the camera normal
-            let parentOnNormal: number=Vector3.Dot(this.cameraTOec,this.cameraNormal)/this.cameraNormal.length();
-
-            let s: number=Math.abs(parentOnNormal/this.distFromCamera);
-            Vector3.FromFloatsToRef(s,s,s,this.ecRoot.scaling);
-            //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
-        }
-
-        private _setAxesRotation() {
+        /**
+         * sets rotaion of edit control to that of the mesh
+         */
+        private _setECRotation() {
             if(this.local) {
                 if(this.mesh.parent==null) {
                     if(this.eulerian) {
@@ -183,11 +185,27 @@ namespace org.ssatguru.babylonjs.component {
                 }
             }
         }
-        
-       
+
+        //how far away from camera should the edit control appear to be
+        private distFromCamera: number=2;
+        //vector from camera to edit control
+        private cameraTOec: Vector3=new Vector3(0,0,0);
+        private cameraNormal: Vector3=new Vector3(0,0,0);
+        private setECScale() {
+            this.ecRoot.position.subtractToRef(this.mainCamera.position,this.cameraTOec);
+            Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(),8,this.cameraNormal);
+
+            //get distance of edit control from the camera plane 
+            //project "camera to edit control" vector onto the camera normal
+            let parentOnNormal: number=Vector3.Dot(this.cameraTOec,this.cameraNormal)/this.cameraNormal.length();
+
+            let s: number=Math.abs(parentOnNormal/this.distFromCamera);
+            Vector3.FromFloatsToRef(s,s,s,this.ecRoot.scaling);
+            //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
+        }
+  
 
         //rotate the rotation guides so that they are facing the camera
-
         private rotRotGuides() {
             let rotX=Math.atan(this.ecTOcamera.y/this.ecTOcamera.z);
             if(this.ecTOcamera.z>=0) {
@@ -210,7 +228,10 @@ namespace org.ssatguru.babylonjs.component {
                 this.rZ.rotation.z=-rotZ-Math.PI;
             }
         }
-
+        
+        /**
+         * rotate the planar guide so that they are facing the camera
+         */
         private rotPlanarGuides(XZ: Mesh,ZY: Mesh,YX: Mesh) {
             let ec: Vector3=this.ecTOcamera;
 
@@ -718,11 +739,9 @@ namespace org.ssatguru.babylonjs.component {
 
         private transBy: Vector3=new Vector3(0,0,0);
         private doTranslation(diff: Vector3) {
-            //if this mesh is parented then before doing anything update
-            //its local axes data as the parent position/rotation might have changed
-            if (this.mesh.parent !=null){
-                this.setLocalAxes(this.mesh);
-            }
+            
+            this.setLocalAxes(this.mesh);
+            
             let n: string=this.axisPicked.name;
             if(n=="ALL") {
                 //TODO when translating, the orientation of pALL keeps changing
@@ -827,6 +846,8 @@ namespace org.ssatguru.babylonjs.component {
         private scaleSnap: number=0.25;
         private scale: Vector3=new Vector3(0,0,0);
         private doScaling(diff: Vector3) {
+            this.setLocalAxes(this.mesh);
+            
             this.scale.x=0;
             this.scale.y=0;
             this.scale.z=0;
@@ -914,8 +935,7 @@ namespace org.ssatguru.babylonjs.component {
                 this.mesh.scaling.y=Math.min(this.mesh.scaling.y,this.scaleBoundsMax.y);
                 this.mesh.scaling.z=Math.min(this.mesh.scaling.z,this.scaleBoundsMax.z);
             }
-            
-             this.setLocalAxes(this.mesh);
+          
         }
 
         private scaleWithSnap(mesh: Mesh,p: Vector3) {
@@ -943,6 +963,23 @@ namespace org.ssatguru.babylonjs.component {
             }
             mesh.scaling.addInPlace(p);
            
+        }
+        
+        private localX: Vector3=new Vector3(0,0,0);
+        private localY: Vector3=new Vector3(0,0,0);;
+        private localZ: Vector3=new Vector3(0,0,0);;
+
+        /*
+         * This would be called after rotation or scaling as the local axes direction or length might have changed
+         * We need to set the local axis as these are used in all three modes to figure out 
+         * direction of mouse move wrt the axes
+         * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
+         */
+        private setLocalAxes(mesh: Mesh) {
+            let meshMatrix: Matrix=mesh.getWorldMatrix();
+            Vector3.FromFloatArrayToRef(meshMatrix.m,0,this.localX);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,4,this.localY);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,8,this.localZ);
         }
 
         /*
@@ -977,6 +1014,9 @@ namespace org.ssatguru.babylonjs.component {
         private eulerian: boolean=false;
         private snapRA: number=0;
         private doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
+            
+            this.setLocalAxes(this.mesh);
+            
             let angle: number=0;
 
             //rotation axis
@@ -992,6 +1032,8 @@ namespace org.ssatguru.babylonjs.component {
              */
             if(this.rotate2) {
                 angle=this.getAngle2(prevPos,newPos,this.mainCamera.position,this.cameraTOec,rAxis);
+                //TODO check why we need to handle righ hand this way
+                if (this.scene.useRightHandedSystem) angle=-angle;
             } else {
                 angle=this.getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),this.cameraTOec);
             }
@@ -1057,7 +1099,7 @@ namespace org.ssatguru.babylonjs.component {
                     mesh.rotate(this.cameraTOec,-angle,Space.WORLD);
                 }
             }
-            this.setLocalAxes(this.mesh);
+            
             //if angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
             if(this.eulerian&&angle!=0) {
                 mesh.rotation=mesh.rotationQuaternion.toEulerAngles();
@@ -1861,22 +1903,7 @@ namespace org.ssatguru.babylonjs.component {
             this.sEndAll.isPickable=false;
         }
 
-        private localX: Vector3=new Vector3(0,0,0);
-        private localY: Vector3=new Vector3(0,0,0);;
-        private localZ: Vector3=new Vector3(0,0,0);;
-
-        /*
-         * This would be called after rotation or scaling as the local axes direction or length might have changed
-         * We need to set the local axis as these are used in all three modes to figure out 
-         * direction of mouse move wrt the axes
-         * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
-         */
-        private setLocalAxes(mesh: Mesh) {
-            let meshMatrix: Matrix=mesh.getWorldMatrix();
-            Vector3.FromFloatArrayToRef(meshMatrix.m,0,this.localX);
-            Vector3.FromFloatArrayToRef(meshMatrix.m,4,this.localY);
-            Vector3.FromFloatArrayToRef(meshMatrix.m,8,this.localZ);
-        }
+        
 
         /**
          * checks if a have left hand , right hand issue.

@@ -22,6 +22,18 @@ var org;
                     ActionType[ActionType["ROT"] = 1] = "ROT";
                     ActionType[ActionType["SCALE"] = 2] = "SCALE";
                 })(ActionType || (ActionType = {}));
+                /**
+                 * Draws a transform widget at the mesh's location (its pivot location).
+                 * The widget transforms(translates,rotates and scales) the mesh based on user
+                 * interactions with the widget.
+                 * The widget shows the mesh position and rotation at any time.
+                 * The widget follows the mesh constantly.
+                 * Note: An alternate approach would have been for the mesh to follow the widget.
+                 * The problem with the alternate approach - syncing the transforms
+                 * if the mesh was being transformed by entities other than the widget say physics
+                 * or script for example.
+                 *
+                 */
                 var EditControl = (function () {
                     function EditControl(mesh, camera, canvas, scale, eulerian) {
                         var _this = this;
@@ -32,7 +44,7 @@ var org;
                         this.rotSnap = Math.PI / 18;
                         this.axesLen = 0.4;
                         this.axesScale = 1;
-                        //how close to an axis should we get before we can pck it 
+                        //how close to an axis should we get before we can pick it 
                         this.pickWidth = 0.02;
                         //axes visibility
                         this.visibility = 0.75;
@@ -69,15 +81,15 @@ var org;
                         this.snapSV = new Vector3(0, 0, 0);
                         this.scaleSnap = 0.25;
                         this.scale = new Vector3(0, 0, 0);
+                        this.localX = new Vector3(0, 0, 0);
+                        this.localY = new Vector3(0, 0, 0);
+                        this.localZ = new Vector3(0, 0, 0);
                         this.eulerian = false;
                         this.snapRA = 0;
                         this.transEnabled = false;
                         this.rotEnabled = false;
                         this.scaleEnabled = false;
                         this.guideSize = 180;
-                        this.localX = new Vector3(0, 0, 0);
-                        this.localY = new Vector3(0, 0, 0);
-                        this.localZ = new Vector3(0, 0, 0);
                         this.tSnap = new Vector3(this.transSnap, this.transSnap, this.transSnap);
                         //few temp vectors & matrix
                         this.tv1 = new Vector3(0, 0, 0);
@@ -134,19 +146,23 @@ var org;
                         }
                     };
                     EditControl.prototype.renderLoopProcess = function () {
+                        //sync the edit control position and rotation with that of mesh
                         this.ecRoot.position = this.mesh.getAbsolutePivotPoint();
+                        this._setECRotation();
+                        //scale the EditControl so it seems at the same distance from camera/user
+                        this.setECScale();
+                        //rotate the free move,rotate,scale pick plane to face the camera/user
                         if (this.local) {
                             this.ecRoot.getWorldMatrix().invertToRef(this.ecMatrix);
                             Vector3.TransformCoordinatesToRef(this.mainCamera.position, this.ecMatrix, this.ecTOcamera);
-                            //pALL is child of ecRoot hence lookAt in local space
+                            //note pALL is child of ecRoot hence lookAt in local space
                             this.pALL.lookAt(this.ecTOcamera, 0, 0, 0, Space.LOCAL);
                         }
                         else {
                             this.mainCamera.position.subtractToRef(this.ecRoot.position, this.ecTOcamera);
                             this.pALL.lookAt(this.mainCamera.position, 0, 0, 0, Space.WORLD);
                         }
-                        this.setAxesScale();
-                        this._setAxesRotation();
+                        //rotate the rotation and planar guide to face the camera/user
                         if (this.rotEnabled)
                             this.rotRotGuides();
                         else if (this.transEnabled)
@@ -156,17 +172,10 @@ var org;
                         //check pointer over axes only during pointer moves
                         //this.onPointerOver();
                     };
-                    EditControl.prototype.setAxesScale = function () {
-                        this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
-                        Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
-                        //get distance of edit control from the camera plane 
-                        //project "camera to edit control" vector onto the camera normal
-                        var parentOnNormal = Vector3.Dot(this.cameraTOec, this.cameraNormal) / this.cameraNormal.length();
-                        var s = Math.abs(parentOnNormal / this.distFromCamera);
-                        Vector3.FromFloatsToRef(s, s, s, this.ecRoot.scaling);
-                        //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
-                    };
-                    EditControl.prototype._setAxesRotation = function () {
+                    /**
+                     * sets rotaion of edit control to that of the mesh
+                     */
+                    EditControl.prototype._setECRotation = function () {
                         if (this.local) {
                             if (this.mesh.parent == null) {
                                 if (this.eulerian) {
@@ -182,6 +191,16 @@ var org;
                                 Quaternion.FromRotationMatrixToRef(this.tm, this.ecRoot.rotationQuaternion);
                             }
                         }
+                    };
+                    EditControl.prototype.setECScale = function () {
+                        this.ecRoot.position.subtractToRef(this.mainCamera.position, this.cameraTOec);
+                        Vector3.FromFloatArrayToRef(this.mainCamera.getWorldMatrix().asArray(), 8, this.cameraNormal);
+                        //get distance of edit control from the camera plane 
+                        //project "camera to edit control" vector onto the camera normal
+                        var parentOnNormal = Vector3.Dot(this.cameraTOec, this.cameraNormal) / this.cameraNormal.length();
+                        var s = Math.abs(parentOnNormal / this.distFromCamera);
+                        Vector3.FromFloatsToRef(s, s, s, this.ecRoot.scaling);
+                        //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
                     };
                     //rotate the rotation guides so that they are facing the camera
                     EditControl.prototype.rotRotGuides = function () {
@@ -207,6 +226,9 @@ var org;
                             this.rZ.rotation.z = -rotZ - Math.PI;
                         }
                     };
+                    /**
+                     * rotate the planar guide so that they are facing the camera
+                     */
                     EditControl.prototype.rotPlanarGuides = function (XZ, ZY, YX) {
                         var ec = this.ecTOcamera;
                         XZ.rotation.x = 0;
@@ -711,11 +733,7 @@ var org;
                             return null;
                     };
                     EditControl.prototype.doTranslation = function (diff) {
-                        //if this mesh is parented then before doing anything update
-                        //its local axes data as the parent position/rotation might have changed
-                        if (this.mesh.parent != null) {
-                            this.setLocalAxes(this.mesh);
-                        }
+                        this.setLocalAxes(this.mesh);
                         var n = this.axisPicked.name;
                         if (n == "ALL") {
                             //TODO when translating, the orientation of pALL keeps changing
@@ -825,6 +843,7 @@ var org;
                         }
                     };
                     EditControl.prototype.doScaling = function (diff) {
+                        this.setLocalAxes(this.mesh);
                         this.scale.x = 0;
                         this.scale.y = 0;
                         this.scale.z = 0;
@@ -928,7 +947,6 @@ var org;
                             this.mesh.scaling.y = Math.min(this.mesh.scaling.y, this.scaleBoundsMax.y);
                             this.mesh.scaling.z = Math.min(this.mesh.scaling.z, this.scaleBoundsMax.z);
                         }
-                        this.setLocalAxes(this.mesh);
                     };
                     EditControl.prototype.scaleWithSnap = function (mesh, p) {
                         if (this.snapS) {
@@ -968,6 +986,20 @@ var org;
                         }
                         mesh.scaling.addInPlace(p);
                     };
+                    ;
+                    ;
+                    /*
+                     * This would be called after rotation or scaling as the local axes direction or length might have changed
+                     * We need to set the local axis as these are used in all three modes to figure out
+                     * direction of mouse move wrt the axes
+                     * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
+                     */
+                    EditControl.prototype.setLocalAxes = function (mesh) {
+                        var meshMatrix = mesh.getWorldMatrix();
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this.localX);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this.localY);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this.localZ);
+                    };
                     EditControl.prototype.getBoundingDimension = function (mesh) {
                         var bb = mesh.getBoundingInfo().boundingBox;
                         var bd = bb.maximum.subtract(bb.minimum);
@@ -993,6 +1025,7 @@ var org;
                         this.boundingDimesion = this.getBoundingDimension(this.mesh);
                     };
                     EditControl.prototype.doRotation = function (mesh, axis, newPos, prevPos) {
+                        this.setLocalAxes(this.mesh);
                         var angle = 0;
                         //rotation axis
                         var rAxis;
@@ -1009,6 +1042,9 @@ var org;
                          */
                         if (this.rotate2) {
                             angle = this.getAngle2(prevPos, newPos, this.mainCamera.position, this.cameraTOec, rAxis);
+                            //TODO check why we need to handle righ hand this way
+                            if (this.scene.useRightHandedSystem)
+                                angle = -angle;
                         }
                         else {
                             angle = this.getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), this.cameraTOec);
@@ -1092,7 +1128,6 @@ var org;
                                 mesh.rotate(this.cameraTOec, -angle, Space.WORLD);
                             }
                         }
-                        this.setLocalAxes(this.mesh);
                         //if angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
                         if (this.eulerian && angle != 0) {
                             mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
@@ -1719,20 +1754,6 @@ var org;
                         this.sEndZY.isPickable = false;
                         this.sEndYX.isPickable = false;
                         this.sEndAll.isPickable = false;
-                    };
-                    ;
-                    ;
-                    /*
-                     * This would be called after rotation or scaling as the local axes direction or length might have changed
-                     * We need to set the local axis as these are used in all three modes to figure out
-                     * direction of mouse move wrt the axes
-                     * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
-                     */
-                    EditControl.prototype.setLocalAxes = function (mesh) {
-                        var meshMatrix = mesh.getWorldMatrix();
-                        Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this.localX);
-                        Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this.localY);
-                        Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this.localZ);
                     };
                     /**
                      * checks if a have left hand , right hand issue.

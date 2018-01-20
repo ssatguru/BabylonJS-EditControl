@@ -6,6 +6,18 @@ declare namespace org.ssatguru.babylonjs.component {
     import Mesh = BABYLON.Mesh;
     import Quaternion = BABYLON.Quaternion;
     import Vector3 = BABYLON.Vector3;
+    /**
+     * Draws a transform widget at the mesh's location (its pivot location).
+     * The widget transforms(translates,rotates and scales) the mesh based on user
+     * interactions with the widget.
+     * The widget shows the mesh position and rotation at any time.
+     * The widget follows the mesh constantly.
+     * Note: An alternate approach would have been for the mesh to follow the widget.
+     * The problem with the alternate approach - syncing the transforms
+     * if the mesh was being transformed by entities other than the widget say physics
+     * or script for example.
+     *
+     */
     class EditControl {
         private mesh;
         private canvas;
@@ -37,12 +49,18 @@ declare namespace org.ssatguru.babylonjs.component {
         private ecMatrix;
         private ecTOcamera;
         private renderLoopProcess();
+        /**
+         * sets rotaion of edit control to that of the mesh
+         */
+        private _setECRotation();
         private distFromCamera;
         private cameraTOec;
         private cameraNormal;
-        private setAxesScale();
-        private _setAxesRotation();
+        private setECScale();
         private rotRotGuides();
+        /**
+         * rotate the planar guide so that they are facing the camera
+         */
         private rotPlanarGuides(XZ, ZY, YX);
         switchTo(mesh: Mesh, eulerian?: boolean): void;
         setUndoCount(c: number): void;
@@ -125,6 +143,10 @@ declare namespace org.ssatguru.babylonjs.component {
         private scale;
         private doScaling(diff);
         private scaleWithSnap(mesh, p);
+        private localX;
+        private localY;
+        private localZ;
+        private setLocalAxes(mesh);
         private boundingDimesion;
         private getBoundingDimension(mesh);
         refreshBoundingInfo(): void;
@@ -223,10 +245,6 @@ declare namespace org.ssatguru.babylonjs.component {
         private sEndYX;
         private sEndAll;
         private createScaleAxes();
-        private localX;
-        private localY;
-        private localZ;
-        private setLocalAxes(mesh);
         /**
          * checks if a have left hand , right hand issue.
          * In other words if a mesh is a LHS mesh in RHS system or
