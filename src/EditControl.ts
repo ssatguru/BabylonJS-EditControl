@@ -626,6 +626,14 @@ namespace org.ssatguru.babylonjs.component {
             }
             if(!this.editing) return;
             if(this.prevPos==null) return;
+            
+            if (this.mesh.parent != null && this.local){
+                
+                if ((<Mesh>this.mesh.parent).scaling.x != (<Mesh>this.mesh.parent).scaling.y ||
+                    (<Mesh>this.mesh.parent).scaling.y != (<Mesh>this.mesh.parent).scaling.z){
+                    return;
+                }
+            }
 
             //this.pickPlane=this.getPickPlane(this.axisPicked);
 
@@ -710,6 +718,11 @@ namespace org.ssatguru.babylonjs.component {
 
         private transBy: Vector3=new Vector3(0,0,0);
         private doTranslation(diff: Vector3) {
+            //if this mesh is parented then before doing anything update
+            //its local axes data as the parent position/rotation might have changed
+            if (this.mesh.parent !=null){
+                this.setLocalAxes(this.mesh);
+            }
             let n: string=this.axisPicked.name;
             if(n=="ALL") {
                 //TODO when translating, the orientation of pALL keeps changing
@@ -1329,10 +1342,10 @@ namespace org.ssatguru.babylonjs.component {
             this.xaxis.renderingGroupId=1;
             this.yaxis.renderingGroupId=1;
             this.zaxis.renderingGroupId=1;
-
-            return guideAxes;
+            
+             return guideAxes;
         }
-
+        
         private pickedPlane: Mesh;
         private pALL: Mesh;
         private pXZ: Mesh;

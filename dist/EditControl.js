@@ -607,6 +607,12 @@ var org;
                             return;
                         if (this.prevPos == null)
                             return;
+                        if (this.mesh.parent != null && this.local) {
+                            if (this.mesh.parent.scaling.x != this.mesh.parent.scaling.y ||
+                                this.mesh.parent.scaling.y != this.mesh.parent.scaling.z) {
+                                return;
+                            }
+                        }
                         //this.pickPlane=this.getPickPlane(this.axisPicked);
                         var newPos = this.getPosOnPickPlane();
                         if (newPos == null)
@@ -705,6 +711,11 @@ var org;
                             return null;
                     };
                     EditControl.prototype.doTranslation = function (diff) {
+                        //if this mesh is parented then before doing anything update
+                        //its local axes data as the parent position/rotation might have changed
+                        if (this.mesh.parent != null) {
+                            this.setLocalAxes(this.mesh);
+                        }
                         var n = this.axisPicked.name;
                         if (n == "ALL") {
                             //TODO when translating, the orientation of pALL keeps changing

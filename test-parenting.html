@@ -1,0 +1,422 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>EditControl Demo</title>
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            
+            table {
+                border-radius: 10px;
+            }
+
+            table, th, td {
+                border: 1px solid black;
+                padding: 5px;
+                padding-left: 15px;
+                padding-right: 15px;
+                border-collapse: collapse;
+            }
+
+            #controls {
+                position: absolute;
+                left: 10px;
+                top: 10px;
+            }
+
+            #renderCanvas {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+
+            #overlay {
+                visibility: hidden;
+                position: absolute;
+                left: 0px;
+                top: 0px;
+                width: 100%;
+                height: 100%;
+                text-align: center;
+                z-index: 1000;
+            }
+
+            #overlay div {
+                width: 400px;
+                margin: 100px auto;
+                background-color: #fff;
+                border: 1px solid #000;
+                padding: 15px;
+                text-align: center;
+            }
+        </style>
+        <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
+        
+        <!-- specific -->
+        <!--<script src="lib/babylon-3.1.1-12.13.2017.js"></script>-->
+        <!-- stable -->
+        <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
+        <!-- latest -->
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        
+        <!-- for demo -->
+        <!--<script src="https://github.com/ssatguru/BabylonJS-EditControl/releases/download/v3.0.1/EditControl.min.js"></script>-->
+        <!--for test-->
+        <script src="dist/EditControl.js"></script>
+    </head>
+
+    <body>
+        <canvas id="renderCanvas"></canvas>
+
+        <div id="controls">
+            <table >
+                <tr>
+                    <td><input type="checkbox" id="selectBox1" checked title="select box1">box1</td>
+                    <td><input type="checkbox" id="selectBox2" title="select box2">box2</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="local" checked title="switch between local or global axes">local</td>
+                    <td><button id="hide">hide/show</button></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="trans">translate</button></td>
+                    <td><button id="rotate">rotate</button></td>
+                    <td><button id="scale">scale</button></td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="snaptrans">snap translation</td>
+                    <td><input type="checkbox" id="snaprot">snap rotation</td>
+                    <td><input type="checkbox" id="snapscale">snap scale</td>
+                <tr>
+                    <td><input type="checkbox" id="boundTrans">bound translation</td>
+                    <td><input type="checkbox" id="boundRot">bound rotation</td>
+                    <td><input type="checkbox" id="boundScale">bound scale</td>
+                </tr>
+                 <tr>
+                    <td></td>
+                    <td><input type="checkbox" id="rotGuideFull">full rotation guides</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="undo">undo</button></td>
+                    <td><button id="redo">redo</button></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="focus">focus</button></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="euler">toggle euler</button></td>
+                    <td><button id="pRot">print rotation to console</button></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><button id="help" >Help</button></td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+            <table>
+        </div>
+
+        
+        <script type="text/javascript">
+            var box;
+            var box1;
+            var box2;
+            var camera;
+            var editControl;
+            var ec1;
+            var ec2;
+
+            /*
+             * get all buttons
+             */
+            var selectBox1 = document.getElementById("selectBox1");
+            var selectBox2 = document.getElementById("selectBox2");
+            
+            var localButton = document.getElementById("local");
+            var hideButton = document.getElementById("hide");
+            
+            var transButton = document.getElementById("trans");
+            var rotButton = document.getElementById("rotate");
+            var scaleButton = document.getElementById("scale");
+            
+            var snapTButton = document.getElementById("snaptrans");
+            var snapRButton = document.getElementById("snaprot");
+            var snapSButton = document.getElementById("snapscale");
+            
+            snapTButton.checked = false;
+            snapRButton.checked = false;
+            snapSButton.checked = false;
+            
+            var boundTButton = document.getElementById("boundTrans");
+            var boundRButton = document.getElementById("boundRot");
+            var boundSButton = document.getElementById("boundScale");
+            
+            boundTButton.checked = false;
+            boundRButton.checked = false;
+            boundSButton.checked = false;
+            
+            var rotGuideFull = document.getElementById("rotGuideFull");
+            rotGuideFull.checked = false;
+            
+            var undoButton = document.getElementById("undo");
+            var redoButton = document.getElementById("redo");
+            
+            var focusButton = document.getElementById("focus");
+
+            var pRotButton = document.getElementById("pRot");
+            var eulerButton = document.getElementById("euler");
+            
+            var helpButton = document.getElementById("help");
+
+            /*
+             * assign functions to buttons
+             */
+
+            var showHelp = function () {
+                var el = document.getElementById("overlay");
+                el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+                        : "visible";
+            }
+
+            helpButton.onclick = showHelp;
+            
+            selectBox1.onclick = function () {
+                if (selectBox1.checked){
+                    editControl=ec1;
+                    box=box1;
+                    selectBox2.checked=false;
+                }
+            };
+            
+            selectBox2.onclick = function () {
+                if (selectBox2.checked){
+                    editControl=ec2;
+                    box=box2;
+                    selectBox1.checked=false;
+                }
+            };
+            
+            hideButton.onclick = function () {
+                if (editControl.isHidden()){
+                    editControl.show();
+                }else editControl.hide();
+            };
+            transButton.onclick = function () {
+                editControl.enableTranslation();
+            };
+            rotButton.onclick = function () {
+                editControl.enableRotation();
+            };
+            scaleButton.onclick = function () {
+                editControl.enableScaling()
+                if (!editControl.isLocal()) {
+                    alert("Please note that you cannot scale in global mode");
+                }
+            };
+            localButton.onclick = function () {
+                editControl.setLocal(localButton.checked);
+                if (editControl.isScalingEnabled() && !editControl.isLocal()) {
+                    alert("Please note that you cannot scale in global mode");
+                }
+            };
+            snapTButton.onclick = function () {
+                editControl.setTransSnap(snapTButton.checked);
+            };
+            snapRButton.onclick = function () {
+                editControl.setRotSnap(snapRButton.checked);
+            };
+            snapSButton.onclick = function () {
+                editControl.setScaleSnap(snapSButton.checked);
+            };
+            
+            boundTButton.onclick = function () {
+                if (boundTButton.checked){
+                    editControl.setTransBounds(
+                        new BABYLON.Vector3(-5,-5,-5),  // min
+                        new BABYLON.Vector3(5,5,5)      // max
+                    );
+                }else{
+                    editControl.removeTransBounds();
+                }
+            };
+            
+            boundRButton.onclick = function () {
+                alert("Rotation Bounds has not been implemented yet");
+            }
+            
+            boundSButton.onclick = function () {
+                if (boundSButton.checked){
+                    editControl.setScaleBounds(
+                        // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
+                        new BABYLON.Vector3(0,0,0),     // causes bug
+                        new BABYLON.Vector3(2,2,2)      // max
+                    );
+                }else{
+                    editControl.removeScaleBounds();
+                }
+            };
+            
+            rotGuideFull.onclick = function () {
+                editControl.setRotGuideFull(rotGuideFull.checked);
+            }
+            
+            
+            undoButton.onclick = function () {
+                editControl.undo();
+            };
+            redoButton.onclick = function () {
+                editControl.redo();
+            };
+            focusButton.onclick = function () {
+                camera.target.copyFrom(box.position);
+            };
+            pRotButton.onclick = function () {
+                console.log(box.rotation);
+                console.log(box.rotationQuaternion);
+            };
+            var euler = false;
+            eulerButton.onclick = function () {
+                euler = !euler;
+                editControl.returnEuler(euler);
+                console.log("enable euler : " + euler);
+            };
+
+            var actionStartListener = function(actionType){
+                if (actionType === 0){
+                    console.log("translation started");
+                }else if (actionType === 1){
+                    console.log("rotation started");
+                }else if (actionType === 2){
+                    console.log("scaling started");
+                }
+            }
+            var actionListener = function(actionType){
+                if (actionType === 0){
+                    console.log("translating");
+                }else if (actionType === 1){
+                    console.log("rotating");
+                }else if (actionType === 2){
+                    console.log("scaling");
+                }
+            }
+            var actionEndListener = function(actionType){
+                if (actionType === 0){
+                    console.log("translation done");
+                }else if (actionType === 1){
+                    console.log("rotation done");
+                }else if (actionType === 2){
+                    console.log("scaling done");
+                }
+            }
+            /*
+             * The scene
+             */
+            var canvas = document.querySelector("#renderCanvas");
+
+            var engine = new BABYLON.Engine(canvas, true);
+
+            var createScene = function () {
+
+                var scene = new BABYLON.Scene(engine);
+
+                scene.clearColor = new BABYLON.Color3(0.75, 0.75, 0.75);
+                //scene.useRightHandedSystem=true;
+
+                camera = new BABYLON.ArcRotateCamera("ArcRotateCamera", Math.PI/4,Math.PI/4,
+                        20, new BABYLON.Vector3(0, 0, 0), scene);
+                camera.wheelPrecision = 15;
+                camera.setTarget(BABYLON.Vector3.Zero());
+                camera.attachControl(canvas, false);
+
+                var light = new BABYLON.HemisphericLight("light1",
+                        new BABYLON.Vector3(0, 1, 0), scene);
+                light.intensity = .5;
+
+                //box = BABYLON.Mesh.CreatePlane("box", 2, scene,false,BABYLON.Mesh.DOUBLESIDE);
+                box1 = BABYLON.MeshBuilder.CreateBox("", {height: 5, width: 3, depth: 2});
+                
+                //if we are planning on doing rotation in quaternion then make sure the rotationQuaternion is atleast initialized
+                //else edit control will throw following exception
+                //"Eulerian is set to false but the mesh's rotationQuaternion is not set."
+                box1.rotationQuaternion = BABYLON.Quaternion.Identity();
+                
+                box1.position = new BABYLON.Vector3(0, 1, 0);
+                
+                
+                box2 = BABYLON.MeshBuilder.CreateBox("box2", {height: 1, width: 1, depth: 1});
+                box2.rotationQuaternion = BABYLON.Quaternion.Identity();
+                box2.position = new BABYLON.Vector3(4, 1, 0);
+                box2.parent=box1;
+                
+                box=box1;
+
+                var ground = BABYLON.Mesh
+                        .CreateGround("ground1", 20, 20, 10, scene);
+                var gridMaterial = new BABYLON.StandardMaterial("Grid Material",
+                        scene);
+                gridMaterial.wireframe = true;
+                ground.material = gridMaterial;
+
+                //------------------EDIT COTROL -------------------------------------------------
+                var EditControl = org.ssatguru.babylonjs.component.EditControl;
+                //create edit control (mesh to attach to,camera, canvas, scale of editcontrol, if doing rotation in euler)
+                ec1 = new EditControl(box1, camera, canvas, 0.75, false);
+                //enable translation controls
+                ec1.enableTranslation();
+                //set rotational snap valie in radians
+                ec1.setRotSnapValue(3.14 / 18);
+                //set transalation snap value in meters
+                ec1.setTransSnapValue(0.5);
+                //set scale snap value in scale ratio
+                ec1.setScaleSnapValue(0.25);
+
+                ec1.addActionStartListener(actionStartListener);
+                ec1.addActionListener(actionListener);
+                ec1.addActionEndListener(actionEndListener);
+                
+                ec2=new EditControl(box2, camera, canvas, 0.5, false);
+                ec2.enableTranslation();
+                
+                editControl = ec1;
+                
+                return scene;
+            };
+            var scene = createScene();
+
+            engine.runRenderLoop(function () {
+                scene.render();
+            });
+            window.addEventListener("resize", function () {
+                engine.resize();
+            });
+        </script>
+
+        <div id="overlay">
+            <div>
+                <h2>Demo of EditControl for Babylonjs</h2>
+                <p>
+                    For more information and source code head on over to <br>
+                    <a href="https://github.com/ssatguru/Babylonjs-EditControl"
+                       target='link'>
+                        https://github.com/ssatguru/Babylonjs-EditControl</a>
+                </p>
+                <button id="closehelp" onclick="showHelp();">close</button>
+            </div>
+        </div>
+    </body>
+</html>
