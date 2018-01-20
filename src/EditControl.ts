@@ -1680,6 +1680,7 @@ namespace org.ssatguru.babylonjs.component {
             this._rEndY.isPickable=false;
             this._rEndZ.isPickable=false;
             this._rEndAll.isPickable=false;
+            this._rEndAll2.isPickable=false;
         }
 
         private _extrudeBox(w: number,l: number): Mesh {

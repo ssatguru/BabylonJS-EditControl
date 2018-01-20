@@ -1558,6 +1558,7 @@ var org;
                         this._rEndY.isPickable = false;
                         this._rEndZ.isPickable = false;
                         this._rEndAll.isPickable = false;
+                        this._rEndAll2.isPickable = false;
                     };
                     EditControl.prototype._extrudeBox = function (w, l) {
                         var shape = [new Vector3(w, w, 0), new Vector3(-w, w, 0), new Vector3(-w, -w, 0), new Vector3(w, -w, 0), new Vector3(w, w, 0)];
