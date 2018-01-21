@@ -66,9 +66,6 @@ var org;
                         this._pDown = false;
                         this._pointerIsOver = false;
                         this._editing = false;
-                        this._snapRX = 0;
-                        this._snapRY = 0;
-                        this._snapRZ = 0;
                         //rotate differently if camera is too close to the rotation plane
                         this._rotate2 = false;
                         this._transBy = new Vector3(0, 0, 0);
@@ -80,6 +77,9 @@ var org;
                         this._localX = new Vector3(0, 0, 0);
                         this._localY = new Vector3(0, 0, 0);
                         this._localZ = new Vector3(0, 0, 0);
+                        this._ecUx = new Vector3(0, 0, 0);
+                        this._ecUy = new Vector3(0, 0, 0);
+                        this._ecUz = new Vector3(0, 0, 0);
                         this._eulerian = false;
                         this._snapRA = 0;
                         this._transEnabled = false;
@@ -159,8 +159,9 @@ var org;
                             this._pALL.lookAt(this._mainCamera.position, 0, 0, 0, Space.WORLD);
                         }
                         //rotate the rotation and planar guide to face the camera/user
-                        if (this._rotEnabled)
+                        if (this._rotEnabled) {
                             this._rotRotGuides();
+                        }
                         else if (this._transEnabled)
                             this._rotPlanarGuides(this._tXZ, this._tZY, this._tYX);
                         else if (this._scaleEnabled)
@@ -183,8 +184,13 @@ var org;
                                 }
                             }
                             else {
+                                //                    if(this.isEditing()&&((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
+                                //                        (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+                                //                        return;
+                                //                    }
                                 this._mesh.getWorldMatrix().getRotationMatrixToRef(this._tm);
                                 Quaternion.FromRotationMatrixToRef(this._tm, this._ecRoot.rotationQuaternion);
+                                //this._ecRoot.rotationQuaternion.normalize();
                             }
                         }
                     };
@@ -459,6 +465,9 @@ var org;
                         this._editing = editing;
                         if (editing) {
                             this._setActionType();
+                            if (this._actionType == ActionType.ROT) {
+                                this._snapRA = 0;
+                            }
                             this._callActionStartListener(this._actionType);
                         }
                         else {
@@ -622,13 +631,6 @@ var org;
                             return;
                         if (this._prevPos == null)
                             return;
-                        if (this._mesh.parent != null && this._local) {
-                            if (this._mesh.parent.scaling.x != this._mesh.parent.scaling.y ||
-                                this._mesh.parent.scaling.y != this._mesh.parent.scaling.z) {
-                                return;
-                            }
-                        }
-                        //this.pickPlane=this.getPickPlane(this.axisPicked);
                         var newPos = this._getPosOnPickPlane();
                         if (newPos == null)
                             return;
@@ -726,7 +728,14 @@ var org;
                             return null;
                     };
                     EditControl.prototype._doTranslation = function (diff) {
-                        this._setLocalAxes(this._mesh);
+                        if ((this._mesh.parent != null) &&
+                            (this._mesh.parent.scaling.x != this._mesh.parent.scaling.y ||
+                                this._mesh.parent.scaling.y != this._mesh.parent.scaling.z)) {
+                            this._setLocalAxes(this._ecRoot);
+                        }
+                        else {
+                            this._setLocalAxes(this._mesh);
+                        }
                         var n = this._axisPicked.name;
                         if (n == "ALL") {
                             //TODO when translating, the orientation of pALL keeps changing
@@ -990,6 +999,14 @@ var org;
                         Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this._localY);
                         Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this._localZ);
                     };
+                    ;
+                    ;
+                    EditControl.prototype._setECAxes = function () {
+                        var meshMatrix = this._ecRoot.getWorldMatrix();
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this._ecUx);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this._ecUy);
+                        Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this._ecUz);
+                    };
                     EditControl.prototype._getBoundingDimension = function (mesh) {
                         var bb = mesh.getBoundingInfo().boundingBox;
                         var bd = bb.maximum.subtract(bb.minimum);
@@ -1015,7 +1032,16 @@ var org;
                         this._boundingDimesion = this._getBoundingDimension(this._mesh);
                     };
                     EditControl.prototype._doRotation = function (mesh, axis, newPos, prevPos) {
-                        this._setLocalAxes(this._mesh);
+                        //for now no rotation if parents have non uniform scale
+                        if ((this._local) && (this._mesh.parent != null) &&
+                            (this._mesh.parent.scaling.x != this._mesh.parent.scaling.y ||
+                                this._mesh.parent.scaling.y != this._mesh.parent.scaling.z)) {
+                            //this._setLocalAxes(this._ecRoot);
+                            return;
+                        }
+                        else {
+                            this._setLocalAxes(this._mesh);
+                        }
                         var angle = 0;
                         //rotation axis
                         var rAxis;
@@ -1043,85 +1069,44 @@ var org;
                          * B)then rotate based on users(camera) postion and orientation in the local/world space
                          *
                          */
-                        this._cameraTOec.normalize();
-                        if (axis == this._rX) {
-                            if (this._snapR) {
-                                this._snapRX += angle;
-                                angle = 0;
-                                if (Math.abs(this._snapRX) >= this._rotSnap) {
-                                    if ((this._snapRX > 0))
-                                        angle = this._rotSnap;
-                                    else
-                                        angle = -this._rotSnap;
-                                    this._snapRX = 0;
-                                }
-                            }
-                            if (angle !== 0) {
-                                if (Vector3.Dot(rAxis, this._cameraTOec) >= 0)
-                                    angle = -1 * angle;
-                                mesh.rotate(rAxis, angle, Space.WORLD);
+                        if (this._snapR) {
+                            this._snapRA += angle;
+                            angle = 0;
+                            if (Math.abs(this._snapRA) >= this._rotSnap) {
+                                if (this._snapRA > 0)
+                                    angle = this._rotSnap;
+                                else
+                                    angle = -this._rotSnap;
+                                this._snapRA = 0;
                             }
                         }
-                        else if (axis == this._rY) {
-                            if (this._snapR) {
-                                this._snapRY += angle;
-                                angle = 0;
-                                if (Math.abs(this._snapRY) >= this._rotSnap) {
-                                    if ((this._snapRY > 0))
-                                        angle = this._rotSnap;
-                                    else
-                                        angle = -this._rotSnap;
-                                    this._snapRY = 0;
-                                }
-                            }
-                            if (angle !== 0) {
-                                if (angle !== 0) {
-                                    if (Vector3.Dot(rAxis, this._cameraTOec) >= 0)
-                                        angle = -1 * angle;
-                                    mesh.rotate(rAxis, angle, Space.WORLD);
-                                }
-                            }
-                        }
-                        else if (axis == this._rZ) {
-                            if (this._snapR) {
-                                this._snapRZ += angle;
-                                angle = 0;
-                                if (Math.abs(this._snapRZ) >= this._rotSnap) {
-                                    if (this._snapRZ > 0)
-                                        angle = this._rotSnap;
-                                    else
-                                        angle = -this._rotSnap;
-                                    this._snapRZ = 0;
-                                }
-                            }
-                            if (angle !== 0) {
-                                if (angle !== 0) {
-                                    if (Vector3.Dot(rAxis, this._cameraTOec) >= 0)
-                                        angle = -1 * angle;
-                                    mesh.rotate(rAxis, angle, Space.WORLD);
-                                }
-                            }
-                        }
-                        else if (axis == this._rAll) {
-                            if (this._snapR) {
-                                this._snapRA += angle;
-                                angle = 0;
-                                if (Math.abs(this._snapRA) >= this._rotSnap) {
-                                    if (this._snapRA > 0)
-                                        angle = this._rotSnap;
-                                    else
-                                        angle = -this._rotSnap;
-                                    this._snapRA = 0;
-                                }
-                            }
-                            if (angle !== 0) {
+                        if (angle !== 0) {
+                            this._cameraTOec.normalize();
+                            if (axis == this._rAll) {
                                 mesh.rotate(this._cameraTOec, -angle, Space.WORLD);
                             }
-                        }
-                        //if angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
-                        if (this._eulerian && angle != 0) {
-                            mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
-                            mesh.rotationQuaternion = null;
+                            else {
+                                if (Vector3.Dot(rAxis, this._cameraTOec) >= 0)
+                                    angle = -angle;
+                                mesh.rotate(rAxis, angle, Space.WORLD);
+                            }
+                            if (this._eulerian) {
+                                mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
+                                mesh.rotationQuaternion = null;
+                            }
+                            /*
+                            if(this._local) {
+                                if((this._mesh.parent!=null)&&
+                                    ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
+                                        (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+                                    if(axis==this._rAll) {
+                                        this._ecRoot.rotate(this._cameraTOec,-angle,Space.WORLD);
+                                    } else {
+                                        this._ecRoot.rotate(rAxis,angle,Space.WORLD);
+                                    }
+                                }
+                            }
+                            */
                         }
                     };
                     EditControl.prototype._getPosOnPickPlane = function () {

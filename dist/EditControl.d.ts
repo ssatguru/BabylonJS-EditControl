@@ -121,9 +121,6 @@ declare namespace org.ssatguru.babylonjs.component {
         private _callActionStartListener(at);
         private _callActionEndListener(at);
         private _prevPos;
-        private _snapRX;
-        private _snapRY;
-        private _snapRZ;
         private _onPointerMove(evt);
         private _rotate2;
         private _getPickPlane(axis);
@@ -141,6 +138,10 @@ declare namespace org.ssatguru.babylonjs.component {
         private _localY;
         private _localZ;
         private _setLocalAxes(mesh);
+        private _ecUx;
+        private _ecUy;
+        private _ecUz;
+        private _setECAxes();
         private _boundingDimesion;
         private _getBoundingDimension(mesh);
         refreshBoundingInfo(): void;

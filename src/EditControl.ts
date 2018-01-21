@@ -25,7 +25,7 @@ namespace org.ssatguru.babylonjs.component {
         ROT=1,
         SCALE=2
     }
-    
+
     /**
      * Draws a transform widget at the mesh's location (its pivot location).
      * The widget transforms(translates,rotates and scales) the mesh based on user
@@ -139,14 +139,14 @@ namespace org.ssatguru.babylonjs.component {
         //edit control to camera vector
         private _ecTOcamera: Vector3=new Vector3(0,0,0);
         private _renderLoopProcess() {
-            
+
             //sync the edit control position and rotation with that of mesh
             this._ecRoot.position=this._mesh.getAbsolutePivotPoint();
             this._setECRotation();
-            
+
             //scale the EditControl so it seems at the same distance from camera/user
             this._setECScale();
-            
+
             //rotate the free move,rotate,scale pick plane to face the camera/user
             if(this._local) {
                 this._ecRoot.getWorldMatrix().invertToRef(this._ecMatrix);
@@ -157,9 +157,11 @@ namespace org.ssatguru.babylonjs.component {
                 this._mainCamera.position.subtractToRef(this._ecRoot.position,this._ecTOcamera);
                 this._pALL.lookAt(this._mainCamera.position,0,0,0,Space.WORLD);
             }
-            
+
             //rotate the rotation and planar guide to face the camera/user
-            if(this._rotEnabled) this._rotRotGuides();
+            if(this._rotEnabled) {
+                this._rotRotGuides();
+            }
             else if(this._transEnabled) this._rotPlanarGuides(this._tXZ,this._tZY,this._tYX);
             else if(this._scaleEnabled) this._rotPlanarGuides(this._sXZ,this._sZY,this._sYX);
 
@@ -179,9 +181,14 @@ namespace org.ssatguru.babylonjs.component {
                     } else {
                         this._ecRoot.rotationQuaternion.copyFrom(this._mesh.rotationQuaternion);
                     }
-                }else{
+                } else {
+//                    if(this.isEditing()&&((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
+//                        (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+//                        return;
+//                    }
                     this._mesh.getWorldMatrix().getRotationMatrixToRef(this._tm);
                     Quaternion.FromRotationMatrixToRef(this._tm,this._ecRoot.rotationQuaternion);
+                    //this._ecRoot.rotationQuaternion.normalize();
                 }
             }
         }
@@ -203,7 +210,7 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatsToRef(s,s,s,this._ecRoot.scaling);
             //Vector3.FromFloatsToRef(s,s,s,this.pALL.scaling);
         }
-  
+
 
         //rotate the rotation guides so that they are facing the camera
         private _rotRotGuides() {
@@ -228,7 +235,7 @@ namespace org.ssatguru.babylonjs.component {
                 this._rZ.rotation.z=-rotZ-Math.PI;
             }
         }
-        
+
         /**
          * rotate the planar guide so that they are facing the camera
          */
@@ -470,6 +477,9 @@ namespace org.ssatguru.babylonjs.component {
             this._editing=editing;
             if(editing) {
                 this._setActionType();
+                if(this._actionType==ActionType.ROT) {
+                    this._snapRA=0;
+                }
                 this._callActionStartListener(this._actionType);
             } else {
                 this._callActionEndListener(this._actionType);
@@ -631,11 +641,6 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private _prevPos: Vector3;
-
-        private _snapRX: number=0;
-        private _snapRY: number=0;
-        private _snapRZ: number=0;
-
         private _onPointerMove(evt: Event) {
 
             if(!this._pDown) {
@@ -644,16 +649,6 @@ namespace org.ssatguru.babylonjs.component {
             }
             if(!this._editing) return;
             if(this._prevPos==null) return;
-            
-            if (this._mesh.parent != null && this._local){
-                
-                if ((<Mesh>this._mesh.parent).scaling.x != (<Mesh>this._mesh.parent).scaling.y ||
-                    (<Mesh>this._mesh.parent).scaling.y != (<Mesh>this._mesh.parent).scaling.z){
-                    return;
-                }
-            }
-
-            //this.pickPlane=this.getPickPlane(this.axisPicked);
 
             let newPos: Vector3=this._getPosOnPickPlane();
 
@@ -736,9 +731,15 @@ namespace org.ssatguru.babylonjs.component {
 
         private _transBy: Vector3=new Vector3(0,0,0);
         private _doTranslation(diff: Vector3) {
-            
-            this._setLocalAxes(this._mesh);
-            
+
+            if((this._mesh.parent!=null)&&
+                ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
+                    (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+                this._setLocalAxes(this._ecRoot);
+            } else {
+                this._setLocalAxes(this._mesh);
+            }
+
             let n: string=this._axisPicked.name;
             if(n=="ALL") {
                 //TODO when translating, the orientation of pALL keeps changing
@@ -817,12 +818,16 @@ namespace org.ssatguru.babylonjs.component {
                 //locallyTranslate moves the mesh wrt the absolute location not pivotlocation :(
                 //this.mesh.locallyTranslate(trans);
                 //
+
+
+
                 this._localX.normalizeToRef(this._tv1);
                 this._localY.normalizeToRef(this._tv2);
                 this._localZ.normalizeToRef(this._tv3);
                 this._mesh.translate(this._tv1,trans.x,Space.WORLD);
                 this._mesh.translate(this._tv2,trans.y,Space.WORLD);
                 this._mesh.translate(this._tv3,trans.z,Space.WORLD);
+
 
             } else {
                 if(this._mesh.parent==null) {
@@ -840,23 +845,23 @@ namespace org.ssatguru.babylonjs.component {
         private _scale: Vector3=new Vector3(0,0,0);
         private _doScaling(diff: Vector3) {
             this._setLocalAxes(this._mesh);
-            
+
             this._scale.x=0;
             this._scale.y=0;
             this._scale.z=0;
             let n: string=this._axisPicked.name;
             if((n=="X")||(n=="XZ")||(n=="YX")) {
                 this._scale.x=Vector3.Dot(diff,this._localX)/this._localX.length();
-                if (this._mesh.scaling.x<0) this._scale.x=-this._scale.x;
+                if(this._mesh.scaling.x<0) this._scale.x=-this._scale.x;
                 //if(this.lhsRhs) this.scale.x=-this.scale.x;
             }
             if((n=="Y")||(n=="ZY")||(n=="YX")) {
                 this._scale.y=Vector3.Dot(diff,this._localY)/this._localY.length();
-                if (this._mesh.scaling.y<0) this._scale.y=-this._scale.y;
+                if(this._mesh.scaling.y<0) this._scale.y=-this._scale.y;
             }
             if((n=="Z")||(n=="XZ")||(n=="ZY")) {
                 this._scale.z=Vector3.Dot(diff,this._localZ)/this._localZ.length();
-                if (this._mesh.scaling.z<0) this._scale.z=-this._scale.z;
+                if(this._mesh.scaling.z<0) this._scale.z=-this._scale.z;
             }
 
             //as the mesh becomes large reduce the amount by which we scale.
@@ -898,17 +903,17 @@ namespace org.ssatguru.babylonjs.component {
                     this._scale.y=Math.abs(this._scale.y);
                     this._scale.z=Math.abs(this._scale.z);
                     if(s>0) {
-                        if(this._mesh.scaling.x > 0)this._scale.x =-this._scale.x;
+                        if(this._mesh.scaling.x>0) this._scale.x=-this._scale.x;
                         //if(this.lhsRhs) this.scale.y=Math.abs(this.scale.y);
-                        if(this._mesh.scaling.y > 0) this._scale.y=-this._scale.y;
-                        if(this._mesh.scaling.z > 0) this._scale.z=-this._scale.z;
+                        if(this._mesh.scaling.y>0) this._scale.y=-this._scale.y;
+                        if(this._mesh.scaling.z>0) this._scale.z=-this._scale.z;
                     } else {
                         //this.scale.x=Math.abs(this.scale.x);
                         //if(this.lhsRhs) this.scale.y=-Math.abs(this.scale.y);
                         //else this.scale.y=Math.abs(this.scale.y);
-                        if(this._mesh.scaling.x < 0) this._scale.x=-this._scale.x;
-                        if(this._mesh.scaling.y < 0) this._scale.y=-this._scale.y;
-                        if(this._mesh.scaling.z < 0) this._scale.z=-this._scale.z;
+                        if(this._mesh.scaling.x<0) this._scale.x=-this._scale.x;
+                        if(this._mesh.scaling.y<0) this._scale.y=-this._scale.y;
+                        if(this._mesh.scaling.z<0) this._scale.z=-this._scale.z;
                     }
                 }
 
@@ -927,7 +932,7 @@ namespace org.ssatguru.babylonjs.component {
                 this._mesh.scaling.y=Math.min(this._mesh.scaling.y,this._scaleBoundsMax.y);
                 this._mesh.scaling.z=Math.min(this._mesh.scaling.z,this._scaleBoundsMax.z);
             }
-          
+
         }
 
         private _scaleWithSnap(mesh: Mesh,p: Vector3) {
@@ -954,9 +959,9 @@ namespace org.ssatguru.babylonjs.component {
                 snapit=false;
             }
             mesh.scaling.addInPlace(p);
-           
+
         }
-        
+
         private _localX: Vector3=new Vector3(0,0,0);
         private _localY: Vector3=new Vector3(0,0,0);;
         private _localZ: Vector3=new Vector3(0,0,0);;
@@ -972,6 +977,17 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatArrayToRef(meshMatrix.m,0,this._localX);
             Vector3.FromFloatArrayToRef(meshMatrix.m,4,this._localY);
             Vector3.FromFloatArrayToRef(meshMatrix.m,8,this._localZ);
+        }
+
+        private _ecUx: Vector3=new Vector3(0,0,0);
+        private _ecUy: Vector3=new Vector3(0,0,0);;
+        private _ecUz: Vector3=new Vector3(0,0,0);;
+
+        private _setECAxes() {
+            let meshMatrix: Matrix=this._ecRoot.getWorldMatrix();
+            Vector3.FromFloatArrayToRef(meshMatrix.m,0,this._ecUx);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,4,this._ecUy);
+            Vector3.FromFloatArrayToRef(meshMatrix.m,8,this._ecUz);
         }
 
         /*
@@ -1007,8 +1023,16 @@ namespace org.ssatguru.babylonjs.component {
         private _snapRA: number=0;
         private _doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
             
-            this._setLocalAxes(this._mesh);
-            
+            //for now no rotation if parents have non uniform scale
+            if((this._local)&&(this._mesh.parent!=null)&&
+                ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
+                    (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+                //this._setLocalAxes(this._ecRoot);
+                    return;
+            } else {
+                this._setLocalAxes(this._mesh);
+            }
+
             let angle: number=0;
 
             //rotation axis
@@ -1016,6 +1040,7 @@ namespace org.ssatguru.babylonjs.component {
             if(axis==this._rX) rAxis=this._local? this._localX:Axis.X;
             else if(axis==this._rY) rAxis=this._local? this._localY:Axis.Y;
             else if(axis==this._rZ) rAxis=this._local? this._localZ:Axis.Z;
+            
             this._ecRoot.position.subtractToRef(this._mainCamera.position,this._cameraTOec);
 
             /**
@@ -1025,7 +1050,7 @@ namespace org.ssatguru.babylonjs.component {
             if(this._rotate2) {
                 angle=this._getAngle2(prevPos,newPos,this._mainCamera.position,this._cameraTOec,rAxis);
                 //TODO check why we need to handle righ hand this way
-                if (this._scene.useRightHandedSystem) angle=-angle;
+                if(this._scene.useRightHandedSystem) angle=-angle;
             } else {
                 angle=this._getAngle(prevPos,newPos,mesh.getAbsolutePivotPoint(),this._cameraTOec);
             }
@@ -1034,71 +1059,45 @@ namespace org.ssatguru.babylonjs.component {
              * B)then rotate based on users(camera) postion and orientation in the local/world space
              * 
              */
-            this._cameraTOec.normalize();
-            if(axis==this._rX) {
-                if(this._snapR) {
-                    this._snapRX+=angle;
-                    angle=0;
-                    if(Math.abs(this._snapRX)>=this._rotSnap) {
-                        if((this._snapRX>0)) angle=this._rotSnap; else angle=-this._rotSnap;
-                        this._snapRX=0;
-                    }
+
+            if(this._snapR) {
+                this._snapRA+=angle;
+                angle=0;
+                if(Math.abs(this._snapRA)>=this._rotSnap) {
+                    if(this._snapRA>0) angle=this._rotSnap; else angle=-this._rotSnap;
+                    this._snapRA=0;
                 }
-                if(angle!==0) {
-                    if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-1*angle;
+            }
+
+            if(angle!==0) {
+                this._cameraTOec.normalize();
+                if(axis==this._rAll) {
+                    mesh.rotate(this._cameraTOec,-angle,Space.WORLD);
+                } else {
+                    if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-angle;
                     mesh.rotate(rAxis,angle,Space.WORLD);
                 }
-            } else if(axis==this._rY) {
-                if(this._snapR) {
-                    this._snapRY+=angle;
-                    angle=0;
-                    if(Math.abs(this._snapRY)>=this._rotSnap) {
-                        if((this._snapRY>0)) angle=this._rotSnap; else angle=-this._rotSnap;
-                        this._snapRY=0;
+
+                if(this._eulerian) {
+                    mesh.rotation=mesh.rotationQuaternion.toEulerAngles();
+                    mesh.rotationQuaternion=null;
+                }
+                /*
+                if(this._local) {
+                    if((this._mesh.parent!=null)&&
+                        ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
+                            (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+                        if(axis==this._rAll) {
+                            this._ecRoot.rotate(this._cameraTOec,-angle,Space.WORLD);
+                        } else {
+                            this._ecRoot.rotate(rAxis,angle,Space.WORLD);
+                        }
                     }
                 }
-                if(angle!==0) {
-                    if(angle!==0) {
-                        if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-1*angle;
-                        mesh.rotate(rAxis,angle,Space.WORLD);
-                    }
-                }
-            } else if(axis==this._rZ) {
-                if(this._snapR) {
-                    this._snapRZ+=angle;
-                    angle=0;
-                    if(Math.abs(this._snapRZ)>=this._rotSnap) {
-                        if(this._snapRZ>0) angle=this._rotSnap; else angle=-this._rotSnap;
-                        this._snapRZ=0;
-                    }
-                }
-                if(angle!==0) {
-                    if(angle!==0) {
-                        if(Vector3.Dot(rAxis,this._cameraTOec)>=0) angle=-1*angle;
-                        mesh.rotate(rAxis,angle,Space.WORLD);
-                    }
-                }
-            } else if(axis==this._rAll) {
-                if(this._snapR) {
-                    this._snapRA+=angle;
-                    angle=0;
-                    if(Math.abs(this._snapRA)>=this._rotSnap) {
-                        if(this._snapRA>0) angle=this._rotSnap; else angle=-this._rotSnap;
-                        this._snapRA=0;
-                    }
-                }
-                if(angle!==0) {
-                    mesh.rotate(this._cameraTOec,-angle,Space.WORLD);
-                }
-            }
-            
-            //if angle is zero then we did not rotate and thus angle would already be in euler if we are eulerian
-            if(this._eulerian&&angle!=0) {
-                mesh.rotation=mesh.rotationQuaternion.toEulerAngles();
-                mesh.rotationQuaternion=null;
+                */
             }
         }
-
+        
         private _getPosOnPickPlane(): Vector3 {
             let pickinfo: PickingInfo=this._scene.pick(this._scene.pointerX,this._scene.pointerY,(mesh) => {
                 return mesh==this._pickedPlane;
@@ -1372,10 +1371,10 @@ namespace org.ssatguru.babylonjs.component {
             this._xaxis.renderingGroupId=1;
             this._yaxis.renderingGroupId=1;
             this._zaxis.renderingGroupId=1;
-            
-             return guideAxes;
+
+            return guideAxes;
         }
-        
+
         private _pickedPlane: Mesh;
         private _pALL: Mesh;
         private _pXZ: Mesh;
@@ -1484,7 +1483,7 @@ namespace org.ssatguru.babylonjs.component {
 
             this._tX.rotation.y=1.57;
             this._tY.rotation.x-=1.57;
-            
+
             this._tX.visibility=0;
             this._tY.visibility=0;
             this._tZ.visibility=0;
@@ -1798,7 +1797,7 @@ namespace org.ssatguru.babylonjs.component {
 
             this._sX.rotation.y=1.57;
             this._sY.rotation.x-=1.57;
-            
+
             this._sX.visibility=0;
             this._sY.visibility=0;
             this._sZ.visibility=0;
@@ -1878,7 +1877,7 @@ namespace org.ssatguru.babylonjs.component {
             this._sEndAll.isPickable=false;
         }
 
-        
+
 
         /**
          * checks if a have left hand , right hand issue.

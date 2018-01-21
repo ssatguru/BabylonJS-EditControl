@@ -88,7 +88,7 @@
                 var s = document.createElement("script");
                 s.src = url;
                 document.head.appendChild(s);
-                
+
                 //pass on the search parm to next demo
                 nextDemo.href = nextDemo.href+search;
 
@@ -115,7 +115,7 @@
                         <input type="radio" id="selectBox1" onclick="switchBox();" checked title="select box1" name="sb">box1
                         <input type="radio" id="selectBox2" onclick="switchBox();"         title="select box2" name="sb">box2
                         <input type="radio" id="selectBox3" onclick="switchBox();"         title="select box3" name="sb">box3
-                        
+
                     </td>
                 </tr>
                 <tr>
@@ -186,7 +186,7 @@
         <script type="text/javascript">
             var switchBox,showHelp,switchSpace;
             function main(){
-                
+
                 var box;
                 var box1;
                 var box2;
@@ -195,6 +195,7 @@
                 var editControl;
                 var ec1;
                 var ec2;
+                var ec3;
 
                 /*
                  * get all buttons
@@ -252,6 +253,7 @@
                         editControl = ec3;
                         box = box3;
                     }
+                    //editControl.switchTo(box);
                     switchSpace();
                     snapTButton.onclick();
                     snapRButton.onclick();
@@ -359,7 +361,7 @@
                     if(actionType===0){
                         console.log("translating");
                     }else if(actionType===1){
-                        console.log("rotating");
+                        //console.log("rotating");
                     }else if(actionType===2){
                         console.log("scaling");
                     }
@@ -410,7 +412,7 @@
                             new BABYLON.Vector3(0,1,0),scene);
                     light.intensity = .5;
 
-                    box1 = BABYLON.MeshBuilder.CreateBox("",{height:5,width:3,depth:2});
+                    box1 = BABYLON.MeshBuilder.CreateBox("box1",{height:5,width:3,depth:2});
                     box1.rotationQuaternion = BABYLON.Quaternion.Identity();
                     box1.position = new BABYLON.Vector3(0,1,0);
 
@@ -419,7 +421,7 @@
                     box2.position = new BABYLON.Vector3(-4,0,0);
                     box2.parent = box1;
 
-                    box3 = BABYLON.MeshBuilder.CreateBox("box2",{height:2,width:1,depth:2});
+                    box3 = BABYLON.MeshBuilder.CreateBox("box3",{height:2,width:1,depth:2});
                     box3.rotationQuaternion = BABYLON.Quaternion.Identity();
                     box3.position = new BABYLON.Vector3(-4,0,0);
                     box3.parent = box2;
