@@ -182,15 +182,29 @@ namespace org.ssatguru.babylonjs.component {
                         this._ecRoot.rotationQuaternion.copyFrom(this._mesh.rotationQuaternion);
                     }
                 } else {
-//                    if(this.isEditing()&&((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
-//                        (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
-//                        return;
-//                    }
+                    
+                    if (this._isScaleUnEqual(this._mesh)) return;
+                    
                     this._mesh.getWorldMatrix().getRotationMatrixToRef(this._tm);
                     Quaternion.FromRotationMatrixToRef(this._tm,this._ecRoot.rotationQuaternion);
                     //this._ecRoot.rotationQuaternion.normalize();
                 }
             }
+        }
+        /**
+         * checks if any of the mesh's ancestors has non uniform scale
+         */
+        private _isScaleUnEqual(mesh: Mesh): boolean {
+            if(mesh.parent==null) return false;
+            while(mesh.parent!=null) {
+                if(((<Mesh>mesh.parent).scaling.x!=(<Mesh>mesh.parent).scaling.y||
+                    (<Mesh>mesh.parent).scaling.y!=(<Mesh>mesh.parent).scaling.z)) {
+                    return true;
+                } else {
+                    mesh=<Mesh>mesh.parent;
+                }
+            }
+            return false;
         }
 
         //how far away from camera should the edit control appear to be
@@ -732,9 +746,7 @@ namespace org.ssatguru.babylonjs.component {
         private _transBy: Vector3=new Vector3(0,0,0);
         private _doTranslation(diff: Vector3) {
 
-            if((this._mesh.parent!=null)&&
-                ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
-                    (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+            if((this._mesh.parent!=null)&& this._isScaleUnEqual(this._mesh)) {
                 this._setLocalAxes(this._ecRoot);
             } else {
                 this._setLocalAxes(this._mesh);
@@ -752,11 +764,6 @@ namespace org.ssatguru.babylonjs.component {
                 if((n=="X")||(n=="XZ")||(n=="YX")) {
                     if(this._local) this._transBy.x=Vector3.Dot(diff,this._localX)/this._localX.length();
                     else this._transBy.x=diff.x;
-                    //                    if (this.lhsRhs){
-                    //                        this.transBy.x=-diff.x;
-                    //                    }else{
-                    //                        this.transBy.x=diff.x;
-                    //                    }
                 }
                 if((n=="Y")||(n=="ZY")||(n=="YX")) {
                     if(this._local) this._transBy.y=Vector3.Dot(diff,this._localY)/this._localY.length();
@@ -1022,15 +1029,12 @@ namespace org.ssatguru.babylonjs.component {
         private _eulerian: boolean=false;
         private _snapRA: number=0;
         private _doRotation(mesh: Mesh,axis: Mesh,newPos: Vector3,prevPos: Vector3) {
-            
+
             //for now no rotation if parents have non uniform scale
-            if((this._local)&&(this._mesh.parent!=null)&&
-                ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
-                    (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
-                //this._setLocalAxes(this._ecRoot);
-                    return;
+            if(this._local&&(this._mesh.parent!=null)&& this._isScaleUnEqual(mesh)) {
+                this._setLocalAxes(this._ecRoot);
             } else {
-                this._setLocalAxes(this._mesh);
+                this._setLocalAxes(mesh);
             }
 
             let angle: number=0;
@@ -1040,7 +1044,7 @@ namespace org.ssatguru.babylonjs.component {
             if(axis==this._rX) rAxis=this._local? this._localX:Axis.X;
             else if(axis==this._rY) rAxis=this._local? this._localY:Axis.Y;
             else if(axis==this._rZ) rAxis=this._local? this._localZ:Axis.Z;
-            
+
             this._ecRoot.position.subtractToRef(this._mainCamera.position,this._cameraTOec);
 
             /**
@@ -1082,11 +1086,9 @@ namespace org.ssatguru.babylonjs.component {
                     mesh.rotation=mesh.rotationQuaternion.toEulerAngles();
                     mesh.rotationQuaternion=null;
                 }
-                /*
+
                 if(this._local) {
-                    if((this._mesh.parent!=null)&&
-                        ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
-                            (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
+                    if((this._mesh.parent!=null)&& this._isScaleUnEqual(mesh)) {
                         if(axis==this._rAll) {
                             this._ecRoot.rotate(this._cameraTOec,-angle,Space.WORLD);
                         } else {
@@ -1094,10 +1096,9 @@ namespace org.ssatguru.babylonjs.component {
                         }
                     }
                 }
-                */
             }
         }
-        
+
         private _getPosOnPickPlane(): Vector3 {
             let pickinfo: PickingInfo=this._scene.pick(this._scene.pointerX,this._scene.pointerY,(mesh) => {
                 return mesh==this._pickedPlane;

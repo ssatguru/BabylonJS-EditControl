@@ -377,8 +377,12 @@
 
                     var light = new BABYLON.HemisphericLight("light1",new BABYLON.Vector3(0,1,0),scene);
                     light.intensity = .5;
-
+                    
+                    var mat = new BABYLON.StandardMaterial("mat", scene);
+                    mat.diffuseColor = new BABYLON.Color3(1, 0, 0); 
+                    
                     box = BABYLON.MeshBuilder.CreateBox("",{height:5,width:3,depth:2});
+                    box.material=mat;
 
                     //if we are planning on doing rotation in quaternion then make sure the rotationQuaternion is atleast initialized
                     //else edit control will throw following exception

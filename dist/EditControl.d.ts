@@ -51,6 +51,10 @@ declare namespace org.ssatguru.babylonjs.component {
          * sets rotaion of edit control to that of the mesh
          */
         private _setECRotation();
+        /**
+         * checks if any of the mesh's ancestors has non uniform scale
+         */
+        private _isScaleUnEqual(mesh);
         private _distFromCamera;
         private _cameraTOec;
         private _cameraNormal;

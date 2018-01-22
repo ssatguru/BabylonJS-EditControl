@@ -411,19 +411,31 @@
                     var light = new BABYLON.HemisphericLight("light1",
                             new BABYLON.Vector3(0,1,0),scene);
                     light.intensity = .5;
+                    
+                    var mat = new BABYLON.StandardMaterial("mat", scene);
+                    mat.diffuseColor = new BABYLON.Color3(1, 0, 0); 
+                    
+                    var mat2 = new BABYLON.StandardMaterial("mat2", scene);
+                    mat2.diffuseColor = new BABYLON.Color3.Teal();
+                    
+                    var mat3 = new BABYLON.StandardMaterial("mat3", scene);
+                    mat3.diffuseColor = new BABYLON.Color3.Magenta();
 
                     box1 = BABYLON.MeshBuilder.CreateBox("box1",{height:5,width:3,depth:2});
                     box1.rotationQuaternion = BABYLON.Quaternion.Identity();
                     box1.position = new BABYLON.Vector3(0,1,0);
+                    box1.material=mat;
 
                     box2 = BABYLON.MeshBuilder.CreateBox("box2",{height:3,width:2,depth:1});
                     box2.rotationQuaternion = BABYLON.Quaternion.Identity();
                     box2.position = new BABYLON.Vector3(-4,0,0);
+                    box2.material=mat2;
                     box2.parent = box1;
 
                     box3 = BABYLON.MeshBuilder.CreateBox("box3",{height:2,width:1,depth:2});
                     box3.rotationQuaternion = BABYLON.Quaternion.Identity();
                     box3.position = new BABYLON.Vector3(-4,0,0);
+                    box3.material=mat3;
                     box3.parent = box2;
 
                     ec1 = attachEditControl(box1);

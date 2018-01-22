@@ -184,15 +184,30 @@ var org;
                                 }
                             }
                             else {
-                                //                    if(this.isEditing()&&((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
-                                //                        (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
-                                //                        return;
-                                //                    }
+                                if (this._isScaleUnEqual(this._mesh))
+                                    return;
                                 this._mesh.getWorldMatrix().getRotationMatrixToRef(this._tm);
                                 Quaternion.FromRotationMatrixToRef(this._tm, this._ecRoot.rotationQuaternion);
                                 //this._ecRoot.rotationQuaternion.normalize();
                             }
                         }
+                    };
+                    /**
+                     * checks if any of the mesh's ancestors has non uniform scale
+                     */
+                    EditControl.prototype._isScaleUnEqual = function (mesh) {
+                        if (mesh.parent == null)
+                            return false;
+                        while (mesh.parent != null) {
+                            if ((mesh.parent.scaling.x != mesh.parent.scaling.y ||
+                                mesh.parent.scaling.y != mesh.parent.scaling.z)) {
+                                return true;
+                            }
+                            else {
+                                mesh = mesh.parent;
+                            }
+                        }
+                        return false;
                     };
                     EditControl.prototype._setECScale = function () {
                         this._ecRoot.position.subtractToRef(this._mainCamera.position, this._cameraTOec);
@@ -728,9 +743,7 @@ var org;
                             return null;
                     };
                     EditControl.prototype._doTranslation = function (diff) {
-                        if ((this._mesh.parent != null) &&
-                            (this._mesh.parent.scaling.x != this._mesh.parent.scaling.y ||
-                                this._mesh.parent.scaling.y != this._mesh.parent.scaling.z)) {
+                        if ((this._mesh.parent != null) && this._isScaleUnEqual(this._mesh)) {
                             this._setLocalAxes(this._ecRoot);
                         }
                         else {
@@ -752,11 +765,6 @@ var org;
                                     this._transBy.x = Vector3.Dot(diff, this._localX) / this._localX.length();
                                 else
                                     this._transBy.x = diff.x;
-                                //                    if (this.lhsRhs){
-                                //                        this.transBy.x=-diff.x;
-                                //                    }else{
-                                //                        this.transBy.x=diff.x;
-                                //                    }
                             }
                             if ((n == "Y") || (n == "ZY") || (n == "YX")) {
                                 if (this._local)
@@ -1033,14 +1041,11 @@ var org;
                     };
                     EditControl.prototype._doRotation = function (mesh, axis, newPos, prevPos) {
                         //for now no rotation if parents have non uniform scale
-                        if ((this._local) && (this._mesh.parent != null) &&
-                            (this._mesh.parent.scaling.x != this._mesh.parent.scaling.y ||
-                                this._mesh.parent.scaling.y != this._mesh.parent.scaling.z)) {
-                            //this._setLocalAxes(this._ecRoot);
-                            return;
+                        if (this._local && (this._mesh.parent != null) && this._isScaleUnEqual(mesh)) {
+                            this._setLocalAxes(this._ecRoot);
                         }
                         else {
-                            this._setLocalAxes(this._mesh);
+                            this._setLocalAxes(mesh);
                         }
                         var angle = 0;
                         //rotation axis
@@ -1094,19 +1099,16 @@ var org;
                                 mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
                                 mesh.rotationQuaternion = null;
                             }
-                            /*
-                            if(this._local) {
-                                if((this._mesh.parent!=null)&&
-                                    ((<Mesh>this._mesh.parent).scaling.x!=(<Mesh>this._mesh.parent).scaling.y||
-                                        (<Mesh>this._mesh.parent).scaling.y!=(<Mesh>this._mesh.parent).scaling.z)) {
-                                    if(axis==this._rAll) {
-                                        this._ecRoot.rotate(this._cameraTOec,-angle,Space.WORLD);
-                                    } else {
-                                        this._ecRoot.rotate(rAxis,angle,Space.WORLD);
+                            if (this._local) {
+                                if ((this._mesh.parent != null) && this._isScaleUnEqual(mesh)) {
+                                    if (axis == this._rAll) {
+                                        this._ecRoot.rotate(this._cameraTOec, -angle, Space.WORLD);
+                                    }
+                                    else {
+                                        this._ecRoot.rotate(rAxis, angle, Space.WORLD);
                                     }
                                 }
                             }
-                            */
                         }
                     };
                     EditControl.prototype._getPosOnPickPlane = function () {
