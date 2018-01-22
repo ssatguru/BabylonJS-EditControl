@@ -142,10 +142,6 @@ declare namespace org.ssatguru.babylonjs.component {
         private _localY;
         private _localZ;
         private _setLocalAxes(mesh);
-        private _ecUx;
-        private _ecUy;
-        private _ecUz;
-        private _setECAxes();
         private _boundingDimesion;
         private _getBoundingDimension(mesh);
         refreshBoundingInfo(): void;

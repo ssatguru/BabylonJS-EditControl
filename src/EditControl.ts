@@ -986,16 +986,6 @@ namespace org.ssatguru.babylonjs.component {
             Vector3.FromFloatArrayToRef(meshMatrix.m,8,this._localZ);
         }
 
-        private _ecUx: Vector3=new Vector3(0,0,0);
-        private _ecUy: Vector3=new Vector3(0,0,0);;
-        private _ecUz: Vector3=new Vector3(0,0,0);;
-
-        private _setECAxes() {
-            let meshMatrix: Matrix=this._ecRoot.getWorldMatrix();
-            Vector3.FromFloatArrayToRef(meshMatrix.m,0,this._ecUx);
-            Vector3.FromFloatArrayToRef(meshMatrix.m,4,this._ecUy);
-            Vector3.FromFloatArrayToRef(meshMatrix.m,8,this._ecUz);
-        }
 
         /*
          * boundingDimesion is used by scaling to adjust rate at which a mesh is scaled

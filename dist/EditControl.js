@@ -77,9 +77,6 @@ var org;
                         this._localX = new Vector3(0, 0, 0);
                         this._localY = new Vector3(0, 0, 0);
                         this._localZ = new Vector3(0, 0, 0);
-                        this._ecUx = new Vector3(0, 0, 0);
-                        this._ecUy = new Vector3(0, 0, 0);
-                        this._ecUz = new Vector3(0, 0, 0);
                         this._eulerian = false;
                         this._snapRA = 0;
                         this._transEnabled = false;
@@ -1006,14 +1003,6 @@ var org;
                         Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this._localX);
                         Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this._localY);
                         Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this._localZ);
-                    };
-                    ;
-                    ;
-                    EditControl.prototype._setECAxes = function () {
-                        var meshMatrix = this._ecRoot.getWorldMatrix();
-                        Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this._ecUx);
-                        Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this._ecUy);
-                        Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this._ecUz);
                     };
                     EditControl.prototype._getBoundingDimension = function (mesh) {
                         var bb = mesh.getBoundingInfo().boundingBox;
