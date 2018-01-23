@@ -274,8 +274,7 @@
                 boundSButton.onclick = function(){
                     if(boundSButton.checked){
                         editControl.setScaleBounds(
-                                // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
-                                new BABYLON.Vector3(0,0,0),// causes bug
+                                new BABYLON.Vector3(0,0,0),     //min
                                 new BABYLON.Vector3(2,2,2)      // max
                                 );
                     }else{
@@ -339,7 +338,7 @@
                 var EditControl = org.ssatguru.babylonjs.component.EditControl;
                 function attachEditControl(mesh){
                     //create edit control (mesh to attach to,camera, canvas, scale of editcontrol, if doing rotation in euler)
-                    var ec = new EditControl(mesh,camera,canvas,0.5,false);
+                    var ec = new EditControl(mesh,camera,canvas,1,false,0.02);
                     //show translation controls
                     ec.enableTranslation();
                     //set rotational snap valie in radians

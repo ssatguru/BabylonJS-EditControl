@@ -72,18 +72,25 @@ namespace org.ssatguru.babylonjs.component {
         //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
         //private lhsRhs: boolean=false;
 
-        public constructor(mesh: Mesh,camera: Camera,canvas: HTMLCanvasElement,scale: number,eulerian?: boolean) {
+        public constructor(mesh: Mesh,camera: Camera,canvas: HTMLCanvasElement,scale?: number,eulerian?: boolean,pickWidth?:number) {
             this._mesh=mesh;
             this._mainCamera=camera;
             this._canvas=canvas;
-            this._axesScale=scale;
-
+            
+            if(scale!=null){
+                this._axesScale=scale;
+            }
+            
             if(eulerian!==null) {
                 this._eulerian=eulerian;
             } else {
                 this._eulerian=false;
             }
             this._checkQuaternion();
+            
+            if(pickWidth!=null){
+                this._pickWidth=pickWidth;
+            }
 
             this._scene=mesh.getScene();
             this._actHist=new ActHist(mesh,10);

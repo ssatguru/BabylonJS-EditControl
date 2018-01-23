@@ -37,7 +37,7 @@ var org;
                 var EditControl = (function () {
                     //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
                     //private lhsRhs: boolean=false;
-                    function EditControl(mesh, camera, canvas, scale, eulerian) {
+                    function EditControl(mesh, camera, canvas, scale, eulerian, pickWidth) {
                         var _this = this;
                         this._local = true;
                         this._snapT = false;
@@ -92,7 +92,9 @@ var org;
                         this._mesh = mesh;
                         this._mainCamera = camera;
                         this._canvas = canvas;
-                        this._axesScale = scale;
+                        if (scale != null) {
+                            this._axesScale = scale;
+                        }
                         if (eulerian !== null) {
                             this._eulerian = eulerian;
                         }
@@ -100,6 +102,9 @@ var org;
                             this._eulerian = false;
                         }
                         this._checkQuaternion();
+                        if (pickWidth != null) {
+                            this._pickWidth = pickWidth;
+                        }
                         this._scene = mesh.getScene();
                         this._actHist = new ActHist(mesh, 10);
                         mesh.computeWorldMatrix(true);

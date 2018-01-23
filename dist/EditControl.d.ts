@@ -42,7 +42,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private _pointerup;
         private _pointermove;
         private _visibility;
-        constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale: number, eulerian?: boolean);
+        constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number);
         private _checkQuaternion();
         private _ecMatrix;
         private _ecTOcamera;

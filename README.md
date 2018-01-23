@@ -89,16 +89,17 @@ var editControl = new EditControl(mesh,camera, canvas, 0.75, true);
 ```
 // TypeScript
 import EditControl = org.ssatguru.babylonjs.component.EditControl;
-let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75, true);
+let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75, true,0.02);
 ```
 This positions the edit control at the mesh pivot position and displays  x,y,z axis.  
 Takes five parms
 * mesh - the mesh to control using the editcontrol
 * camera - active camera
 * canvas - the mesh canvas 
-* scale - how small or large the editcontrol should appear  
-* eulerian - true/false. Optional. Default false. True indicates that rotation of the mesh is in euler. 
-If rotation is unresponsive then it is possible that the rotation may not have been initialized to either a eulerian or quaternion value.
+* scale - number. Optional. Default 1. Determines how small or large the editcontrol should appear.
+* eulerian - true/false. Optional. Default false. True indicates that rotation of the mesh is in euler.If rotation is unresponsive then it is possible that the rotation may not have been initialized to either a eulerian or quaternion value.
+* pickWidth - number. Optional. Default 0.02. Determines how close to an axis should the pointer get before we can pick it 
+
 
 #### To show Translation, Rotation or Scaling controls
 ```
