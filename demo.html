@@ -338,7 +338,7 @@
                 var EditControl = org.ssatguru.babylonjs.component.EditControl;
                 function attachEditControl(mesh){
                     //create edit control (mesh to attach to,camera, canvas, scale of editcontrol, if doing rotation in euler)
-                    var ec = new EditControl(mesh,camera,canvas,1,false,0.02);
+                    var ec = new EditControl(mesh,camera,canvas,0.75,false,0.02);
                     //show translation controls
                     ec.enableTranslation();
                     //set rotational snap valie in radians
