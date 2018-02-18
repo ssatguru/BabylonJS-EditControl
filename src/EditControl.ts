@@ -314,6 +314,7 @@ namespace org.ssatguru.babylonjs.component {
             this._checkQuaternion();
             this._setLocalAxes(mesh);
             this._actHist=new ActHist(mesh,10);
+            this.refreshBoundingInfo();
         }
 
         public setUndoCount(c: number) {

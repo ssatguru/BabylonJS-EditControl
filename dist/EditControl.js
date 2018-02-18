@@ -301,6 +301,7 @@ var org;
                         this._checkQuaternion();
                         this._setLocalAxes(mesh);
                         this._actHist = new ActHist(mesh, 10);
+                        this.refreshBoundingInfo();
                     };
                     EditControl.prototype.setUndoCount = function (c) {
                         this._actHist.setCapacity(c);
