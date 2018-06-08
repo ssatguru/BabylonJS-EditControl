@@ -29,6 +29,8 @@ For a list of know issues, shortcomings and planned enhancements see <a href="ht
 1) add the following dependencies 
  ```
 <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
+<!-- add "earcut.min.js" as show below if using babylonjs 3.2 and above -->
+<script src="https://cdn.babylonjs.com/earcut.min.js"></script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
