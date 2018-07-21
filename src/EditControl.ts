@@ -1570,6 +1570,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private _createTriangle(name: string,w: number,scene: Scene) {
+            console.log("_createTriangle " + w);
             let p: Path2=new Path2(w/2,-w/2).addLineTo(w/2,w/2).addLineTo(-w/2,w/2).addLineTo(w/2,-w/2);
             let s=new BABYLON.PolygonMeshBuilder(name,p,scene)
             let t=s.build();

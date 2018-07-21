@@ -1464,6 +1464,7 @@ var org;
                         this._tEndAll.isPickable = false;
                     };
                     EditControl.prototype._createTriangle = function (name, w, scene) {
+                        console.log("_createTriangle " + w);
                         var p = new Path2(w / 2, -w / 2).addLineTo(w / 2, w / 2).addLineTo(-w / 2, w / 2).addLineTo(w / 2, -w / 2);
                         var s = new BABYLON.PolygonMeshBuilder(name, p, scene);
                         var t = s.build();
