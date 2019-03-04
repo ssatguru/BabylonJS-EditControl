@@ -17,9 +17,7 @@ It currently supports
 * Scale size of control
 * undo, redo
 
-For a demo of stable version, head on over to <a href="https://ssatguru.github.io/BabylonJS-EditControl/demo?stable" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/demo?stable </a>
-
-For preview of the latest see <a href="https://ssatguru.github.io/BabylonJS-EditControl/demo" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl/demo </a>  
+For a demo, head on over to <a href="https://ssatguru.github.io/BabylonJS-EditControl-Samples/demo/Demo.html" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl-Samples/demo/Demo.html </a>
 
 For a list of know issues, shortcomings and planned enhancements see <a href="https://github.com/ssatguru/BabylonJS-EditControl/issues" target="_blank"> https://github.com/ssatguru/BabylonJS-EditControl/issues  </a>  
 
@@ -61,11 +59,15 @@ You can also install this from npm
 ```
 npm install babylonjs-editcontrol
 ```
+## USAGE  
 
-This has been built as an UMD module which means you can load it as a CommonJS/NodeJS module, AMD module or as a global object
+This has been built as an UMD module which means you can use it as a CommonJS/NodeJS module, AMD module or as a global object
 loaded using the script tag.  
+
+Project "BabylonJS-EditControl-Samples" [https://github.com/ssatguru/BabylonJS-EditControl-Samples](https://github.com/ssatguru/BabylonJS-EditControl-Samples) has a 
+collection of sample projects to show how to use this from TypeScript, NodeJs, AMD or plain vanilla JavaScript applications.  
   
-Below is a quick summary of how you can load this as different module.  
+Below is a quick summary of how you can use this as different module types.  
   
 CommonJS/NodeJS Module
 ```
@@ -126,9 +128,6 @@ or via cdn
 <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 ```
-
-
-
 
 ## API
 #### To Instantiate
