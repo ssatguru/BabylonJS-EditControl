@@ -1,7 +1,7 @@
 nbproject
 node_modules
-lib
-src
+tst
 _config.yml
-
+tsconfig.json
+webpack.config.js
 

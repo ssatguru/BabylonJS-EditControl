@@ -1,6 +1,6 @@
 {
   "name": "babylonjs-editcontrol",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "A transform control for Babylonjs mesh",
   "repository": {
     "type": "git",
@@ -8,21 +8,29 @@
   },
   "keywords": [
     "babylonjs",
-    "transform control"
+    "transform control",
+    "widget",
+    "gizmo"
   ],
   "author": "satguru <ssatguru@gmail.com>",
   "license": "Apache-2.0",
   "contributors": [],
-  "main": "dist/EditControl.min.js",
+  "main": "dist/EditControl.js",
   "types": "dist/EditControl.d.ts",
   "dependencies": {},
   "devDependencies": {
-    "babylonjs": "^3.1.0",
-    "uglify-js": "^3.3.7"
+    "babylonjs": "^3.3.0",
+    "earcut": "^2.1.5",
+    "pepjs": "^0.4.3",
+    "terser-webpack-plugin": "^1.2.2",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.3.3333",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.2.3"
   },
   "scripts": {
-    "compile": "tsc -p src",
-    "min": "uglifyjs dist/EditControl.js -o dist/EditControl.min.js -m --mangle-props  regex=/^_/ -c --warn",
-    "build": "npm run compile && npm run min"
+    "build-prod": "webpack --mode production",
+    "build": "webpack",
+    "build-tst": "webpack --config ./tst/webpack.config.tst.js"
   }
 }

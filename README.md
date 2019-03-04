@@ -40,9 +40,8 @@ See INSTALL below to find where you can get "EditControl.js".
 2) a small javascript code snippet to get you up and running
 ```
 	//------------------EDIT CONTROL -------------------------------------------------
-	var EditControl = org.ssatguru.babylonjs.component.EditControl;
 	//create edit control (mesh to attach to, active camera, canvas, scale of editcontrol)
-	editControl = new EditControl(box,camera, canvas, 0.75);
+	var editControl = new EditControl(box,camera, canvas, 0.75);
 	//to show translation controls
 	editControl.enableTranslation();
 	//set transalation snap value in meters
@@ -63,34 +62,83 @@ You can also install this from npm
 npm install babylonjs-editcontrol
 ```
 
-Note that even though this is available in npm it is not packaged as a node module or any other type of module.  
-For now, to keep it simple and avoid dependencies on module systems, the application is packaged as a simple javascript "namespaced" application.  
-In other words load it using the "script" tag and refer to it using the global name "org.ssatguru.babylonjs.component.EditControl". 
-Different module system provides way to handle non modules. Here is how you can use Edit Control from web pack.  
-#### webpack
-Because EditControl is not a module, it does not export/import anything.  
-webpack provides "exports-loader" and "imports-loader" to add exports and imports to such apps.  
-This is how you would use it from webpack  
+This has been built as an UMD module which means you can load it as a CommonJS/NodeJS module, AMD module or as a global object
+loaded using the script tag.  
+  
+Below is a quick summary of how you can load this as different module.  
+  
+CommonJS/NodeJS Module
 ```
-var EditControl=require("exports-loader?org.ssatguru.babylonjs.component.EditControl!imports-loader?BABYLON=babylonjs!babylonjs-editcontrol/dist/EditControl");
+let BABYLON = require("babylonjs");
+let EditControl = require("babylonjs-editcontrol").EditControl;
+let engine = new BABYLON.Engine(canvas, true);
+...
+let editControl = new EditControl(box,camera, canvas, 0.75);
+...
+
+```
+AMD Module
+```
+<script src="./lib/require.js"></script>
+<script>
+	require.config({
+		baseUrl: ".",
+		paths: {
+			"babylonjs": "./lib/babylon",
+			"ec": "./lib/EditControl"
+		}
+	});
+
+	require(['babylonjs', 'ec'], function (BABYLON, ec) {
+		let EditControl = ec.EditControl;
+		let engine = new BABYLON.Engine(canvas, true);
+		...
+		let editControl = new EditControl(box,camera, canvas, 0.75);
+		...
+	});
+</script>
+```
+Global Module
+```
+<script src="./lib/babylon.js"></script>
+<script src="./lib/EditControl.js"></script>
+<script>
+	let engine = new BABYLON.Engine(canvas, true);
+	...
+	let editControl = new EditControl(box,camera, canvas, 0.75);
+	...
+</script>
+```
+## DEPENDENCIES
+
+* pepjs  
+* earcut  
+* babylonjs  
+
+All three can be installed from npm 
+```
+npm install babylonjs pepjs earcut
+```
+or via cdn
+```
+<script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
+<!-- add "earcut.min.js" as show below if using babylonjs 3.2 and above -->
+<script src="https://cdn.babylonjs.com/earcut.min.js"></script>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
 ```
 
-you will, ofcourse, have to npm install the following  
-exports-loader  
-imports-loader  
-babylonjs  
-babylonjs-editcontrol  
+
+
 
 ## API
 #### To Instantiate
 ```
 // JavaScript
-var EditControl = org.ssatguru.babylonjs.component.EditControl;
 var editControl = new EditControl(mesh,camera, canvas, 0.75, true);
 ```
 ```
 // TypeScript
-import EditControl = org.ssatguru.babylonjs.component.EditControl;
+import {EditControl} from "babaylonjs-editcontrol";
 let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75, true,0.02);
 ```
 This positions the edit control at the mesh pivot position and displays  x,y,z axis.  
@@ -245,15 +293,16 @@ isEuler : true/false, optional, default false, true indicates that rotation of t
 editControl.detach();
 ```
 
-## Build
-If not already installed, install node js and typescript.  
+## Build and Test
+If not already installed, install node js.  
 Switch to the project folder.  
-Run "npm install", once, to install all the dependencies (these, for now, are babylonjs and uglify).  
-To build anytime  
-Run "npm run compile" - this will compile the typescript file and store the javascript file in the "dist" folder.  
-Run "npm run min" - this will minify the javascript file and store the minified version in the "dist" folder.  
-Run "npm run build" - this will both compile and minify. 
-Use the "test.html" to test your changes.  
+Run "npm install", once, to install all the dependencies.  
+### Build
+Run "npm run build" - this will compile the files in "src" and create an uncompressed development module in the "dist" folder.  
+Run "npm run build-prod" - this will compile and create a compressed production module in the "dist" folder. 
+### Test
+Run "npm run build-tst" - this will compile the files in "tst" and create an uncompressed test application in the "tst" folder.  
+Use the "tst/Test-EditControl.html" to test your changes.  
 ## Note:  
 The original version was written in Java and then transpiled to TypeScript/JavaScript using JSweet.  
 It was originally written in Java, as at that time I wasn't very comfortable with the TypeScript language and its ecosystem.  
