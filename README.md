@@ -21,8 +21,8 @@ For a demo, head on over to <a href="https://ssatguru.github.io/BabylonJS-EditCo
 
 For a list of know issues, shortcomings and planned enhancements see <a href="https://github.com/ssatguru/BabylonJS-EditControl/issues" target="_blank"> https://github.com/ssatguru/BabylonJS-EditControl/issues  </a>  
 
-### Breaking change with 3.2
-Version 3.2 converts the project from a plain vanilla JavaScript project to a module based JavaScript project.  
+### Breaking change with 3.2.0
+Version 3.2.0 converts the project from a plain vanilla JavaScript project to a module based JavaScript project.  
 With this the way to load the application has changed.  
 In JavaScript instead of
 ```
