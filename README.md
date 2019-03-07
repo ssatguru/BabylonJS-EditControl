@@ -67,8 +67,8 @@ See INSTALL below to find where you can get "EditControl.js".
 	editControl.setTransSnapValue(0.5);
 ```
 
-see demo.html for a working example
-[https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html](https://github.com/ssatguru/BabylonJS-EditControl/blob/master/demo.html)
+see sample project here
+[https://github.com/ssatguru/BabylonJS-EditControl-Samples/tree/master/sample-global](https://github.com/ssatguru/BabylonJS-EditControl-Samples/tree/master/sample-global)
 
 ## INSTALL
 
