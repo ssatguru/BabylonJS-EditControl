@@ -30,6 +30,11 @@ export declare class EditControl {
     private _blueMat;
     private _whiteMat;
     private _yellowMat;
+    private _redCol;
+    private _greenCol;
+    private _blueCol;
+    private _whiteCol;
+    private _yellowCol;
     private _actHist;
     private _renderer;
     private _pointerdown;
@@ -144,7 +149,6 @@ export declare class EditControl {
     private _doRotation;
     private _getPosOnPickPlane;
     private _hideBaxis;
-    private _setAxesVisiblity;
     getRotationQuaternion(): Quaternion;
     getPosition(): Vector3;
     private _transEnabled;
@@ -193,6 +197,7 @@ export declare class EditControl {
     private _tZY;
     private _tYX;
     private _tAll;
+    private _all_t;
     private _tEndX;
     private _tEndY;
     private _tEndZ;
@@ -200,21 +205,30 @@ export declare class EditControl {
     private _tEndZY;
     private _tEndYX;
     private _tEndAll;
+    private _all_tEnd;
     private _createTransAxes;
-    private _createTriangle;
+    private _createPickableTrans;
+    private _createNonPickableTrans;
     private _rCtl;
     private _rX;
     private _rY;
     private _rZ;
     private _rAll;
+    private _all_r;
     private _rEndX;
     private _rEndY;
     private _rEndZ;
     private _rEndAll;
     private _rEndAll2;
+    private _all_rEnd;
     private _guideSize;
     setRotGuideFull(y: boolean): void;
     private _createRotAxes;
+    private _createPickableRot;
+    private _createNonPickableRot;
+    private _setVisibility;
+    private _setPickableFalse;
+    private _setRenderingGroup;
     private _extrudeBox;
     private _createCircle;
     private _createTube;
@@ -226,6 +240,7 @@ export declare class EditControl {
     private _sZY;
     private _sYX;
     private _sAll;
+    private _all_s;
     private _sEndX;
     private _sEndY;
     private _sEndZ;
@@ -233,7 +248,10 @@ export declare class EditControl {
     private _sEndZY;
     private _sEndYX;
     private _sEndAll;
+    private _all_sEnd;
     private _createScaleAxes;
+    private _createPickableScale;
+    private _createNonPickableScale;
     /**
      * checks if a have left hand , right hand issue.
      * In other words if a mesh is a LHS mesh in RHS system or
@@ -242,7 +260,6 @@ export declare class EditControl {
      * thus Cross product of X and Y should be inverse of Z.
      *
      */
-    private _check_LHS_RHS;
     /**
      * set how transparent the axes are
      * 0 to 1

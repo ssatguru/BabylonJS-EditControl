@@ -254,12 +254,12 @@ let setButtons = function (camera) {
             box = box3;
         }
         switchSpace();
-        snapTButton.click();
-        snapRButton.click();
-        snapSButton.click();
-        boundTButton.click();
-        boundSButton.click();
-        rotGuideFull.click();
+        snapTButton.onclick(null);
+        snapRButton.onclick(null);
+        snapSButton.onclick(null);
+        boundTButton.onclick(null);
+        boundSButton.onclick(null);
+        rotGuideFull.onclick(null);
     }
     selectBox1.onclick = switchBox;
     selectBox2.onclick = switchBox;

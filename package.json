@@ -20,17 +20,18 @@
   "dependencies": {},
   "devDependencies": {
     "babylonjs": "^3.3.0",
-    "earcut": "^2.1.5",
     "pepjs": "^0.4.3",
     "terser-webpack-plugin": "^1.2.2",
     "ts-loader": "^5.3.3",
     "typescript": "^3.3.3333",
     "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3"
+    "webpack-cli": "^3.2.3",
+    "webpack-dev-server": "^3.2.1"
   },
   "scripts": {
     "build-prod": "webpack --mode production",
     "build": "webpack",
-    "build-tst": "webpack --config ./tst/webpack.config.tst.js"
+    "build-tst": "webpack --config ./tst/webpack.config.tst.js",
+    "start": "webpack-dev-server --open"
   }
 }
