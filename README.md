@@ -23,21 +23,21 @@ For a list of know issues, shortcomings and planned enhancements see <a href="ht
 
 ### Breaking change with 3.2.0
 Version 3.2.0 converts the project from a plain vanilla JavaScript project to a module based JavaScript project.  
-With this the way to load the application has changed.  
-In JavaScript instead of
+With this change, the way to load the application has changed.  
+In JavaScript, instead of
 ```
 var EditControl = org.ssatguru.babylonjs.component.EditControl;
 editControl = new EditControl(box,camera, canvas, 0.75);
 ```
-now just use
+now do
 ```
 var editControl = new EditControl(box,camera, canvas, 0.75);
 ```
-In TypeScript instead of
+In TypeScript, instead of
 ```
 import EditControl = org.ssatguru.babylonjs.component.EditControl;
 ```
-now use
+now do
 ```
 import {EditControl} from "babaylonjs-editcontrol";
 ```
@@ -58,13 +58,13 @@ See INSTALL below to find where you can get "EditControl.js".
 
 2) a small javascript code snippet to get you up and running
 ```
-	//------------------EDIT CONTROL -------------------------------------------------
-	//create edit control (mesh to attach to, active camera, canvas, scale of editcontrol)
-	var editControl = new EditControl(box,camera, canvas, 0.75);
-	//to show translation controls
-	editControl.enableTranslation();
-	//set transalation snap value in meters
-	editControl.setTransSnapValue(0.5);
+//------------------EDIT CONTROL -------------------------------------------------
+//create edit control (mesh to attach to, active camera, canvas, scale of editcontrol)
+var editControl = new EditControl(box,camera, canvas, 0.75);
+//to show translation controls
+editControl.enableTranslation();
+//set transalation snap value in meters
+editControl.setTransSnapValue(0.5
 ```
 
 see sample project here
