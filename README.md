@@ -313,11 +313,13 @@ If not already installed, install node js.
 Switch to the project folder.  
 Run "npm install", once, to install all the dependencies.  
 ### Build
-Run "npm run build" - this will compile the files in "src" and create an uncompressed development module in the "dist" folder.  
-Run "npm run build-prod" - this will compile and create a compressed production module in the "dist" folder. 
+Run "npm run build" - this will compile the files in "src" and create a development module in the "dist" folder.  
+Run "npm run build-prod" - this will compile and create a minified production module in the "dist" folder. 
 ### Test
-Run "npm run build-tst" - this will compile the files in "tst" and create an uncompressed test application in the "tst" folder.  
-Use the "tst/Test-EditControl.html" to test your changes.  
+Run "npm run start"  to start the webpack dev server on localhost:8080. It will watch for any changes and serve out the latest "EditControl.js".  
+Double click "tst/comprehensive.html" or tst/simple.html" to open them in browser and test your changes.  
+These two html pull "EditControl.js" from http://localhost:8080.  
+
 ## Note:  
 The original version was written in Java and then transpiled to TypeScript/JavaScript using JSweet.  
 It was originally written in Java, as at that time I wasn't very comfortable with the TypeScript language and its ecosystem.  
