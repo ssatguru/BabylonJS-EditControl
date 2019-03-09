@@ -48,8 +48,6 @@ See below for more details.
 1) add the following dependencies 
  ```
 <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
-<!-- add "earcut.min.js" as show below if using babylonjs 3.2 and above -->
-<script src="https://cdn.babylonjs.com/earcut.min.js"></script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="EditControl.js"></script>
 ```
@@ -135,18 +133,15 @@ Global Module
 ## DEPENDENCIES
 
 * pepjs  
-* earcut  
 * babylonjs  
 
-All three can be installed from npm 
+The two can be installed from npm 
 ```
-npm install babylonjs pepjs earcut
+npm install babylonjs pepjs 
 ```
 or via cdn
 ```
 <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
-<!-- add "earcut.min.js" as show below if using babylonjs 3.2 and above -->
-<script src="https://cdn.babylonjs.com/earcut.min.js"></script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 ```
 
