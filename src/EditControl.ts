@@ -1161,7 +1161,8 @@ export class EditControl {
     }
 
     public enableTranslation() {
-        if ((this._tX == null)) {
+        if (this._hidden) return;
+        if (this._tX == null) {
             this._createTransAxes();
             this._tCtl.parent = this._ecRoot;
         }
@@ -1192,7 +1193,7 @@ export class EditControl {
     }
 
     public enableRotation() {
-        //if(this.rX==null) {
+        if (this._hidden) return;
         if (this._rCtl == null) {
             this._createRotAxes();
             this._rCtl.parent = this._ecRoot;
@@ -1220,6 +1221,7 @@ export class EditControl {
     }
 
     public enableScaling() {
+        if (this._hidden) return;
         if (this._sX == null) {
             this._createScaleAxes();
             this._sCtl.parent = this._ecRoot;
@@ -1484,9 +1486,10 @@ export class EditControl {
         let tEndZ = tEndX.clone("");
 
         
-        let tEndXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, scene);
-        let tEndZY = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, scene);
-        let tEndYX = MeshBuilder.CreatePlane("YX", { size: r * 2 }, scene);
+        let s = r*2
+        let tEndXZ = MeshBuilder.CreatePlane("XZ", { size: s }, scene);
+        let tEndZY = MeshBuilder.CreatePlane("ZY", { size: s }, scene);
+        let tEndYX = MeshBuilder.CreatePlane("YX", { size: s }, scene);
 
         let tEndAll = Mesh.CreateBox("ALL", r ,scene);
 
@@ -1496,16 +1499,16 @@ export class EditControl {
 
         tEndXZ.rotation.x = 1.57;
         tEndZY.rotation.y = 1.57;
-        tEndYX.rotation.x = 0;
+        //tEndYX.rotation.x = 0;
 
-        tEndXZ.position.x = 2*r;
-        tEndXZ.position.z = 2*r;
+        tEndXZ.position.x = s;
+        tEndXZ.position.z = s;
 
-        tEndZY.position.z = 2*r;
-        tEndZY.position.y = 2*r;
+        tEndZY.position.z = s;
+        tEndZY.position.y = s;
 
-        tEndYX.position.y = 2*r;
-        tEndYX.position.x = 2*r;
+        tEndYX.position.y = s;
+        tEndYX.position.x = s;
 
         tEndX.parent = this._tX;
         tEndY.parent = this._tY;
@@ -1812,9 +1815,10 @@ export class EditControl {
         let sEndY = sEndX.clone("");
         let sEndZ = sEndX.clone("");
 
-        let sEndXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this._scene);
-        let sEndZY = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, this._scene);
-        let sEndYX = MeshBuilder.CreatePlane("YX", { size: r * 2 }, this._scene);
+        let s=r*2;
+        let sEndXZ = MeshBuilder.CreatePlane("XZ", { size: s }, this._scene);
+        let sEndZY = MeshBuilder.CreatePlane("ZY", { size: s }, this._scene);
+        let sEndYX = MeshBuilder.CreatePlane("YX", { size: s }, this._scene);
 
 
         let sEndAll = Mesh.CreateBox("ALL", r, this._scene);
@@ -1822,14 +1826,14 @@ export class EditControl {
         sEndXZ.rotation.x = 1.57;
         sEndZY.rotation.y = -1.57;
 
-        sEndXZ.position.x = 2*r;
-        sEndXZ.position.z = 2*r;
+        sEndXZ.position.x = s;
+        sEndXZ.position.z = s;
 
-        sEndZY.position.z = 2*r;
-        sEndZY.position.y = 2*r;
+        sEndZY.position.z = s;
+        sEndZY.position.y = s;
 
-        sEndYX.position.y = 2*r;
-        sEndYX.position.x = 2*r;
+        sEndYX.position.y = s;
+        sEndYX.position.x = s;
 
         sEndX.parent = this._sX;
         sEndY.parent = this._sY;
