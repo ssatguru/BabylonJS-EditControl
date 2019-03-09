@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>EditControl Test</title>
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            table {
+                border-radius: 10px;
+            }
+
+            table, th, td {
+                border: 1px solid black;
+                padding: 5px;
+                padding-left: 15px;
+                padding-right: 15px;
+                border-collapse: collapse;
+            }
+
+            #controls {
+                position: absolute;
+                left: 10px;
+                top: 10px;
+            }
+
+            #renderCanvas {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+
+            #overlay {
+                visibility: hidden;
+                position: absolute;
+                left: 0px;
+                top: 0px;
+                width: 100%;
+                height: 100%;
+                text-align: center;
+                z-index: 1000;
+            }
+
+            #overlay div {
+                width: 400px;
+                margin: 100px auto;
+                background-color: #fff;
+                border: 1px solid #000;
+                padding: 15px;
+                text-align: center;
+            }
+        </style>
+
+        <script src="../node_modules/pepjs/dist/pep.min.js"></script>
+        <script src="../node_modules/babylonjs/babylon.max.js"></script>
+        <!--<script src="../dist/EditControl.js"></script>-->
+        //run the webpack dev server to serve this
+        <script src="http://localhost:8080/EditControl.js"></script>
+        <script src="./comprehensive.js"></script> 
+
+    </head>
+
+    <body touch-action="none">
+        <canvas id="renderCanvas"></canvas>
+        <div id="controls">
+            <table>
+                <tr>
+                    <td>
+                        box1 is parent of box2 and box2 is parent of box3
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        select
+                        <input type="radio" id="selectBox1" checked title="select box1" name="sb">box1
+                        <input type="radio" id="selectBox2"         title="select box2" name="sb">box2
+                        <input type="radio" id="selectBox3"         title="select box3" name="sb">box3
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="hide">hide/show</button>
+                        <button id="focus">focus</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" id="local"  onclick="switchSpace();" name="lg" checked title="switch to local axes">local
+                        <input type="radio" id="global" onclick="switchSpace();" name="lg"        title="switch to global axes">global
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table>
+                            <tr>
+                                <td><button id="trans">translate</button></td>
+                                <td><button id="rotate">rotate</button></td>
+                                <td><button id="scale">scale</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" id="snaptrans">snap translation</td>
+                                <td><input type="checkbox" id="snaprot">snap rotation</td>
+                                <td><input type="checkbox" id="snapscale">snap scale</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" id="boundTrans">bound translation</td>
+                                <td><input type="checkbox" id="boundRot">bound rotation</td>
+                                <td><input type="checkbox" id="boundScale">bound scale</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><input type="checkbox" id="rotGuideFull">full rotation guides</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button id="euler">toggle euler</button>
+                                    <br>
+                                    <button id="pRot">print rotation to console</button>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="undo">undo</button>
+                        <button id="redo">redo</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>
