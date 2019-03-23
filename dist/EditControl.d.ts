@@ -41,8 +41,21 @@ export declare class EditControl {
     private _pointerup;
     private _pointermove;
     private _visibility;
+    private _lhsRhs;
     constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number);
     private _checkQuaternion;
+    /**
+        * checks if a have left hand , right hand issue.
+        * In other words if a mesh is a LHS mesh in RHS system or
+        * a RHS mesh in LHS system
+        * The X axis will be reversed in such cases.
+        * thus Cross product of X and Y should be inverse of Z.
+        *
+        * if no parent then we are ok.
+        * If parent and parent has issue then we have issue.
+        *
+        */
+    private _check_LHS_RHS;
     private _ecMatrix;
     private _ecTOcamera;
     private _renderLoopProcess;

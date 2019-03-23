@@ -7,19 +7,19 @@ import {
     Color3,
     LinesMesh,
     Material,
-    Matrix, 
-    Mesh, 
-    MeshBuilder, 
-    Node, 
-    PickingInfo, 
-    Quaternion, 
-    Scene, 
-    Space, 
-    StandardMaterial, 
+    Matrix,
+    Mesh,
+    MeshBuilder,
+    Node,
+    PickingInfo,
+    Quaternion,
+    Scene,
+    Space,
+    StandardMaterial,
     Vector3
 }
     from 'babylonjs';
-    
+
 
 
 enum ActionType {
@@ -63,12 +63,12 @@ export class EditControl {
     private _blueMat: StandardMaterial;
     private _whiteMat: StandardMaterial;
     private _yellowMat: StandardMaterial;
-    private _redCol:Color3=new Color3(1,0.2,0.2);
-    private _greenCol:Color3=new Color3(0.2,1,0.2);
-    private _blueCol:Color3=new Color3(0.2,0.2,1);
-    private _whiteCol:Color3=new Color3(1,1,1);
-    private _yellowCol:Color3=new Color3(1,1,0.2);
-    
+    private _redCol: Color3 = new Color3(1, 0.2, 0.2);
+    private _greenCol: Color3 = new Color3(0.2, 1, 0.2);
+    private _blueCol: Color3 = new Color3(0.2, 0.2, 1);
+    private _whiteCol: Color3 = new Color3(1, 1, 1);
+    private _yellowCol: Color3 = new Color3(1, 1, 0.2);
+
     private _actHist: ActHist;
     private _renderer: () => void;
     private _pointerdown: EventListener;
@@ -78,7 +78,7 @@ export class EditControl {
     private _visibility: number = 0.75;
 
     //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
-    //private lhsRhs: boolean=false;
+    private _lhsRhs: boolean = false;
 
     public constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number) {
 
@@ -107,7 +107,8 @@ export class EditControl {
         mesh.computeWorldMatrix(true);
         this._boundingDimesion = this._getBoundingDimension(mesh);
         this._setLocalAxes(mesh);
-        //this.lhsRhs=this.check_LHS_RHS(mesh);
+        this._lhsRhs = this._check_LHS_RHS(mesh);
+        console.log("lhs rhs issue " + this._lhsRhs);
 
         //build the edit control axes
         this._ecRoot = new Mesh("", this._scene);
@@ -149,6 +150,30 @@ export class EditControl {
                 throw "Error: Eulerian is set to false but the mesh's rotationQuaternion is not set.";
             }
         }
+    }
+
+    /**
+        * checks if a have left hand , right hand issue.
+        * In other words if a mesh is a LHS mesh in RHS system or 
+        * a RHS mesh in LHS system
+        * The X axis will be reversed in such cases.
+        * thus Cross product of X and Y should be inverse of Z.
+        * 
+        * if no parent then we are ok.
+        * If parent and parent has issue then we have issue.
+        * 
+        */
+    private _check_LHS_RHS(mesh: Mesh) {
+        let _issue: boolean = false;
+        let root: Node = mesh.parent;
+        if (root == null) return false;
+        this._setLocalAxes(root);
+        let actualZ = Vector3.Cross(this._localX, this._localY);
+        //same direction or opposite direction of Z
+        if (Vector3.Dot(actualZ, this._localZ) < 0) _issue = true;
+        else _issue = false;
+        this._setLocalAxes(mesh);
+        return _issue;
     }
 
     private _ecMatrix: Matrix = new Matrix();
@@ -323,6 +348,7 @@ export class EditControl {
         this._checkQuaternion();
         this._setLocalAxes(mesh);
         this._actHist = new ActHist(mesh, 10);
+        this._lhsRhs = this._check_LHS_RHS(mesh);
         this.refreshBoundingInfo();
     }
 
@@ -560,7 +586,7 @@ export class EditControl {
                 this._prevOverMesh = <Mesh>pickResult.pickedMesh;
                 if (this._rotEnabled) {
                     this._savedCol = (<LinesMesh>this._prevOverMesh.getChildren()[0]).color;
-                    (<LinesMesh>this._prevOverMesh.getChildren()[0]).color=this._whiteCol;
+                    (<LinesMesh>this._prevOverMesh.getChildren()[0]).color = this._whiteCol;
                 } else {
                     let childs: Node[] = this._prevOverMesh.getChildren();
                     if (childs.length > 0) {
@@ -572,7 +598,7 @@ export class EditControl {
                     }
                 }
                 if (this._prevOverMesh.name == "X") {
-                    this._xaxis.color=this._whiteCol;
+                    this._xaxis.color = this._whiteCol;
                 } else if (this._prevOverMesh.name == "Y") {
                     this._yaxis.color = this._whiteCol;
                 } else if (this._prevOverMesh.name == "Z") {
@@ -599,13 +625,13 @@ export class EditControl {
     private _restoreColor(mesh: Mesh) {
         switch (mesh.name) {
             case "X":
-                this._xaxis.color=this._redCol;
+                this._xaxis.color = this._redCol;
                 break;
             case "Y":
-                this._yaxis.color=this._greenCol;
+                this._yaxis.color = this._greenCol;
                 break;
             case "Z":
-                this._zaxis.color=this._blueCol;
+                this._zaxis.color = this._blueCol;
                 break;
         }
 
@@ -758,7 +784,9 @@ export class EditControl {
         } else return null;
     }
 
-
+    //TODO when translating, the orientation of pALL keeps changing
+    //TODo this is not so with rotation or scaling
+    //TODO so for translation instead of pALL maybe we should use the camera view plane for picking
 
     private _transBy: Vector3 = new Vector3(0, 0, 0);
     private _doTranslation(diff: Vector3) {
@@ -770,27 +798,22 @@ export class EditControl {
         }
 
         let n: string = this._axisPicked.name;
-        if (n == "ALL") {
-            //TODO when translating, the orientation of pALL keeps changing
-            //TODo this is not so with rotation or scaling
-            //TODO so for translation instead of pALL maybe we should use the camera view plane for picking
-            this._transBy = diff;
-        } else {
-            this._transBy.x = 0; this._transBy.y = 0; this._transBy.z = 0;
 
-            if ((n == "X") || (n == "XZ") || (n == "YX")) {
-                if (this._local) this._transBy.x = Vector3.Dot(diff, this._localX) / this._localX.length();
-                else this._transBy.x = diff.x;
-            }
-            if ((n == "Y") || (n == "ZY") || (n == "YX")) {
-                if (this._local) this._transBy.y = Vector3.Dot(diff, this._localY) / this._localY.length();
-                else this._transBy.y = diff.y;
-            }
-            if ((n == "Z") || (n == "XZ") || (n == "ZY")) {
-                if (this._local) this._transBy.z = Vector3.Dot(diff, this._localZ) / this._localZ.length();
-                else this._transBy.z = diff.z;
-            }
+        this._transBy.x = 0; this._transBy.y = 0; this._transBy.z = 0;
+
+        if ((n == "X") || (n == "XZ") || (n == "YX") || (n == "ALL")) {
+            if (this._local) this._transBy.x = Vector3.Dot(diff, this._localX) / this._localX.length();
+            else this._transBy.x = diff.x;
         }
+        if ((n == "Y") || (n == "ZY") || (n == "YX") || (n == "ALL")) {
+            if (this._local) this._transBy.y = Vector3.Dot(diff, this._localY) / this._localY.length();
+            else this._transBy.y = diff.y;
+        }
+        if ((n == "Z") || (n == "XZ") || (n == "ZY") || (n == "ALL")) {
+            if (this._local) this._transBy.z = Vector3.Dot(diff, this._localZ) / this._localZ.length();
+            else this._transBy.z = diff.z;
+        }
+
         this._transWithSnap(this._mesh, this._transBy, this._local);
 
         // bound the translation
@@ -807,8 +830,6 @@ export class EditControl {
 
         this._mesh.computeWorldMatrix(true);
     }
-
-
 
     private _snapTV: Vector3 = new Vector3(0, 0, 0);
     private _transWithSnap(mesh: Mesh, trans: Vector3, local: boolean) {
@@ -991,7 +1012,7 @@ export class EditControl {
      * direction of mouse move wrt the axes
      * TODO should use world pivotmatrix instead of worldmatrix - incase pivot axes were rotated?
      */
-    private _setLocalAxes(mesh: Mesh) {
+    private _setLocalAxes(mesh: Node) {
         let meshMatrix: Matrix = mesh.getWorldMatrix();
         Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this._localX);
         Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this._localY);
@@ -1061,6 +1082,9 @@ export class EditControl {
             angle = this._getAngle(prevPos, newPos, mesh.getAbsolutePivotPoint(), this._cameraTOec);
         }
 
+        if (this._lhsRhs) {
+            angle = -angle;
+        }
         /**
          * B)then rotate based on users(camera) postion and orientation in the local/world space
          * 
@@ -1090,6 +1114,9 @@ export class EditControl {
             }
 
             if (this._local) {
+                if (this._lhsRhs) {
+                    angle = -angle;
+                }
                 if ((this._mesh.parent != null) && this._isScaleUnEqual(mesh)) {
                     if (axis == this._rAll) {
                         this._ecRoot.rotate(this._cameraTOec, -angle, Space.WORLD);
@@ -1119,32 +1146,32 @@ export class EditControl {
         this._bZaxis.visibility = 0;
     }
 
-//    private _setAxesVisiblity(v: number) {
-//        if (this._transEnabled) {
-//            this._tEndX.visibility = v;
-//            this._tEndY.visibility = v;
-//            this._tEndZ.visibility = v;
-//            this._tEndXZ.visibility = v;
-//            this._tEndZY.visibility = v;
-//            this._tEndYX.visibility = v;
-//            this._tEndAll.visibility = v;
-//        }
-//        if (this._rotEnabled) {
-//            this._rEndX.visibility = v;
-//            this._rEndY.visibility = v;
-//            this._rEndZ.visibility = v;
-//            this._rEndAll.visibility = v;
-//        }
-//        if (this._scaleEnabled) {
-//            this._sEndX.visibility = v;
-//            this._sEndY.visibility = v;
-//            this._sEndZ.visibility = v;
-//            this._sEndXZ.visibility = v;
-//            this._sEndZY.visibility = v;
-//            this._sEndYX.visibility = v;
-//            this._sEndAll.visibility = v;
-//        }
-//    }
+    //    private _setAxesVisiblity(v: number) {
+    //        if (this._transEnabled) {
+    //            this._tEndX.visibility = v;
+    //            this._tEndY.visibility = v;
+    //            this._tEndZ.visibility = v;
+    //            this._tEndXZ.visibility = v;
+    //            this._tEndZY.visibility = v;
+    //            this._tEndYX.visibility = v;
+    //            this._tEndAll.visibility = v;
+    //        }
+    //        if (this._rotEnabled) {
+    //            this._rEndX.visibility = v;
+    //            this._rEndY.visibility = v;
+    //            this._rEndZ.visibility = v;
+    //            this._rEndAll.visibility = v;
+    //        }
+    //        if (this._scaleEnabled) {
+    //            this._sEndX.visibility = v;
+    //            this._sEndY.visibility = v;
+    //            this._sEndZ.visibility = v;
+    //            this._sEndXZ.visibility = v;
+    //            this._sEndZY.visibility = v;
+    //            this._sEndYX.visibility = v;
+    //            this._sEndAll.visibility = v;
+    //        }
+    //    }
 
     public getRotationQuaternion(): Quaternion {
         return this._ecRoot.rotationQuaternion
@@ -1168,7 +1195,7 @@ export class EditControl {
         }
         this._clearPrevOverMesh();
         if (!this._transEnabled) {
-            this._setVisibility(this._all_tEnd,this._visibility);
+            this._setVisibility(this._all_tEnd, this._visibility);
             this._transEnabled = true;
             this.disableRotation();
             this.disableScaling();
@@ -1177,7 +1204,7 @@ export class EditControl {
 
     public disableTranslation() {
         if (this._transEnabled) {
-            this._setVisibility(this._all_tEnd,0);
+            this._setVisibility(this._all_tEnd, 0);
             this._transEnabled = false;
         }
     }
@@ -1200,7 +1227,7 @@ export class EditControl {
         }
         this._clearPrevOverMesh();
         if (!this._rotEnabled) {
-            this._setVisibility(this._all_rEnd,this._visibility);
+            this._setVisibility(this._all_rEnd, this._visibility);
             this._rotEnabled = true;
             this.disableTranslation();
             this.disableScaling();
@@ -1209,7 +1236,7 @@ export class EditControl {
 
     public disableRotation() {
         if (this._rotEnabled) {
-            this._setVisibility(this._all_rEnd,0);
+            this._setVisibility(this._all_rEnd, 0);
             this._rotEnabled = false;
         }
     }
@@ -1228,7 +1255,7 @@ export class EditControl {
         }
         this._clearPrevOverMesh();
         if (!this._scaleEnabled) {
-            this._setVisibility(this._all_sEnd,this._visibility);
+            this._setVisibility(this._all_sEnd, this._visibility);
             this._scaleEnabled = true;
             this.disableTranslation();
             this.disableRotation();
@@ -1237,7 +1264,7 @@ export class EditControl {
 
     public disableScaling() {
         if (this._scaleEnabled) {
-             this._setVisibility(this._all_sEnd,0);
+            this._setVisibility(this._all_sEnd, 0);
             this._scaleEnabled = false;
         }
     }
@@ -1316,9 +1343,9 @@ export class EditControl {
         this._bXaxis.parent = guideAxes;
         this._bYaxis.parent = guideAxes;
         this._bZaxis.parent = guideAxes;
-        this._bXaxis.color= this._redCol;
-        this._bYaxis.color= this._greenCol
-        this._bZaxis.color= this._blueCol
+        this._bXaxis.color = this._redCol;
+        this._bYaxis.color = this._greenCol
+        this._bZaxis.color = this._blueCol
         this._hideBaxis();
 
         //the small axis
@@ -1335,9 +1362,9 @@ export class EditControl {
         this._xaxis.parent = guideAxes;
         this._yaxis.parent = guideAxes;
         this._zaxis.parent = guideAxes;
-        this._xaxis.color=this._redCol;
-        this._yaxis.color=this._greenCol;
-        this._zaxis.color=this._blueCol;
+        this._xaxis.color = this._redCol;
+        this._yaxis.color = this._greenCol;
+        this._zaxis.color = this._blueCol;
 
         this._xaxis.renderingGroupId = 1;
         this._yaxis.renderingGroupId = 1;
@@ -1397,7 +1424,7 @@ export class EditControl {
     private _tZY: Mesh;
     private _tYX: Mesh;
     private _tAll: Mesh;
-    private _all_t:Mesh[];
+    private _all_t: Mesh[];
 
     private _tEndX: Mesh;
     private _tEndY: Mesh;
@@ -1406,8 +1433,8 @@ export class EditControl {
     private _tEndZY: Mesh;
     private _tEndYX: Mesh;
     private _tEndAll: Mesh;
-    
-    private _all_tEnd:Mesh[];
+
+    private _all_tEnd: Mesh[];
 
     private _createTransAxes() {
         let r: number = this._pickWidth * 2 * this._axesScale;
@@ -1416,13 +1443,13 @@ export class EditControl {
         this._tCtl = new Mesh("", this._scene);
 
         /*pickable invisible boxes around axes lines*/
-        this._createPickableTrans(r, l,this._tCtl,this._scene);
+        this._createPickableTrans(r, l, this._tCtl, this._scene);
 
         //non pickable but visible cones at end of axes lines
-        this._createNonPickableTrans(r,l,this._scene);
+        this._createNonPickableTrans(r, l, this._scene);
     }
-    
-    private _createPickableTrans(r:number, l:number,tCtl:Mesh,scene:Scene){
+
+    private _createPickableTrans(r: number, l: number, tCtl: Mesh, scene: Scene) {
         let tX = this._extrudeBox(r / 2, l);
         tX.name = "X";
         let tY = tX.clone("Y");
@@ -1435,14 +1462,14 @@ export class EditControl {
         tXZ.rotation.x = 1.57;
         tZY.rotation.y = -1.57;
 
-        tXZ.position.x = 2*r;
-        tXZ.position.z = 2*r;
+        tXZ.position.x = 2 * r;
+        tXZ.position.z = 2 * r;
 
-        tZY.position.z = 2*r;
-        tZY.position.y = 2*r;
+        tZY.position.z = 2 * r;
+        tZY.position.y = 2 * r;
 
-        tYX.position.y = 2*r;
-        tYX.position.x = 2*r;
+        tYX.position.y = 2 * r;
+        tYX.position.x = 2 * r;
 
         tXZ.bakeCurrentTransformIntoVertices();
         tZY.bakeCurrentTransformIntoVertices();
@@ -1461,22 +1488,22 @@ export class EditControl {
         tX.rotation.y = 1.57;
         tY.rotation.x -= 1.57;
 
-        this._tX=tX;
-        this._tY=tY;
-        this._tZ=tZ;
-        this._tXZ=tXZ;
-        this._tZY=tZY;
-        this._tYX=tYX;
-        this._tAll=tAll;
-        this._all_t=[tX,tY,tZ,tXZ,tZY,tYX,tAll]
-        
-        this._setVisibility(this._all_t,0);
-          //do not want clients picking this
+        this._tX = tX;
+        this._tY = tY;
+        this._tZ = tZ;
+        this._tXZ = tXZ;
+        this._tZY = tZY;
+        this._tYX = tYX;
+        this._tAll = tAll;
+        this._all_t = [tX, tY, tZ, tXZ, tZY, tYX, tAll]
+
+        this._setVisibility(this._all_t, 0);
+        //do not want clients picking this
         //we will pick using mesh filter in scene.pick function
         this._setPickableFalse(this._all_t)
     }
-    
-    private _createNonPickableTrans(r:number,l:number,scene:Scene){
+
+    private _createNonPickableTrans(r: number, l: number, scene: Scene) {
         //cone length
         let cl: number = l / 5;
         //cone base radius
@@ -1485,13 +1512,13 @@ export class EditControl {
         let tEndY = tEndX.clone("");
         let tEndZ = tEndX.clone("");
 
-        
-        let s = r*2
+
+        let s = r * 2
         let tEndXZ = MeshBuilder.CreatePlane("XZ", { size: s }, scene);
         let tEndZY = MeshBuilder.CreatePlane("ZY", { size: s }, scene);
         let tEndYX = MeshBuilder.CreatePlane("YX", { size: s }, scene);
 
-        let tEndAll = Mesh.CreateBox("ALL", r ,scene);
+        let tEndAll = Mesh.CreateBox("ALL", r, scene);
 
         tEndX.rotation.x = 1.57;
         tEndY.rotation.x = 1.57;
@@ -1529,21 +1556,21 @@ export class EditControl {
         tEndZY.material = this._redMat;
         tEndYX.material = this._blueMat;
         tEndAll.material = this._yellowMat;
-        
-        this._tEndX=tEndX;
-        this._tEndY=tEndY;
-        this._tEndZ=tEndZ;
-        this._tEndXZ=tEndXZ;
-        this._tEndZY=tEndZY;
-        this._tEndYX=tEndYX;
-        this._tEndAll=tEndAll;
-        this._all_tEnd=[tEndX,tEndY,tEndZ,tEndXZ,tEndZY,tEndYX,tEndAll];
-        
+
+        this._tEndX = tEndX;
+        this._tEndY = tEndY;
+        this._tEndZ = tEndZ;
+        this._tEndXZ = tEndXZ;
+        this._tEndZY = tEndZY;
+        this._tEndYX = tEndYX;
+        this._tEndAll = tEndAll;
+        this._all_tEnd = [tEndX, tEndY, tEndZ, tEndXZ, tEndZY, tEndYX, tEndAll];
+
         this._setPickableFalse(this._all_tEnd);
         this._setRenderingGroup(this._all_tEnd);
     }
-    
-   
+
+
 
     private _rCtl: Mesh;
 
@@ -1551,15 +1578,15 @@ export class EditControl {
     private _rY: Mesh;
     private _rZ: Mesh;
     private _rAll: Mesh;
-    private _all_r:Mesh[];
-    
+    private _all_r: Mesh[];
+
     private _rEndX: LinesMesh;
     private _rEndY: LinesMesh;
     private _rEndZ: LinesMesh;
     private _rEndAll: LinesMesh;
     private _rEndAll2: LinesMesh;
-    private _all_rEnd:Mesh[];
-    
+    private _all_rEnd: Mesh[];
+
 
     private _guideSize: number = 180;
 
@@ -1579,14 +1606,14 @@ export class EditControl {
         this._rCtl = new Mesh("", this._scene);
 
         //pickable invisible torus around the rotation circles
-        this._createPickableRot(d,this._rCtl);
+        this._createPickableRot(d, this._rCtl);
 
         /*non pickable but visible circles */
         this._createNonPickableRot(d);
-        
+
     }
-    
-    private _createPickableRot(d:number,rCtl:Mesh){
+
+    private _createPickableRot(d: number, rCtl: Mesh) {
         let rX = this._createTube(d / 2, this._guideSize);
         let rY = this._createTube(d / 2, this._guideSize);
         let rZ = this._createTube(d / 2, this._guideSize);
@@ -1607,21 +1634,21 @@ export class EditControl {
         rY.parent = rCtl;
         rZ.parent = rCtl;
         rAll.parent = this._pALL;
-        
-        this._rX=rX;
-        this._rY=rY;
-        this._rZ=rZ;
-        this._rAll=rAll;
-        this._all_r=[rX,rY,rZ,rAll];
-        
-        this._setVisibility(this._all_r,0);
+
+        this._rX = rX;
+        this._rY = rY;
+        this._rZ = rZ;
+        this._rAll = rAll;
+        this._all_r = [rX, rY, rZ, rAll];
+
+        this._setVisibility(this._all_r, 0);
 
         //do not want clients picking this
         //we will pick using mesh filter in scene.pick function
         this._setPickableFalse(this._all_r);
     }
-    
-    private _createNonPickableRot(d:number){
+
+    private _createNonPickableRot(d: number) {
 
         let rEndX = this._createCircle(d / 2, this._guideSize, false);
         let rEndY = rEndX.clone("");
@@ -1641,30 +1668,30 @@ export class EditControl {
 
 
         rEndX.color = this._redCol;
-        rEndY.color=this._greenCol;
-        rEndZ.color=this._blueCol;
-        rEndAll.color=this._yellowCol;
+        rEndY.color = this._greenCol;
+        rEndZ.color = this._blueCol;
+        rEndAll.color = this._yellowCol;
         rEndAll2.color = Color3.Gray();
-        
-        this._rEndX=rEndX;
-        this._rEndY=rEndY;
-        this._rEndZ=rEndZ;
-        this._rEndAll=rEndAll;
-        this._rEndAll2=rEndAll2;
-        this._all_rEnd=[rEndX,rEndY,rEndZ,rEndAll,rEndAll2];
+
+        this._rEndX = rEndX;
+        this._rEndY = rEndY;
+        this._rEndZ = rEndZ;
+        this._rEndAll = rEndAll;
+        this._rEndAll2 = rEndAll2;
+        this._all_rEnd = [rEndX, rEndY, rEndZ, rEndAll, rEndAll2];
 
         this._setPickableFalse(this._all_rEnd);
         this._setRenderingGroup(this._all_rEnd);
     }
-    
-    private _setVisibility(meshes:Mesh[],v:number){
-        meshes.map((m) => m.visibility=v)
+
+    private _setVisibility(meshes: Mesh[], v: number) {
+        meshes.map((m) => m.visibility = v)
     }
-    private _setPickableFalse(meshes:Mesh[]){
-        meshes.map((m) => {m.isPickable=false})
+    private _setPickableFalse(meshes: Mesh[]) {
+        meshes.map((m) => { m.isPickable = false })
     }
-    private _setRenderingGroup(meshes:Mesh[]){
-        meshes.map((m) => m.renderingGroupId=2)
+    private _setRenderingGroup(meshes: Mesh[]) {
+        meshes.map((m) => m.renderingGroupId = 2)
     }
 
     private _extrudeBox(w: number, l: number): Mesh {
@@ -1719,7 +1746,7 @@ export class EditControl {
 
 
     private _sCtl: Mesh;
-    
+
     private _sX: Mesh;
     private _sY: Mesh;
     private _sZ: Mesh;
@@ -1727,7 +1754,7 @@ export class EditControl {
     private _sZY: Mesh;
     private _sYX: Mesh;
     private _sAll: Mesh;
-    private _all_s:Mesh[];
+    private _all_s: Mesh[];
 
     private _sEndX: Mesh;
     private _sEndY: Mesh;
@@ -1736,7 +1763,7 @@ export class EditControl {
     private _sEndZY: Mesh;
     private _sEndYX: Mesh;
     private _sEndAll: Mesh;
-    private _all_sEnd:Mesh[];
+    private _all_sEnd: Mesh[];
 
 
     private _createScaleAxes() {
@@ -1746,42 +1773,42 @@ export class EditControl {
         this._sCtl = new Mesh("", this._scene);
 
         /* pickable , invisible part */
-        this._createPickableScale(r,l,this._sCtl);
+        this._createPickableScale(r, l, this._sCtl);
 
         /* non pickable visible boxes at end of axes */
-        this._createNonPickableScale(r,l);
-        
-        
+        this._createNonPickableScale(r, l);
+
+
     }
 
-    private _createPickableScale(r:number,l:number,sCtl:Mesh){
-        let sX:Mesh = this._extrudeBox(r / 2, l);
+    private _createPickableScale(r: number, l: number, sCtl: Mesh) {
+        let sX: Mesh = this._extrudeBox(r / 2, l);
         sX.name = "X";
-        let sY:Mesh = sX.clone("Y");
-        let sZ:Mesh = sX.clone("Z");
+        let sY: Mesh = sX.clone("Y");
+        let sZ: Mesh = sX.clone("Z");
 
-        let sXZ:Mesh = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this._scene);
-        let sZY:Mesh = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, this._scene);
-        let sYX:Mesh = MeshBuilder.CreatePlane("YX", { size: r * 2 }, this._scene);
+        let sXZ: Mesh = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, this._scene);
+        let sZY: Mesh = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, this._scene);
+        let sYX: Mesh = MeshBuilder.CreatePlane("YX", { size: r * 2 }, this._scene);
 
 
         sXZ.rotation.x = 1.57;
         sZY.rotation.y = -1.57;
 
-        sXZ.position.x = 2*r;
-        sXZ.position.z = 2*r;
+        sXZ.position.x = 2 * r;
+        sXZ.position.z = 2 * r;
 
-        sZY.position.z = 2*r;
-        sZY.position.y = 2*r;
+        sZY.position.z = 2 * r;
+        sZY.position.y = 2 * r;
 
-        sYX.position.y = 2*r;
-        sYX.position.x = 2*r;
+        sYX.position.y = 2 * r;
+        sYX.position.x = 2 * r;
 
         sXZ.bakeCurrentTransformIntoVertices();
         sZY.bakeCurrentTransformIntoVertices();
         sYX.bakeCurrentTransformIntoVertices();
 
-        let sAll:Mesh = Mesh.CreateBox("ALL", 2*r, this._scene);
+        let sAll: Mesh = Mesh.CreateBox("ALL", 2 * r, this._scene);
 
         sX.parent = sCtl;
         sY.parent = sCtl;
@@ -1794,28 +1821,28 @@ export class EditControl {
         sX.rotation.y = 1.57;
         sY.rotation.x -= 1.57;
 
-        this._sX=sX;
-        this._sY=sY;
-        this._sZ=sZ;
-        this._sXZ=sXZ;
-        this._sZY=sZY;
-        this._sYX=sYX;
-        this._sAll=sAll;
-        this._all_s=[sX,sY,sZ,sXZ,sZY,sYX,sAll];
-        
-        this._setVisibility(this._all_s,0);
+        this._sX = sX;
+        this._sY = sY;
+        this._sZ = sZ;
+        this._sXZ = sXZ;
+        this._sZY = sZY;
+        this._sYX = sYX;
+        this._sAll = sAll;
+        this._all_s = [sX, sY, sZ, sXZ, sZY, sYX, sAll];
+
+        this._setVisibility(this._all_s, 0);
         //do not want clients picking this
         //we will pick using mesh filter in scene.pick function
         this._setPickableFalse(this._all_s);
     }
-    
-    private _createNonPickableScale(r:number,l:number){
-        
+
+    private _createNonPickableScale(r: number, l: number) {
+
         let sEndX = Mesh.CreateBox("", r, this._scene);
         let sEndY = sEndX.clone("");
         let sEndZ = sEndX.clone("");
 
-        let s=r*2;
+        let s = r * 2;
         let sEndXZ = MeshBuilder.CreatePlane("XZ", { size: s }, this._scene);
         let sEndZY = MeshBuilder.CreatePlane("ZY", { size: s }, this._scene);
         let sEndYX = MeshBuilder.CreatePlane("YX", { size: s }, this._scene);
@@ -1854,16 +1881,16 @@ export class EditControl {
         sEndZY.material = this._redMat;
         sEndYX.material = this._blueMat;
         sEndAll.material = this._yellowMat;
-         
-        this._sEndX=sEndX;
-        this._sEndY=sEndY;
-        this._sEndZ=sEndZ;
-        this._sEndXZ=sEndXZ;
-        this._sEndZY=sEndZY;
-        this._sEndYX=sEndYX;
-        this._sEndAll=sEndAll;
-        this._all_sEnd=[sEndX,sEndY,sEndZ,sEndXZ,sEndZY,sEndYX,sEndAll];
-        
+
+        this._sEndX = sEndX;
+        this._sEndY = sEndY;
+        this._sEndZ = sEndZ;
+        this._sEndXZ = sEndXZ;
+        this._sEndZY = sEndZY;
+        this._sEndYX = sEndYX;
+        this._sEndAll = sEndAll;
+        this._all_sEnd = [sEndX, sEndY, sEndZ, sEndXZ, sEndZY, sEndYX, sEndAll];
+
         this._setPickableFalse(this._all_sEnd);
         this._setRenderingGroup(this._all_sEnd);
     }
@@ -1877,12 +1904,12 @@ export class EditControl {
      * thus Cross product of X and Y should be inverse of Z.
      * 
      */
-//    private _check_LHS_RHS(mesh: Mesh) {
-//        let actualZ = Vector3.Cross(this._localX, this._localY);
-//        //same direction or opposite direction of Z
-//        if (Vector3.Dot(actualZ, this._localZ) < 0) return true;
-//        else return false;
-//    }
+    //    private _check_LHS_RHS(mesh: Mesh) {
+    //        let actualZ = Vector3.Cross(this._localX, this._localY);
+    //        //same direction or opposite direction of Z
+    //        if (Vector3.Dot(actualZ, this._localZ) < 0) return true;
+    //        else return false;
+    //    }
 
     /**
      * set how transparent the axes are
@@ -2027,11 +2054,11 @@ export class EditControl {
 
 
     private _createMaterials(scene: Scene) {
-        this._redMat=EditControl._getStandardMaterial(this._redCol, scene);
-        this._greenMat=EditControl._getStandardMaterial(this._greenCol, scene);
-        this._blueMat=EditControl._getStandardMaterial(this._blueCol, scene);
-        this._whiteMat=EditControl._getStandardMaterial(this._whiteCol, scene);
-        this._yellowMat=EditControl._getStandardMaterial(this._yellowCol, scene);
+        this._redMat = EditControl._getStandardMaterial(this._redCol, scene);
+        this._greenMat = EditControl._getStandardMaterial(this._greenCol, scene);
+        this._blueMat = EditControl._getStandardMaterial(this._blueCol, scene);
+        this._whiteMat = EditControl._getStandardMaterial(this._whiteCol, scene);
+        this._yellowMat = EditControl._getStandardMaterial(this._yellowCol, scene);
     }
 
     private _disposeMaterials() {
