@@ -352,6 +352,10 @@ export class EditControl {
         this.refreshBoundingInfo();
     }
 
+    public switchCamera(camera:Camera){
+        this._mainCamera = camera;
+    }
+
     public setUndoCount(c: number) {
         this._actHist.setCapacity(c);
     }

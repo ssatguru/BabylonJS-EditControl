@@ -77,6 +77,7 @@ export declare class EditControl {
      */
     private _rotPlanarGuides;
     switchTo(mesh: Mesh, eulerian?: boolean): void;
+    switchCamera(camera: Camera): void;
     setUndoCount(c: number): void;
     undo(): void;
     redo(): void;

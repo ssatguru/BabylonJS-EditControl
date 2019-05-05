@@ -292,11 +292,19 @@ editControl.setVisibility(v:number);
 ```
 By default the visibility is set to 0.75
 
+#### To switch camera
+```
+editControl.switchCamera(camera:Camera);
+```
+The edit control uses the camera specified during instantiation to control how it is scaled or picked.  
+Use this to swicth to a different camera after instantiation.  
+You might want to use this for example when the active camera in your scene changes and you want to use the new one for the editcontrol.  
+
 #### To switch edit control to another mesh
 ```
 editControl.switchTo(Mesh mesh, optional boolean isEuler );
 ```
-This quickly removes control from one mesh and attaches it to another mesh.
+This quickly removes the edit control from one mesh and attaches it to another mesh.
 
 The translation, rotation, scaling mode is maintained.  
 

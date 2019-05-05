@@ -1,6 +1,6 @@
 {
   "name": "babylonjs-editcontrol",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "A transform control for Babylonjs mesh",
   "repository": {
     "type": "git",
