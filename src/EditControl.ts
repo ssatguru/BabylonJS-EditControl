@@ -142,6 +142,10 @@ export class EditControl {
         this._scene.registerBeforeRender(this._renderer);
     }
 
+    public getRoot(): AbstractMesh {
+        return this._ecRoot;
+    }
+
     //make sure that if eulerian is set to false then mesh's rotation is in quaternion
     //throw error and exit if not so.
     private _checkQuaternion() {
@@ -352,7 +356,7 @@ export class EditControl {
         this.refreshBoundingInfo();
     }
 
-    public switchCamera(camera:Camera){
+    public switchCamera(camera: Camera) {
         this._mainCamera = camera;
     }
 

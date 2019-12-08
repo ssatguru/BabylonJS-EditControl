@@ -1,4 +1,4 @@
-import { Camera, Mesh, Quaternion, Vector3 } from 'babylonjs';
+import { AbstractMesh, Camera, Mesh, Quaternion, Vector3 } from 'babylonjs';
 /**
  * Draws a transform widget at the mesh's location (its pivot location).
  * The widget transforms(translates,rotates and scales) the mesh based on user
@@ -43,6 +43,7 @@ export declare class EditControl {
     private _visibility;
     private _lhsRhs;
     constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number);
+    getRoot(): AbstractMesh;
     private _checkQuaternion;
     /**
         * checks if a have left hand , right hand issue.
