@@ -4,4 +4,4 @@ tst
 _config.yml
 tsconfig.json
 webpack.config.js
-
+*.bat

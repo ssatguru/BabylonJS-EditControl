@@ -16,7 +16,8 @@ import {
     Scene,
     Space,
     StandardMaterial,
-    Vector3
+    Vector3,
+    TransformNode
 }
     from 'babylonjs';
 
@@ -42,7 +43,8 @@ enum ActionType {
  */
 
 export class EditControl {
-    private _mesh: Mesh;
+    private _mesh: TransformNode;
+
 
     private _canvas: HTMLCanvasElement;
     private _scene: Scene;
@@ -80,7 +82,7 @@ export class EditControl {
     //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
     private _lhsRhs: boolean = false;
 
-    public constructor(mesh: Mesh, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number) {
+    public constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number) {
 
         this._mesh = mesh;
         this._mainCamera = camera;
@@ -167,7 +169,7 @@ export class EditControl {
         * If parent and parent has issue then we have issue.
         * 
         */
-    private _check_LHS_RHS(mesh: Mesh) {
+    private _check_LHS_RHS(mesh: TransformNode) {
         let _issue: boolean = false;
         let root: Node = mesh.parent;
         if (root == null) return false;
@@ -239,7 +241,7 @@ export class EditControl {
     /**
      * checks if any of the mesh's ancestors has non uniform scale
      */
-    private _isScaleUnEqual(mesh: Mesh): boolean {
+    private _isScaleUnEqual(mesh: TransformNode): boolean {
         if (mesh.parent == null) return false;
         while (mesh.parent != null) {
             if (((<Mesh>mesh.parent).scaling.x != (<Mesh>mesh.parent).scaling.y ||
@@ -343,7 +345,7 @@ export class EditControl {
 
 
 
-    public switchTo(mesh: Mesh, eulerian?: boolean) {
+    public switchTo(mesh: TransformNode, eulerian?: boolean) {
         mesh.computeWorldMatrix(true);
         this._mesh = mesh;
         if (eulerian != null) {
@@ -840,7 +842,7 @@ export class EditControl {
     }
 
     private _snapTV: Vector3 = new Vector3(0, 0, 0);
-    private _transWithSnap(mesh: Mesh, trans: Vector3, local: boolean) {
+    private _transWithSnap(mesh: TransformNode, trans: Vector3, local: boolean) {
         if (this._snapT) {
             let snapit: boolean = false;
             this._snapTV.addInPlace(trans);
@@ -983,7 +985,7 @@ export class EditControl {
 
     }
 
-    private _scaleWithSnap(mesh: Mesh, p: Vector3) {
+    private _scaleWithSnap(mesh: TransformNode, p: Vector3) {
         if (this._snapS) {
             let snapit: boolean = false;
             this._snapSV.addInPlace(p);
@@ -1034,13 +1036,15 @@ export class EditControl {
      *
      */
     private _boundingDimesion: Vector3;
-    private _getBoundingDimension(mesh: Mesh): Vector3 {
-        let bb: BoundingBox = mesh.getBoundingInfo().boundingBox;
-        let bd: Vector3 = bb.maximum.subtract(bb.minimum);
-        if (bd.x == 0) bd.x = 1;
-        if (bd.y == 0) bd.y = 1;
-        if (bd.z == 0) bd.z = 1;
-        return bd;
+    private _getBoundingDimension(mesh: TransformNode): Vector3 {
+        if (mesh instanceof AbstractMesh) {
+            { } let bb: BoundingBox = mesh.getBoundingInfo().boundingBox;
+            let bd: Vector3 = bb.maximum.subtract(bb.minimum);
+            if (bd.x == 0) bd.x = 1;
+            if (bd.y == 0) bd.y = 1;
+            if (bd.z == 0) bd.z = 1;
+            return bd;
+        } else return new Vector3(1, 1, 1);
     }
 
     /*
@@ -1059,7 +1063,7 @@ export class EditControl {
 
     private _eulerian: boolean = false;
     private _snapRA: number = 0;
-    private _doRotation(mesh: Mesh, axis: Mesh, newPos: Vector3, prevPos: Vector3) {
+    private _doRotation(mesh: TransformNode, axis: Mesh, newPos: Vector3, prevPos: Vector3) {
 
         //for now no rotation if parents have non uniform scale
         if (this._local && (this._mesh.parent != null) && this._isScaleUnEqual(mesh)) {
@@ -2088,7 +2092,7 @@ export class EditControl {
 }
 
 class ActHist {
-    private mesh: AbstractMesh;
+    private mesh: TransformNode;
 
     private lastMax: number = 10;
 
@@ -2098,7 +2102,7 @@ class ActHist {
 
     private current: number = -1;
 
-    public constructor(mesh: AbstractMesh, capacity: number) {
+    public constructor(mesh: TransformNode, capacity: number) {
         this.mesh = mesh;
         this.lastMax = capacity - 1;
         this.add();
@@ -2162,7 +2166,7 @@ class Act {
     //actiontype
     private _at: number;
 
-    public constructor(mesh: AbstractMesh, at: number) {
+    public constructor(mesh: TransformNode, at: number) {
         this._p = mesh.position.clone();
         //if (mesh.rotationQuaternion == null) {
         if (mesh.rotationQuaternion == null) {
@@ -2180,7 +2184,7 @@ class Act {
         return this._at;
     }
 
-    public perform(mesh: AbstractMesh) {
+    public perform(mesh: TransformNode) {
         mesh.position.copyFrom(this._p)
         //check if we are doing euler or quaternion now
         //also check what were we doing when the rotation value
