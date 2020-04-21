@@ -17,7 +17,8 @@ import {
     Space,
     StandardMaterial,
     Vector3,
-    TransformNode
+    TransformNode,
+    Engine
 }
     from 'babylonjs';
 
@@ -133,7 +134,7 @@ export class EditControl {
 
         //use canvas rather than scene to handle pointer events
         //scene cannot have mutiple eventlisteners for an event
-        //with canvas one will have to do ones own pickinfo generattion.
+        //with canvas one will have to do ones own pickinfo generation.
 
         canvas.addEventListener("pointerdown", this._pointerdown, false);
         canvas.addEventListener("pointerup", this._pointerup, false);
@@ -488,9 +489,12 @@ export class EditControl {
         evt.preventDefault();
         this._pDown = true;
         if ((<PointerEvent>evt).button != 0) return;
-        //TODO: do we really need to do a pick here?
-        //onPointerOver() has already done this.
-        let pickResult: PickingInfo = this._scene.pick(this._scene.pointerX, this._scene.pointerY, (mesh) => {
+        let engine : Engine = this._scene.getEngine();
+        let pointPos : number[] = [
+            (engine.isPointerLock)?engine.getRenderingCanvas().width*0.5 : this._scene.pointerX,
+            (engine.isPointerLock)?engine.getRenderingCanvas().height*0.5 : this._scene.pointerY
+        ];
+        let pickResult: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
             if (this._transEnabled) {
                 if ((mesh == this._tX) || (mesh == this._tY) || (mesh == this._tZ) || (mesh == this._tXZ) || (mesh == this._tZY) || (mesh == this._tYX) || (mesh == this._tAll)) return true;
             } else if ((this._rotEnabled)) {
@@ -563,7 +567,10 @@ export class EditControl {
     private _detachCamera(cam: Object, can: Object) {
         let camera: Camera = <Camera>cam;
         let canvas: HTMLCanvasElement = <HTMLCanvasElement>can;
-        camera.detachControl(canvas);
+        let engine : Engine = this._scene.getEngine();
+        if(!engine.isPointerLock){
+            camera.detachControl(canvas)
+        }        
     }
 
     private _prevOverMesh: Mesh;
@@ -577,7 +584,12 @@ export class EditControl {
     private _savedCol: Color3;
     private _onPointerOver() {
         //if(this.pDown) return;
-        let pickResult: PickingInfo = this._scene.pick(this._scene.pointerX, this._scene.pointerY, (mesh) => {
+        let engine : Engine = this._scene.getEngine();
+        let pointPos : number[] = [
+            (engine.isPointerLock)?engine.getRenderingCanvas().width*0.5 : this._scene.pointerX,
+            (engine.isPointerLock)?engine.getRenderingCanvas().height*0.5 : this._scene.pointerY
+        ];
+        let pickResult: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
             if (this._transEnabled) {
                 if ((mesh == this._tX) || (mesh == this._tY) || (mesh == this._tZ) || (mesh == this._tXZ) || (mesh == this._tZY) || (mesh == this._tYX) || (mesh == this._tAll)) return true;
             } else if ((this._rotEnabled)) {
@@ -662,7 +674,10 @@ export class EditControl {
     private _onPointerUp(evt: Event) {
         this._pDown = false;
         if (this._editing) {
-            this._mainCamera.attachControl(this._canvas);
+            let engine : Engine = this._scene.getEngine();
+            if(!engine.isPointerLock){
+                this._mainCamera.attachControl(this._canvas);
+            }  
             this._setEditing(false);
             //this.setAxesVisiblity(1);
             this._hideBaxis();
@@ -2063,7 +2078,15 @@ export class EditControl {
         }
         return angle;
     }
-
+    
+    private static _getStandardMaterial(col: Color3, scene: Scene): StandardMaterial {
+        let mat: StandardMaterial = new StandardMaterial("", scene);
+        mat.emissiveColor = col;
+        mat.diffuseColor = Color3.Black();
+        mat.specularColor = Color3.Black();
+        mat.backFaceCulling = false;
+        return mat;
+    }
 
     private _createMaterials(scene: Scene) {
         this._redMat = EditControl._getStandardMaterial(this._redCol, scene);
@@ -2081,14 +2104,7 @@ export class EditControl {
         this._yellowMat.dispose();
     }
 
-    private static _getStandardMaterial(col: Color3, scene: Scene): StandardMaterial {
-        let mat: StandardMaterial = new StandardMaterial("", scene);
-        mat.emissiveColor = col;
-        mat.diffuseColor = Color3.Black();
-        mat.specularColor = Color3.Black();
-        mat.backFaceCulling = false;
-        return mat;
-    }
+    
 }
 
 class ActHist {
