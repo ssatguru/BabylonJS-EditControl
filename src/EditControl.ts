@@ -489,10 +489,10 @@ export class EditControl {
         evt.preventDefault();
         this._pDown = true;
         if ((<PointerEvent>evt).button != 0) return;
-        let engine : Engine = this._scene.getEngine();
-        let pointPos : number[] = [
-            (engine.isPointerLock)?engine.getRenderingCanvas().width*0.5 : this._scene.pointerX,
-            (engine.isPointerLock)?engine.getRenderingCanvas().height*0.5 : this._scene.pointerY
+        let engine: Engine = this._scene.getEngine();
+        let pointPos: number[] = [
+            (engine.isPointerLock) ? engine.getRenderingCanvas().width * 0.5 : this._scene.pointerX,
+            (engine.isPointerLock) ? engine.getRenderingCanvas().height * 0.5 : this._scene.pointerY
         ];
         let pickResult: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
             if (this._transEnabled) {
@@ -567,10 +567,10 @@ export class EditControl {
     private _detachCamera(cam: Object, can: Object) {
         let camera: Camera = <Camera>cam;
         let canvas: HTMLCanvasElement = <HTMLCanvasElement>can;
-        let engine : Engine = this._scene.getEngine();
-        if(!engine.isPointerLock){
+        let engine: Engine = this._scene.getEngine();
+        if (!engine.isPointerLock) {
             camera.detachControl(canvas)
-        }        
+        }
     }
 
     private _prevOverMesh: Mesh;
@@ -584,10 +584,10 @@ export class EditControl {
     private _savedCol: Color3;
     private _onPointerOver() {
         //if(this.pDown) return;
-        let engine : Engine = this._scene.getEngine();
-        let pointPos : number[] = [
-            (engine.isPointerLock)?engine.getRenderingCanvas().width*0.5 : this._scene.pointerX,
-            (engine.isPointerLock)?engine.getRenderingCanvas().height*0.5 : this._scene.pointerY
+        let engine: Engine = this._scene.getEngine();
+        let pointPos: number[] = [
+            (engine.isPointerLock) ? engine.getRenderingCanvas().width * 0.5 : this._scene.pointerX,
+            (engine.isPointerLock) ? engine.getRenderingCanvas().height * 0.5 : this._scene.pointerY
         ];
         let pickResult: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
             if (this._transEnabled) {
@@ -674,10 +674,10 @@ export class EditControl {
     private _onPointerUp(evt: Event) {
         this._pDown = false;
         if (this._editing) {
-            let engine : Engine = this._scene.getEngine();
-            if(!engine.isPointerLock){
+            let engine: Engine = this._scene.getEngine();
+            if (!engine.isPointerLock) {
                 this._mainCamera.attachControl(this._canvas);
-            }  
+            }
             this._setEditing(false);
             //this.setAxesVisiblity(1);
             this._hideBaxis();
@@ -1156,7 +1156,12 @@ export class EditControl {
     }
 
     private _getPosOnPickPlane(): Vector3 {
-        let pickinfo: PickingInfo = this._scene.pick(this._scene.pointerX, this._scene.pointerY, (mesh) => {
+        let engine: Engine = this._scene.getEngine();
+        let pointPos: number[] = [
+            (engine.isPointerLock) ? engine.getRenderingCanvas().width * 0.5 : this._scene.pointerX,
+            (engine.isPointerLock) ? engine.getRenderingCanvas().height * 0.5 : this._scene.pointerY
+        ];
+        let pickinfo: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
             return mesh == this._pickedPlane;
         }, null, this._mainCamera);
 
@@ -2078,7 +2083,7 @@ export class EditControl {
         }
         return angle;
     }
-    
+
     private static _getStandardMaterial(col: Color3, scene: Scene): StandardMaterial {
         let mat: StandardMaterial = new StandardMaterial("", scene);
         mat.emissiveColor = col;
@@ -2104,7 +2109,7 @@ export class EditControl {
         this._yellowMat.dispose();
     }
 
-    
+
 }
 
 class ActHist {
