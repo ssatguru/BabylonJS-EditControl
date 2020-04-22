@@ -306,7 +306,7 @@ export declare class EditControl {
      * to figure this check the orientation of the user(camera)to ec vector with the rotation normal vector
      */
     private _getAngle;
+    private static _getStandardMaterial;
     private _createMaterials;
     private _disposeMaterials;
-    private static _getStandardMaterial;
 }
