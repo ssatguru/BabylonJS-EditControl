@@ -286,15 +286,18 @@ export declare class EditControl {
     setLocal(l: boolean): void;
     isLocal(): boolean;
     setTransSnap(s: boolean): void;
+    isTransSnap(): boolean;
     setRotSnap(s: boolean): void;
+    isRotSnap(): boolean;
     setScaleSnap(s: boolean): void;
+    isScaleSnap(): boolean;
     private _tSnap;
     setTransSnapValue(t: number): void;
+    getTransSnapValue(): number;
     setRotSnapValue(r: number): void;
-    /**
-     * use this to set the scale snap value
-     */
+    getRotSnapValue(): number;
     setScaleSnapValue(r: number): void;
+    getScaleSnapValue(): number;
     private _tv1;
     private _tv2;
     private _tv3;

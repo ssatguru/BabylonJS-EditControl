@@ -490,11 +490,9 @@ export class EditControl {
         this._pDown = true;
         if ((<PointerEvent>evt).button != 0) return;
         let engine: Engine = this._scene.getEngine();
-        let pointPos: number[] = [
-            (engine.isPointerLock) ? engine.getRenderingCanvas().width * 0.5 : this._scene.pointerX,
-            (engine.isPointerLock) ? engine.getRenderingCanvas().height * 0.5 : this._scene.pointerY
-        ];
-        let pickResult: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
+        let x = (engine.isPointerLock) ? this._canvas.width * 0.5 : this._scene.pointerX;
+        let y = (engine.isPointerLock) ? this._canvas.height * 0.5 : this._scene.pointerY;
+        let pickResult: PickingInfo = this._scene.pick(x, y, (mesh) => {
             if (this._transEnabled) {
                 if ((mesh == this._tX) || (mesh == this._tY) || (mesh == this._tZ) || (mesh == this._tXZ) || (mesh == this._tZY) || (mesh == this._tYX) || (mesh == this._tAll)) return true;
             } else if ((this._rotEnabled)) {
@@ -585,11 +583,9 @@ export class EditControl {
     private _onPointerOver() {
         //if(this.pDown) return;
         let engine: Engine = this._scene.getEngine();
-        let pointPos: number[] = [
-            (engine.isPointerLock) ? engine.getRenderingCanvas().width * 0.5 : this._scene.pointerX,
-            (engine.isPointerLock) ? engine.getRenderingCanvas().height * 0.5 : this._scene.pointerY
-        ];
-        let pickResult: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
+        let x = (engine.isPointerLock) ? this._canvas.width * 0.5 : this._scene.pointerX;
+        let y = (engine.isPointerLock) ? this._canvas.height * 0.5 : this._scene.pointerY;
+        let pickResult: PickingInfo = this._scene.pick(x, y, (mesh) => {
             if (this._transEnabled) {
                 if ((mesh == this._tX) || (mesh == this._tY) || (mesh == this._tZ) || (mesh == this._tXZ) || (mesh == this._tZY) || (mesh == this._tYX) || (mesh == this._tAll)) return true;
             } else if ((this._rotEnabled)) {
@@ -1157,11 +1153,9 @@ export class EditControl {
 
     private _getPosOnPickPlane(): Vector3 {
         let engine: Engine = this._scene.getEngine();
-        let pointPos: number[] = [
-            (engine.isPointerLock) ? engine.getRenderingCanvas().width * 0.5 : this._scene.pointerX,
-            (engine.isPointerLock) ? engine.getRenderingCanvas().height * 0.5 : this._scene.pointerY
-        ];
-        let pickinfo: PickingInfo = this._scene.pick(pointPos[0], pointPos[1], (mesh) => {
+        let x = (engine.isPointerLock) ? this._canvas.width * 0.5 : this._scene.pointerX;
+        let y = (engine.isPointerLock) ? this._canvas.height * 0.5 : this._scene.pointerY;
+        let pickinfo: PickingInfo = this._scene.pick(x, y, (mesh) => {
             return mesh == this._pickedPlane;
         }, null, this._mainCamera);
 
@@ -1969,12 +1963,22 @@ export class EditControl {
         this._snapT = s;
     }
 
+    public isTransSnap(): boolean {
+        return this._snapT;
+    }
+
     public setRotSnap(s: boolean) {
         this._snapR = s;
+    }
+    public isRotSnap(): boolean {
+        return this._snapR;
     }
 
     public setScaleSnap(s: boolean) {
         this._snapS = s;
+    }
+    public isScaleSnap(): boolean {
+        return this._snapS;
     }
 
     private _tSnap: Vector3 = new Vector3(this._transSnap, this._transSnap, this._transSnap);
@@ -1982,18 +1986,23 @@ export class EditControl {
         this._tSnap.copyFromFloats(t, t, t);
         this._transSnap = t;
     }
+    public getTransSnapValue(): number {
+        return this._transSnap;
+    }
 
     public setRotSnapValue(r: number) {
         this._rotSnap = r;
     }
+    public getRotSnapValue(): number {
+        return this._rotSnap;
+    }
 
-    /**
-     * use this to set the scale snap value
-     */
     public setScaleSnapValue(r: number) {
         this._scaleSnap = r;
     }
-
+    public getScaleSnapValue(): number {
+        return this._scaleSnap;
+    }
     //few temp vectors & matrix
     private _tv1: Vector3 = new Vector3(0, 0, 0);
     private _tv2: Vector3 = new Vector3(0, 0, 0);
