@@ -15,6 +15,7 @@ export declare class EditControl {
     private _mesh;
     private _canvas;
     private _scene;
+    private _utilLayer;
     private _mainCamera;
     private _ecRoot;
     private _local;
@@ -222,6 +223,15 @@ export declare class EditControl {
     private _tEndAll;
     private _all_tEnd;
     private _createTransAxes;
+    /**
+     * pickable but invisible
+     * a) 3 boxes around each of the 3 small axes lines
+     * b) 3 small planes near origin for movement along a plane
+     * @param r
+     * @param l
+     * @param tCtl
+     * @param scene
+     */
     private _createPickableTrans;
     private _createNonPickableTrans;
     private _rCtl;

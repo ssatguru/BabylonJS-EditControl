@@ -7,6 +7,8 @@ let main = function () {
   let engine = new BABYLON.Engine(canvas, true);
   let scene = createScene(engine);
   let camera = addCamera(scene, canvas);
+  scene.debugLayer.show({ showExplorer: true, embedMode: true });
+
   addGUI();
   addGrid(scene);
   let box = addBox(scene);

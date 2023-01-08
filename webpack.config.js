@@ -10,7 +10,13 @@ module.exports = (env, argv) => {
     },
     devtool: "source-map",
     devServer: {
-      publicPath: "/dist",
+      devMiddleware: {
+        publicPath: "/dist/",
+      },
+      static: {
+        directory: "./",
+        serveIndex: true,
+      },
     },
     module: {
       rules: [
@@ -38,12 +44,13 @@ module.exports = (env, argv) => {
       },
     },
     optimization: {
+      minimize: true,
       minimizer: [
         new TerserPlugin({
-          cache: true,
           parallel: true,
-          sourceMap: true, // Must be set to true if using source-maps in production
           terserOptions: {
+            nameCache: null,
+            sourceMap: true, // Must be set to true if using source-maps in production
             // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
             ecma: undefined,
             mangle: {

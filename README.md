@@ -4,8 +4,8 @@ An edit control for use in [BabylonJS](http://www.babylonjs.com/) (a 3D HTML Web
 
 ## About
 
-All 3d editors provide a widget, also referred to as transform control, to translate, rotate or scale 3d objects in the editor.  
-This EditControl is similar to those widgets.  
+Many 3d editors provide, what is called, a widget/gizmo/transform control, to help translate, rotate or scale 3d objects in the editor.  
+This EditControl is just that.  
 You can embed this in your Babylonjs application to provide those same capabilities.  
 It currently supports
 
@@ -22,9 +22,26 @@ It currently supports
 
 For a demo, head on over to <a href="https://ssatguru.github.io/BabylonJS-EditControl-Samples/demo/Demo.html" target="_blank"> https://ssatguru.github.io/BabylonJS-EditControl-Samples/demo/Demo.html </a>
 
-For a list of know issues, shortcomings and planned enhancements see <a href="https://github.com/ssatguru/BabylonJS-EditControl/issues" target="_blank"> https://github.com/ssatguru/BabylonJS-EditControl/issues </a>
+### Limitations/Issues
 
-### Breaking change with 3.2.0
+This currently does not handle properly, a right handed mesh in a left handed system (example gltf mesh in lhs babylon) or a left handed mesh in a right handed system.  
+A right handed mesh in a right handed system or a left handed mesh in a left handed system is handled properly.  
+A gltf mesh in a right handed babylon is handled properly.  
+I would address this in a future release.
+
+For a list of other know issues, shortcomings and planned enhancements see <a href="https://github.com/ssatguru/BabylonJS-EditControl/issues" target="_blank"> https://github.com/ssatguru/BabylonJS-EditControl/issues </a>
+
+### 3.3.0 Major changes
+
+Moved the EditControl to the Babylonjs DefaultUtilityLayer scene.  
+Because this scene is different from the main scene there is less interference with the main scene. Also makes it a bit faster.  
+This is similar to how the native gizmos of Babylonjs work.
+
+Upgraded to latest version of Babylons js - 5.41.  
+Replaced deprecated methods with new ones.
+Upgraded other dev dependenices to latest version - typescript, webpack etc.
+
+### 3.20 Major and Breaking changes
 
 Version 3.2.0 converts the project from a plain vanilla JavaScript project to a module based JavaScript project.  
 With this change, the way to load the application has changed.  
@@ -418,7 +435,7 @@ Two ways to test.
    "npm run start"  
    This will start the live dev server on port 8080 (could be different if this port is already in use) and open the browser with the file http://localhost:8080/tst/test.html.  
    The dev server will live compile your code any time you make changes.  
-   Note: The dev server does not write the build to disk, instead it serves it from memory. In our case the build, "EditControl.max.js", is served from location http://localhost:8080/dest. (see publicPath in wepack.config.js file).
+   Note: The dev server does not write the build to disk, instead it serves it from memory. In our case the build, "EditControl.max.js", is served from location http://localhost:8080/dist. (see publicPath in wepack.config.js file).
 
 2. using any other http server.  
    Start the server , say http-server, from the project root folder (not from within "/tst " folder).  

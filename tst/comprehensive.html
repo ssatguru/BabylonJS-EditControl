@@ -1,86 +1,89 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>EditControl Test</title>
 
-    <link rel="stylesheet" href="test.css" media="screen" />
-    <link rel="stylesheet" href="w3.css" media="screen" />
+<head>
+	<meta charset="utf-8" />
+	<title>EditControl Test</title>
 
-    <script src="/node_modules/pepjs/dist/pep.min.js"></script>
-    <script src="/node_modules/babylonjs/babylon.max.js"></script>
+	<link rel="stylesheet" href="test.css" media="screen" />
+	<link rel="stylesheet" href="w3.css" media="screen" />
 
-    <script src="/dist/EditControl.js"></script>
-    <script src="comprehensive.js"></script>
-  </head>
+	<script src="/node_modules/pepjs/dist/pep.min.js"></script>
+	<script src="/node_modules/babylonjs/babylon.max.js"></script>
+	<script src="/node_modules/babylonjs-inspector/babylon.inspector.bundle.js"></script>
 
-  <body touch-action="none">
-    <canvas id="renderCanvas"></canvas>
+	<script src="/dist/EditControl.max.js"></script>
+	<script src="comprehensive.js"></script>
+</head>
 
-    <div id="controls">
-      <table>
-        <tr>
-          <td>
-            box1 is parent of box2 and box2 is parent of box3
-          </td>
-        </tr>
-        <tr>
-          <td>
-            select
-            <input type="radio" id="selectBox1" checked title="select box1" name="sb" />box1 <input type="radio" id="selectBox2" title="select box2" name="sb" />box2 <input type="radio" id="selectBox3" title="select box3" name="sb" />box3
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <button id="hide">hide/show</button>
-            <button id="focus">focus</button>
-          </td>
-        </tr>
-        <tr>
-          <td><input type="radio" id="local" onclick="switchSpace();" name="lg" checked title="switch to local axes" />local <input type="radio" id="global" onclick="switchSpace();" name="lg" title="switch to global axes" />global</td>
-        </tr>
-        <tr>
-          <td>
-            <table>
-              <tr>
-                <td><button id="trans">translate</button></td>
-                <td><button id="rotate">rotate</button></td>
-                <td><button id="scale">scale</button></td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" id="snaptrans" />snap translation</td>
-                <td><input type="checkbox" id="snaprot" />snap rotation</td>
-                <td><input type="checkbox" id="snapscale" />snap scale</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" id="boundTrans" />bound translation</td>
-                <td><input type="checkbox" id="boundRot" />bound rotation</td>
-                <td><input type="checkbox" id="boundScale" />bound scale</td>
-              </tr>
-              <tr>
-                <td></td>
-                <td><input type="checkbox" id="rotGuideFull" />full rotation guides</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td></td>
-                <td>
-                  <button id="euler">toggle euler</button>
-                  <br />
-                  <button id="pRot">print rotation to console</button>
-                </td>
-                <td></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <button id="undo">undo</button>
-            <button id="redo">redo</button>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </body>
+<body touch-action="none">
+	<canvas id="renderCanvas"></canvas>
+
+	<div id="controls">
+		<table>
+			<tr>
+				<td>
+					box1 is parent of box2 and box2 is parent of box3
+				</td>
+			</tr>
+			<tr>
+				<td>
+					select
+					<input type="radio" id="selectBox1" checked title="select box1" name="sb" />box1 <input type="radio" id="selectBox2" title="select box2" name="sb" />box2 <input type="radio" id="selectBox3" title="select box3" name="sb" />box3
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<button id="hide">hide/show</button>
+					<button id="focus">focus</button>
+				</td>
+			</tr>
+			<tr>
+				<td><input type="radio" id="local" onclick="switchSpace();" name="lg" checked title="switch to local axes" />local <input type="radio" id="global" onclick="switchSpace();" name="lg" title="switch to global axes" />global</td>
+			</tr>
+			<tr>
+				<td>
+					<table>
+						<tr>
+							<td><button id="trans">translate</button></td>
+							<td><button id="rotate">rotate</button></td>
+							<td><button id="scale">scale</button></td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="snaptrans" />snap translation</td>
+							<td><input type="checkbox" id="snaprot" />snap rotation</td>
+							<td><input type="checkbox" id="snapscale" />snap scale</td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="boundTrans" />bound translation</td>
+							<td><input type="checkbox" id="boundRot" />bound rotation</td>
+							<td><input type="checkbox" id="boundScale" />bound scale</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><input type="checkbox" id="rotGuideFull" />full rotation guides</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<button id="euler">toggle euler</button>
+								<br />
+								<button id="pRot">print rotation to console</button>
+							</td>
+							<td></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<button id="undo">undo</button>
+					<button id="redo">redo</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+
 </html>

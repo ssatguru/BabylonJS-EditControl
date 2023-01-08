@@ -18,7 +18,9 @@ import {
     StandardMaterial,
     Vector3,
     TransformNode,
-    Engine
+    Engine,
+    DeepImmutableObject,
+    UtilityLayerRenderer
 }
     from 'babylonjs';
 
@@ -49,6 +51,7 @@ export class EditControl {
 
     private _canvas: HTMLCanvasElement;
     private _scene: Scene;
+    private _utilLayer: UtilityLayerRenderer;
     private _mainCamera: Camera;
     //root of the edit control
     private _ecRoot: Mesh;
@@ -77,6 +80,7 @@ export class EditControl {
     private _pointerdown: EventListener;
     private _pointerup: EventListener;
     private _pointermove: EventListener;
+
     //axes visibility
     private _visibility: number = 0.75;
 
@@ -104,7 +108,11 @@ export class EditControl {
             this._pickWidth = pickWidth;
         }
 
-        this._scene = mesh.getScene();
+
+        this._utilLayer = UtilityLayerRenderer.DefaultUtilityLayer;
+        this._utilLayer.onlyCheckPointerDownEvents = false;
+        this._scene = this._utilLayer.utilityLayerScene;
+
         this._actHist = new ActHist(mesh, 10);
 
         mesh.computeWorldMatrix(true);
@@ -262,7 +270,7 @@ export class EditControl {
     private _cameraNormal: Vector3 = new Vector3(0, 0, 0);
     private _setECScale() {
         this._ecRoot.position.subtractToRef(this._mainCamera.position, this._cameraTOec);
-        Vector3.FromFloatArrayToRef(this._mainCamera.getWorldMatrix().asArray(), 8, this._cameraNormal);
+        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>this._mainCamera.getWorldMatrix().asArray(), 8, this._cameraNormal);
 
         //get distance of edit control from the camera plane 
         //project "camera to edit control" vector onto the camera normal
@@ -501,7 +509,7 @@ export class EditControl {
                 if ((mesh == this._sX) || (mesh == this._sY) || (mesh == this._sZ) || (mesh == this._sXZ) || (mesh == this._sZY) || (mesh == this._sYX) || (mesh == this._sAll)) return true;
             }
             return false;
-        }, null, this._mainCamera);
+        }, false, this._mainCamera);
 
         if (pickResult.hit) {
             //this.setAxesVisiblity(0);
@@ -594,7 +602,7 @@ export class EditControl {
                 if ((mesh == this._sX) || (mesh == this._sY) || (mesh == this._sZ) || (mesh == this._sXZ) || (mesh == this._sZY) || (mesh == this._sYX) || (mesh == this._sAll)) return true;
             }
             return false;
-        }, null, this._mainCamera);
+        }, false, this._mainCamera);
         if (pickResult.hit) {
             //if we are still over the same axis mesh then don't do anything
             if (<Mesh>pickResult.pickedMesh != this._prevOverMesh) {
@@ -672,7 +680,7 @@ export class EditControl {
         if (this._editing) {
             let engine: Engine = this._scene.getEngine();
             if (!engine.isPointerLock) {
-                this._mainCamera.attachControl(this._canvas);
+                this._mainCamera.attachControl(true);
             }
             this._setEditing(false);
             //this.setAxesVisiblity(1);
@@ -1035,9 +1043,9 @@ export class EditControl {
      */
     private _setLocalAxes(mesh: Node) {
         let meshMatrix: Matrix = mesh.getWorldMatrix();
-        Vector3.FromFloatArrayToRef(meshMatrix.m, 0, this._localX);
-        Vector3.FromFloatArrayToRef(meshMatrix.m, 4, this._localY);
-        Vector3.FromFloatArrayToRef(meshMatrix.m, 8, this._localZ);
+        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>meshMatrix.m, 0, this._localX);
+        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>meshMatrix.m, 4, this._localY);
+        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>meshMatrix.m, 8, this._localZ);
     }
 
 
@@ -1357,9 +1365,9 @@ export class EditControl {
         let guideAxes: Mesh = new Mesh("", this._scene);
 
         //the big axes, shown when an axis is selected
-        this._bXaxis = Mesh.CreateLines("", [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)], this._scene);
-        this._bYaxis = Mesh.CreateLines("", [new Vector3(0, -100, 0), new Vector3(0, 100, 0)], this._scene);
-        this._bZaxis = Mesh.CreateLines("", [new Vector3(0, 0, -100), new Vector3(0, 0, 100)], this._scene);
+        this._bXaxis = MeshBuilder.CreateLines("", { points: [new Vector3(-100, 0, 0), new Vector3(100, 0, 0)] }, this._scene);
+        this._bYaxis = MeshBuilder.CreateLines("", { points: [new Vector3(0, -100, 0), new Vector3(0, 100, 0)] }, this._scene);
+        this._bZaxis = MeshBuilder.CreateLines("", { points: [new Vector3(0, 0, -100), new Vector3(0, 0, 100)] }, this._scene);
 
         //lines are now pickable too
         this._bXaxis.isPickable = false;
@@ -1376,9 +1384,9 @@ export class EditControl {
 
         //the small axis
         let al: number = this._axesLen * this._axesScale * 0.75;
-        this._xaxis = Mesh.CreateLines("", [new Vector3(0, 0, 0), new Vector3(al, 0, 0)], this._scene);
-        this._yaxis = Mesh.CreateLines("", [new Vector3(0, 0, 0), new Vector3(0, al, 0)], this._scene);
-        this._zaxis = Mesh.CreateLines("", [new Vector3(0, 0, 0), new Vector3(0, 0, al)], this._scene);
+        this._xaxis = MeshBuilder.CreateLines("", { points: [new Vector3(0, 0, 0), new Vector3(al, 0, 0)] }, this._scene);
+        this._yaxis = MeshBuilder.CreateLines("", { points: [new Vector3(0, 0, 0), new Vector3(0, al, 0)] }, this._scene);
+        this._zaxis = MeshBuilder.CreateLines("", { points: [new Vector3(0, 0, 0), new Vector3(0, 0, al)] }, this._scene);
 
         //lines are now pickable too
         this._xaxis.isPickable = false;
@@ -1406,10 +1414,10 @@ export class EditControl {
     private _pYX: Mesh;
 
     private _createPickPlanes() {
-        this._pALL = Mesh.CreatePlane("", 5, this._scene);
-        this._pXZ = Mesh.CreatePlane("", 5, this._scene);
-        this._pZY = Mesh.CreatePlane("", 5, this._scene);
-        this._pYX = Mesh.CreatePlane("", 5, this._scene);
+        this._pALL = MeshBuilder.CreatePlane("", { size: 5 }, this._scene);
+        this._pXZ = MeshBuilder.CreatePlane("", { size: 5 }, this._scene);
+        this._pZY = MeshBuilder.CreatePlane("", { size: 5 }, this._scene);
+        this._pYX = MeshBuilder.CreatePlane("", { size: 5 }, this._scene);
 
         this._pALL.isPickable = false;
         this._pXZ.isPickable = false;
@@ -1468,12 +1476,22 @@ export class EditControl {
 
         this._tCtl = new Mesh("", this._scene);
 
-        /*pickable invisible boxes around axes lines*/
+        // pickable invisible boxes around axes lines
         this._createPickableTrans(r, l, this._tCtl, this._scene);
 
         //non pickable but visible cones at end of axes lines
         this._createNonPickableTrans(r, l, this._scene);
     }
+
+    /**
+     * pickable but invisible 
+     * a) 3 boxes around each of the 3 small axes lines
+     * b) 3 small planes near origin for movement along a plane
+     * @param r 
+     * @param l 
+     * @param tCtl 
+     * @param scene 
+     */
 
     private _createPickableTrans(r: number, l: number, tCtl: Mesh, scene: Scene) {
         let tX = this._extrudeBox(r / 2, l);
@@ -1481,9 +1499,10 @@ export class EditControl {
         let tY = tX.clone("Y");
         let tZ = tX.clone("Z");
 
-        let tXZ = MeshBuilder.CreatePlane("XZ", { size: r * 2 }, scene);
-        let tZY = MeshBuilder.CreatePlane("ZY", { size: r * 2 }, scene);
-        let tYX = MeshBuilder.CreatePlane("YX", { size: r * 2 }, scene);
+        let s = r * 2;
+        let tXZ = MeshBuilder.CreatePlane("XZ", { size: s }, scene);
+        let tZY = MeshBuilder.CreatePlane("ZY", { size: s }, scene);
+        let tYX = MeshBuilder.CreatePlane("YX", { size: s }, scene);
 
         tXZ.rotation.x = 1.57;
         tZY.rotation.y = -1.57;
@@ -1501,7 +1520,7 @@ export class EditControl {
         tZY.bakeCurrentTransformIntoVertices();
         tYX.bakeCurrentTransformIntoVertices();
 
-        let tAll = Mesh.CreateBox("ALL", r * 2, scene);
+        let tAll = MeshBuilder.CreateBox("ALL", { size: r * 2 }, scene);
 
         tX.parent = tCtl;
         tY.parent = tCtl;
@@ -1529,12 +1548,15 @@ export class EditControl {
         this._setPickableFalse(this._all_t)
     }
 
+    //non pickable but visible 
+    // a) 3 cones at end of the 3 small axes lines
+    // b) 3 small planes near origin for movement along a plane
     private _createNonPickableTrans(r: number, l: number, scene: Scene) {
         //cone length
         let cl: number = l / 5;
         //cone base radius
         //let cr: number = r;
-        let tEndX = Mesh.CreateCylinder("", cl, 0, r, 6, 1, scene);
+        let tEndX = MeshBuilder.CreateCylinder("", { height: cl, diameterTop: 0, diameterBottom: r, tessellation: 6, subdivisions: 1 }, scene);
         let tEndY = tEndX.clone("");
         let tEndZ = tEndX.clone("");
 
@@ -1544,7 +1566,7 @@ export class EditControl {
         let tEndZY = MeshBuilder.CreatePlane("ZY", { size: s }, scene);
         let tEndYX = MeshBuilder.CreatePlane("YX", { size: s }, scene);
 
-        let tEndAll = Mesh.CreateBox("ALL", r, scene);
+        let tEndAll = MeshBuilder.CreateBox("ALL", { size: r }, scene);
 
         tEndX.rotation.x = 1.57;
         tEndY.rotation.x = 1.57;
@@ -1723,7 +1745,7 @@ export class EditControl {
     private _extrudeBox(w: number, l: number): Mesh {
         let shape: Vector3[] = [new Vector3(w, w, 0), new Vector3(-w, w, 0), new Vector3(-w, -w, 0), new Vector3(w, -w, 0), new Vector3(w, w, 0)];
         let path: Vector3[] = [new Vector3(0, 0, 0), new Vector3(0, 0, l)];
-        let box: Mesh = Mesh.ExtrudeShape("", shape, path, 1, 0, 2, this._scene);
+        let box: Mesh = MeshBuilder.ExtrudeShape("", { shape: shape, path: path, scale: 1, rotation: 0, cap: 2 }, this._scene);
         return box;
     }
 
@@ -1749,7 +1771,7 @@ export class EditControl {
                 p++;
             }
         }
-        let circle: LinesMesh = Mesh.CreateLines("", points, this._scene);
+        let circle: LinesMesh = MeshBuilder.CreateLines("", { points: points }, this._scene);
         return circle;
     }
 
@@ -1766,7 +1788,7 @@ export class EditControl {
             points[p] = new Vector3(x, 0, z);
             p++;
         }
-        let tube: Mesh = Mesh.CreateTube("", points, this._pickWidth * this._axesScale * 2, 3, null, Mesh.NO_CAP, this._scene);
+        let tube: Mesh = MeshBuilder.CreateTube("", { path: points, radius: this._pickWidth * this._axesScale * 2, tessellation: 3, cap: Mesh.NO_CAP }, this._scene);
         return tube;
     }
 
@@ -1834,7 +1856,7 @@ export class EditControl {
         sZY.bakeCurrentTransformIntoVertices();
         sYX.bakeCurrentTransformIntoVertices();
 
-        let sAll: Mesh = Mesh.CreateBox("ALL", 2 * r, this._scene);
+        let sAll: Mesh = MeshBuilder.CreateBox("ALL", { size: 2 * r }, this._scene);
 
         sX.parent = sCtl;
         sY.parent = sCtl;
@@ -1864,7 +1886,7 @@ export class EditControl {
 
     private _createNonPickableScale(r: number, l: number) {
 
-        let sEndX = Mesh.CreateBox("", r, this._scene);
+        let sEndX = MeshBuilder.CreateBox("", { size: r }, this._scene);
         let sEndY = sEndX.clone("");
         let sEndZ = sEndX.clone("");
 
@@ -1874,7 +1896,7 @@ export class EditControl {
         let sEndYX = MeshBuilder.CreatePlane("YX", { size: s }, this._scene);
 
 
-        let sEndAll = Mesh.CreateBox("ALL", r, this._scene);
+        let sEndAll = MeshBuilder.CreateBox("ALL", { size: r }, this._scene);
 
         sEndXZ.rotation.x = 1.57;
         sEndZY.rotation.y = -1.57;

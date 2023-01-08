@@ -11,6 +11,8 @@ var main = function () {
     var engine = new BABYLON.Engine(canvas, true);
     var scene = addScene(engine);
     var camera = addCamera(scene, canvas);
+    scene.debugLayer.show({ showExplorer: true, embedMode: true });
+
     addGrid(scene);
     addBoxes(scene);
     addEditControls(camera, canvas);
@@ -26,7 +28,7 @@ var addScene = function (engine) {
     var scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0.75, 0.75, 0.75, 1);
     var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = .5;
+    light.intensity = 0.5;
     return scene;
 };
 var addCamera = function (scene, canvas) {
@@ -86,33 +88,27 @@ var attachEditControl = function (mesh, camera, canvas) {
 var actionStartListener = function (actionType) {
     if (actionType === 0) {
         console.log("translation started");
-    }
-    else if (actionType === 1) {
+    } else if (actionType === 1) {
         console.log("rotation started");
-    }
-    else if (actionType === 2) {
+    } else if (actionType === 2) {
         console.log("scaling started");
     }
 };
 var actionListener = function (actionType) {
     if (actionType === 0) {
         console.log("translating");
-    }
-    else if (actionType === 1) {
+    } else if (actionType === 1) {
         //console.log("rotating");
-    }
-    else if (actionType === 2) {
+    } else if (actionType === 2) {
         console.log("scaling");
     }
 };
 var actionEndListener = function (actionType) {
     if (actionType === 0) {
         console.log("translation done");
-    }
-    else if (actionType === 1) {
+    } else if (actionType === 1) {
         console.log("rotation done");
-    }
-    else if (actionType === 2) {
+    } else if (actionType === 2) {
         console.log("scaling done");
     }
 };
@@ -121,9 +117,7 @@ var setButtons = function (camera) {
     hideButton.onclick = function () {
         if (commonEC.isHidden()) {
             commonEC.show();
-        }
-        else
-            commonEC.hide();
+        } else commonEC.hide();
     };
     var transButton = document.getElementById("trans");
     var rotButton = document.getElementById("rotate");
@@ -163,11 +157,11 @@ var setButtons = function (camera) {
     boundSButton.checked = false;
     boundTButton.onclick = function () {
         if (boundTButton.checked) {
-            commonEC.setTransBounds(new BABYLON.Vector3(-5, -5, -5), // min
-            new BABYLON.Vector3(5, 5, 5) // max
+            commonEC.setTransBounds(
+                new BABYLON.Vector3(-5, -5, -5), // min
+                new BABYLON.Vector3(5, 5, 5) // max
             );
-        }
-        else {
+        } else {
             commonEC.removeTransBounds();
         }
     };
@@ -177,12 +171,11 @@ var setButtons = function (camera) {
     boundSButton.onclick = function () {
         if (boundSButton.checked) {
             commonEC.setScaleBounds(
-            // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
-            new BABYLON.Vector3(0, 0, 0), // causes bug
-            new BABYLON.Vector3(2, 2, 2) // max
+                // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
+                new BABYLON.Vector3(0, 0, 0), // causes bug
+                new BABYLON.Vector3(2, 2, 2) // max
             );
-        }
-        else {
+        } else {
             commonEC.removeScaleBounds();
         }
     };
@@ -222,12 +215,10 @@ var setButtons = function (camera) {
         if (selectBox1.checked) {
             commonEC = ec1;
             box = box1;
-        }
-        else if (selectBox2.checked) {
+        } else if (selectBox2.checked) {
             commonEC = ec2;
             box = box2;
-        }
-        else {
+        } else {
             commonEC = ec3;
             box = box3;
         }
