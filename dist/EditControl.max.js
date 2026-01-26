@@ -85,6 +85,9 @@ var ActionType;
  *
  */
 class EditControl {
+    _isEulerian(mesh) {
+        return ((mesh.rotationQuaternion == null) || (mesh.rotationQuaternion == undefined));
+    }
     constructor(mesh, camera, canvas, scale, pickWidth) {
         this._local = true;
         this._snapT = false;
@@ -134,7 +137,7 @@ class EditControl {
         this._localX = new babylonjs_1.Vector3(0, 0, 0);
         this._localY = new babylonjs_1.Vector3(0, 0, 0);
         this._localZ = new babylonjs_1.Vector3(0, 0, 0);
-        this._eulerian = false;
+        // private _eulerian: boolean = false;
         this._snapRA = 0;
         this._transEnabled = false;
         this._rotEnabled = false;
@@ -151,12 +154,6 @@ class EditControl {
         this._canvas = canvas;
         if (scale != null) {
             this._axesScale = scale;
-        }
-        if ((this._mesh.rotationQuaternion == null) || (this._mesh.rotationQuaternion == undefined)) {
-            this._eulerian = true;
-        }
-        else {
-            this._eulerian = false;
         }
         if (pickWidth != null) {
             this._pickWidth = pickWidth;
@@ -257,7 +254,7 @@ class EditControl {
     _setECRotation() {
         if (this._local) {
             if (this._mesh.parent == null) {
-                if (this._eulerian) {
+                if (this._isEulerian(this._mesh)) {
                     let rot = this._mesh.rotation;
                     babylonjs_1.Quaternion.RotationYawPitchRollToRef(rot.y, rot.x, rot.z, this._ecRoot.rotationQuaternion);
                 }
@@ -375,12 +372,6 @@ class EditControl {
     switchTo(mesh) {
         mesh.computeWorldMatrix(true);
         this._mesh = mesh;
-        if ((this._mesh.rotationQuaternion == null) || (this._mesh.rotationQuaternion == undefined)) {
-            this._eulerian = true;
-        }
-        else {
-            this._eulerian = false;
-        }
         this._setLocalAxes(mesh);
         this._actHist = new ActHist(mesh, 10);
         this._lhsRhs = this._check_LHS_RHS(mesh);
@@ -1182,10 +1173,6 @@ class EditControl {
                     angle = -angle;
                 mesh.rotate(rAxis, angle, babylonjs_1.Space.WORLD);
             }
-            if (this._eulerian) {
-                mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
-                mesh.rotationQuaternion = null;
-            }
             if (this._local) {
                 if (this._lhsRhs) {
                     angle = -angle;
@@ -1278,9 +1265,6 @@ class EditControl {
     }
     isRotationEnabled() {
         return this._rotEnabled;
-    }
-    returnEuler(euler) {
-        this._eulerian = euler;
     }
     enableRotation() {
         if (this._hidden)
@@ -2049,7 +2033,6 @@ class ActHist {
 class Act {
     constructor(mesh, at) {
         this._p = mesh.position.clone();
-        //if (mesh.rotationQuaternion == null) {
         if (mesh.rotationQuaternion == null) {
             this._rQ = null;
             this._rE = mesh.rotation.clone();
