@@ -43,9 +43,9 @@ export declare class EditControl {
     private _pointermove;
     private _visibility;
     private _lhsRhs;
-    constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number);
+    private _isEulerian;
+    constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, pickWidth?: number);
     getRoot(): AbstractMesh;
-    private _checkQuaternion;
     /**
         * checks if a have left hand , right hand issue.
         * In other words if a mesh is a LHS mesh in RHS system or
@@ -78,7 +78,7 @@ export declare class EditControl {
      * rotate the planar guide so that they are facing the camera
      */
     private _rotPlanarGuides;
-    switchTo(mesh: TransformNode, eulerian?: boolean): void;
+    switchTo(mesh: TransformNode): void;
     switchCamera(camera: Camera): void;
     setUndoCount(c: number): void;
     undo(): void;
@@ -160,7 +160,6 @@ export declare class EditControl {
     private _boundingDimesion;
     private _getBoundingDimension;
     refreshBoundingInfo(): void;
-    private _eulerian;
     private _snapRA;
     private _doRotation;
     private _getPosOnPickPlane;
@@ -173,7 +172,6 @@ export declare class EditControl {
     disableTranslation(): void;
     private _rotEnabled;
     isRotationEnabled(): boolean;
-    returnEuler(euler: boolean): void;
     enableRotation(): void;
     disableRotation(): void;
     private _scaleEnabled;

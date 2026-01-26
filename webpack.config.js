@@ -3,6 +3,7 @@ const TerserPlugin = require("terser-webpack-plugin");
 var webpack = require("webpack");
 
 module.exports = (env, argv) => {
+  console.log(argv.mode === "production" ? "production build":"development build");
   return {
     mode: "development",
     entry: {
@@ -44,7 +45,7 @@ module.exports = (env, argv) => {
       },
     },
     optimization: {
-      minimize: true,
+      minimize: argv.mode === "production" ? true:false,
       minimizer: [
         new TerserPlugin({
           parallel: true,

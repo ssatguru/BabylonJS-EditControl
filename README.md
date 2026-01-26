@@ -31,52 +31,71 @@ I would address this in a future release.
 
 For a list of other know issues, shortcomings and planned enhancements see <a href="https://github.com/ssatguru/BabylonJS-EditControl/issues" target="_blank"> https://github.com/ssatguru/BabylonJS-EditControl/issues </a>
 
-### 3.3.0 Major changes
+### Changes
 
-Moved the EditControl to the Babylonjs DefaultUtilityLayer scene.  
+#### 4.0.0 (Breaking changes )
+
+- Breaking change. Now user does not have to specify if the mesh, to which the edit control is being attached, uses Euler or Quaternion rotation. It figure that out itself. If mesh.rotationQuaternion is not null it assumes quaternion else euler.  
+As such the contructor now has changed from  
+	```
+	constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number) 
+	```
+	to 
+	``` 
+	constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, pickWidth?: number)  
+	```
+- An edit control axes color now changes to yellow rather than white when pointer hovers over it or selects it.  This seems to be the standard practice.
+
+- Upgraded to latest version of babylonjs namely 8.47.0
+- Upgraded other dev dependenices to latest version - typescript, webpack etc.
+
+#### 3.3.0 
+
+- Moved the EditControl to the Babylonjs DefaultUtilityLayer scene.  
 Because this scene is different from the main scene there is less interference with the main scene. Also makes it a bit faster.  
 This is similar to how the native gizmos of Babylonjs work.
 
-Upgraded to latest version of Babylons js - 5.41.  
+- Upgraded to latest version of Babylons js - 5.41.  
 Replaced deprecated methods with new ones.
-Upgraded other dev dependenices to latest version - typescript, webpack etc.
+- Upgraded other dev dependenices to latest version - typescript, webpack etc.
 
-### 3.20 Major and Breaking changes
+#### 3.2.0 (Breaking changes)
 
-Version 3.2.0 converts the project from a plain vanilla JavaScript project to a module based JavaScript project.  
+- Version 3.2.0 converts the project from a plain vanilla JavaScript project to a module based JavaScript project.  
 With this change, the way to load the application has changed.  
 In JavaScript, instead of
 
-```
-var EditControl = org.ssatguru.babylonjs.component.EditControl;
-editControl = new EditControl(box,camera, canvas, 0.75);
-```
+	```
+	var EditControl = org.ssatguru.babylonjs.component.EditControl;
+	editControl = new EditControl(box,camera, canvas, 0.75);
+	```
 
-now do
+	now do
 
-```
-var editControl = new EditControl(box,camera, canvas, 0.75);
-```
+	```
+	var editControl = new EditControl(box,camera, canvas, 0.75);
+	```
 
-In TypeScript, instead of
+	In TypeScript, instead of
 
-```
-import EditControl = org.ssatguru.babylonjs.component.EditControl;
-```
+	```
+	import EditControl = org.ssatguru.babylonjs.component.EditControl;
+	```
 
-now do
+	now do
 
-```
-import {EditControl} from "babaylonjs-editcontrol";
-```
+	```
+	import {EditControl} from "babaylonjs-editcontrol";
+	```
 
-See below for more details.
+	See below for more details.
 
 ## Quick start
 
 1. add the following dependencies
 
 ```
+<!-- pep.js is optional -->
 <script src="https://code.jquery.com/pep/0.4.2/pep.js"></script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="EditControl.js"></script>
@@ -171,7 +190,7 @@ Global Module
 
 ## DEPENDENCIES
 
-- pepjs
+- pepjs - optional. Its a polyfill needed for pointer support in very old browsers. Not needed if targeting relatively new browsers. 
 - babylonjs
 
 The two can be installed from npm
@@ -193,23 +212,22 @@ or via cdn
 
 ```
 // JavaScript
-var editControl = new EditControl(mesh,camera, canvas, 0.75, true);
+var editControl = new EditControl(mesh,camera, canvas, 0.75,0.02);
 ```
 
 ```
 // TypeScript
 import {EditControl} from "babaylonjs-editcontrol";
-let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75, true,0.02);
+let editControl:EditControl = new EditControl(mesh,camera, canvas, 0.75, 0.02);
 ```
 
 This positions the edit control at the mesh pivot position and displays x,y,z axis.  
-Takes five parms
+Takes four parms
 
 - mesh - the mesh to control using the editcontrol
 - camera - active camera
 - canvas - the mesh canvas
 - scale - number. Optional. Default 1. Determines how small or large the editcontrol should appear.
-- eulerian - true/false. Optional. Default false. True indicates that rotation of the mesh is in euler.If rotation is unresponsive then it is possible that the rotation may not have been initialized to either a eulerian or quaternion value.
 - pickWidth - number. Optional. Default 0.02. Determines how close to an axis should the pointer get before we can pick it
 
 #### To show Translation, Rotation or Scaling controls
@@ -424,7 +442,14 @@ Run "npm install", once, to install all the dependencies.
 ### Build
 
 Run "npm run build" - this will compile the files in "src" and create a development module in the "dist" folder.  
-Run "npm run build-prod" - this will compile and create a minified production module in the "dist" folder.
+Run "npm run build-prod" - this will compile and create a minified production module in the "dist" folder.  
+  
+The project uses webpack which compiles using typescipt compiler and then optmize and packages the module.  
+The typescript compiler has been configured to output es6 code.  
+The webpack has been configured to output a UMD module.  
+In development mode it outputs a unoptmized  UMD module, that is a human readable, properly formatted javascript UMD module. This file ends in ".max.js".  
+In production mode it outputs a optmized UMD module. The module is minified and its variables are mangled.
+
 
 ### To test
 

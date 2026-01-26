@@ -1,5 +1,6 @@
 nbproject
 node_modules
 *.bat
+ig_*
 
 

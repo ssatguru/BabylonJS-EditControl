@@ -69,11 +69,13 @@ export class EditControl {
     private _blueMat: StandardMaterial;
     private _whiteMat: StandardMaterial;
     private _yellowMat: StandardMaterial;
-    private _redCol: Color3 = new Color3(1, 0.2, 0.2);
-    private _greenCol: Color3 = new Color3(0.2, 1, 0.2);
-    private _blueCol: Color3 = new Color3(0.2, 0.2, 1);
-    private _whiteCol: Color3 = new Color3(1, 1, 1);
-    private _yellowCol: Color3 = new Color3(1, 1, 0.2);
+
+    private _redCol: Color3 = new Color3(1, 0.34, 0.26);
+    private _greenCol: Color3 = new Color3(0.0, 0.8, 0.16);
+    private _blueCol: Color3 = new Color3(0.21, 0.5, 1);
+
+    private _whiteCol: Color3 = new Color3(0.7, 0.7, 0.7);
+    private _yellowCol: Color3 = new Color3(1, 1, 0);
 
     private _actHist: ActHist;
     private _renderer: () => void;
@@ -87,7 +89,11 @@ export class EditControl {
     //lhs-rhs issue. lhs mesh in rhs or rhs mesh in lhs
     private _lhsRhs: boolean = false;
 
-    public constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, eulerian?: boolean, pickWidth?: number) {
+    private _isEulerian(mesh:TransformNode):boolean{
+        return ((mesh.rotationQuaternion == null) || (mesh.rotationQuaternion == undefined));
+    }
+
+    public constructor(mesh: TransformNode, camera: Camera, canvas: HTMLCanvasElement, scale?: number, pickWidth?: number) {
 
         this._mesh = mesh;
         this._mainCamera = camera;
@@ -96,13 +102,7 @@ export class EditControl {
         if (scale != null) {
             this._axesScale = scale;
         }
-
-        if (eulerian !== null) {
-            this._eulerian = eulerian;
-        } else {
-            this._eulerian = false;
-        }
-        this._checkQuaternion();
+        
 
         if (pickWidth != null) {
             this._pickWidth = pickWidth;
@@ -119,7 +119,7 @@ export class EditControl {
         this._boundingDimesion = this._getBoundingDimension(mesh);
         this._setLocalAxes(mesh);
         this._lhsRhs = this._check_LHS_RHS(mesh);
-        console.log("lhs rhs issue " + this._lhsRhs);
+        if (this._lhsRhs) console.warn("we have lhs rhs issue " + this._lhsRhs);
 
         //build the edit control axes
         this._ecRoot = new Mesh("", this._scene);
@@ -155,16 +155,6 @@ export class EditControl {
 
     public getRoot(): AbstractMesh {
         return this._ecRoot;
-    }
-
-    //make sure that if eulerian is set to false then mesh's rotation is in quaternion
-    //throw error and exit if not so.
-    private _checkQuaternion() {
-        if (!this._eulerian) {
-            if ((this._mesh.rotationQuaternion == null) || (this._mesh.rotationQuaternion == undefined)) {
-                throw "Error: Eulerian is set to false but the mesh's rotationQuaternion is not set.";
-            }
-        }
     }
 
     /**
@@ -231,7 +221,7 @@ export class EditControl {
     private _setECRotation() {
         if (this._local) {
             if (this._mesh.parent == null) {
-                if (this._eulerian) {
+                if (this._isEulerian(this._mesh)) {
                     let rot: Vector3 = this._mesh.rotation;
                     Quaternion.RotationYawPitchRollToRef(rot.y, rot.x, rot.z, this._ecRoot.rotationQuaternion);
                 } else {
@@ -270,7 +260,7 @@ export class EditControl {
     private _cameraNormal: Vector3 = new Vector3(0, 0, 0);
     private _setECScale() {
         this._ecRoot.position.subtractToRef(this._mainCamera.position, this._cameraTOec);
-        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>this._mainCamera.getWorldMatrix().asArray(), 8, this._cameraNormal);
+        Vector3.FromArrayToRef(this._mainCamera.getWorldMatrix().asArray(), 8, this._cameraNormal);
 
         //get distance of edit control from the camera plane 
         //project "camera to edit control" vector onto the camera normal
@@ -354,13 +344,9 @@ export class EditControl {
 
 
 
-    public switchTo(mesh: TransformNode, eulerian?: boolean) {
+    public switchTo(mesh: TransformNode) {
         mesh.computeWorldMatrix(true);
         this._mesh = mesh;
-        if (eulerian != null) {
-            this._eulerian = eulerian;
-        }
-        this._checkQuaternion();
         this._setLocalAxes(mesh);
         this._actHist = new ActHist(mesh, 10);
         this._lhsRhs = this._check_LHS_RHS(mesh);
@@ -497,7 +483,7 @@ export class EditControl {
         evt.preventDefault();
         this._pDown = true;
         if ((<PointerEvent>evt).button != 0) return;
-        let engine: Engine = this._scene.getEngine();
+        let engine: Engine = <Engine> this._scene.getEngine();
         let x = (engine.isPointerLock) ? this._canvas.width * 0.5 : this._scene.pointerX;
         let y = (engine.isPointerLock) ? this._canvas.height * 0.5 : this._scene.pointerY;
         let pickResult: PickingInfo = this._scene.pick(x, y, (mesh) => {
@@ -573,7 +559,7 @@ export class EditControl {
     private _detachCamera(cam: Object, can: Object) {
         let camera: Camera = <Camera>cam;
         let canvas: HTMLCanvasElement = <HTMLCanvasElement>can;
-        let engine: Engine = this._scene.getEngine();
+        let engine: Engine = <Engine> this._scene.getEngine();
         if (!engine.isPointerLock) {
             camera.detachControl(canvas)
         }
@@ -590,7 +576,7 @@ export class EditControl {
     private _savedCol: Color3;
     private _onPointerOver() {
         //if(this.pDown) return;
-        let engine: Engine = this._scene.getEngine();
+        let engine: Engine = <Engine> this._scene.getEngine();
         let x = (engine.isPointerLock) ? this._canvas.width * 0.5 : this._scene.pointerX;
         let y = (engine.isPointerLock) ? this._canvas.height * 0.5 : this._scene.pointerY;
         let pickResult: PickingInfo = this._scene.pick(x, y, (mesh) => {
@@ -612,7 +598,7 @@ export class EditControl {
                 this._prevOverMesh = <Mesh>pickResult.pickedMesh;
                 if (this._rotEnabled) {
                     this._savedCol = (<LinesMesh>this._prevOverMesh.getChildren()[0]).color;
-                    (<LinesMesh>this._prevOverMesh.getChildren()[0]).color = this._whiteCol;
+                    (<LinesMesh>this._prevOverMesh.getChildren()[0]).color = this._yellowCol;
                 } else {
                     let childs: Node[] = this._prevOverMesh.getChildren();
                     if (childs.length > 0) {
@@ -624,11 +610,11 @@ export class EditControl {
                     }
                 }
                 if (this._prevOverMesh.name == "X") {
-                    this._xaxis.color = this._whiteCol;
+                    this._xaxis.color = this._yellowCol;
                 } else if (this._prevOverMesh.name == "Y") {
-                    this._yaxis.color = this._whiteCol;
+                    this._yaxis.color = this._yellowCol;
                 } else if (this._prevOverMesh.name == "Z") {
-                    this._zaxis.color = this._whiteCol;
+                    this._zaxis.color = this._yellowCol;
                 }
             }
         } else {
@@ -678,7 +664,7 @@ export class EditControl {
     private _onPointerUp(evt: Event) {
         this._pDown = false;
         if (this._editing) {
-            let engine: Engine = this._scene.getEngine();
+            let engine: Engine = <Engine> this._scene.getEngine();
             if (!engine.isPointerLock) {
                 this._mainCamera.attachControl(true);
             }
@@ -1043,9 +1029,9 @@ export class EditControl {
      */
     private _setLocalAxes(mesh: Node) {
         let meshMatrix: Matrix = mesh.getWorldMatrix();
-        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>meshMatrix.m, 0, this._localX);
-        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>meshMatrix.m, 4, this._localY);
-        Vector3.FromArrayToRef(<DeepImmutableObject<Float32Array>>meshMatrix.m, 8, this._localZ);
+        Vector3.FromArrayToRef(meshMatrix.m, 0, this._localX);
+        Vector3.FromArrayToRef(meshMatrix.m, 4, this._localY);
+        Vector3.FromArrayToRef(meshMatrix.m, 8, this._localZ);
     }
 
 
@@ -1080,7 +1066,7 @@ export class EditControl {
         this._boundingDimesion = this._getBoundingDimension(this._mesh);
     }
 
-    private _eulerian: boolean = false;
+    // private _eulerian: boolean = false;
     private _snapRA: number = 0;
     private _doRotation(mesh: TransformNode, axis: Mesh, newPos: Vector3, prevPos: Vector3) {
 
@@ -1139,10 +1125,6 @@ export class EditControl {
                 mesh.rotate(rAxis, angle, Space.WORLD);
             }
 
-            if (this._eulerian) {
-                mesh.rotation = mesh.rotationQuaternion.toEulerAngles();
-                mesh.rotationQuaternion = null;
-            }
 
             if (this._local) {
                 if (this._lhsRhs) {
@@ -1160,7 +1142,7 @@ export class EditControl {
     }
 
     private _getPosOnPickPlane(): Vector3 {
-        let engine: Engine = this._scene.getEngine();
+        let engine: Engine = <Engine> this._scene.getEngine();
         let x = (engine.isPointerLock) ? this._canvas.width * 0.5 : this._scene.pointerX;
         let y = (engine.isPointerLock) ? this._canvas.height * 0.5 : this._scene.pointerY;
         let pickinfo: PickingInfo = this._scene.pick(x, y, (mesh) => {
@@ -1249,10 +1231,7 @@ export class EditControl {
         return this._rotEnabled;
     }
 
-    public returnEuler(euler: boolean) {
-        this._eulerian = euler;
-    }
-
+    
     public enableRotation() {
         if (this._hidden) return;
         if (this._rCtl == null) {
@@ -1718,7 +1697,7 @@ export class EditControl {
         rEndX.color = this._redCol;
         rEndY.color = this._greenCol;
         rEndZ.color = this._blueCol;
-        rEndAll.color = this._yellowCol;
+        rEndAll.color = this._whiteCol;
         rEndAll2.color = Color3.Gray();
 
         this._rEndX = rEndX;
@@ -2128,8 +2107,8 @@ export class EditControl {
         this._redMat = EditControl._getStandardMaterial(this._redCol, scene);
         this._greenMat = EditControl._getStandardMaterial(this._greenCol, scene);
         this._blueMat = EditControl._getStandardMaterial(this._blueCol, scene);
-        this._whiteMat = EditControl._getStandardMaterial(this._whiteCol, scene);
-        this._yellowMat = EditControl._getStandardMaterial(this._yellowCol, scene);
+        this._whiteMat = EditControl._getStandardMaterial(this._yellowCol, scene);
+        this._yellowMat = EditControl._getStandardMaterial(this._whiteCol, scene);
     }
 
     private _disposeMaterials() {
@@ -2220,7 +2199,6 @@ class Act {
 
     public constructor(mesh: TransformNode, at: number) {
         this._p = mesh.position.clone();
-        //if (mesh.rotationQuaternion == null) {
         if (mesh.rotationQuaternion == null) {
             this._rQ = null;
             this._rE = mesh.rotation.clone();

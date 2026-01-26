@@ -58,13 +58,10 @@ let addBox = function (scene) {
 
 //------------------EDIT COTROL -------------------------------------------------
 let attachEditControl = function (mesh, camera, canvas) {
-  //if we are planning on doing rotation in quaternion then make sure the rotationQuaternion is atleast initialized
-  //else edit control will throw following exception
-  //"Eulerian is set to false but the mesh's rotationQuaternion is not set."
-  mesh.rotationQuaternion = BABYLON.Quaternion.Identity();
   mesh.position = new BABYLON.Vector3(0, 1, 0);
   //create edit control (mesh to attach to,camera, canvas, scale of editcontrol, if doing rotation in euler)
-  let ec = new EditControl(mesh, camera, canvas, 0.75, false, 0.02);
+  //let ec = new EditControl(mesh, camera, canvas, 0.75, false, 0.02);
+  let ec = new EditControl(mesh, camera, canvas, 0.75, 0.02);
   //show translation controls
   ec.enableTranslation();
   return ec;

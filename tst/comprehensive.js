@@ -74,8 +74,7 @@ var addEditControls = function (camera, canvas) {
     commonEC = ec1;
 };
 var attachEditControl = function (mesh, camera, canvas) {
-    mesh.rotationQuaternion = BABYLON.Quaternion.Identity();
-    var ec = new EditControl(mesh, camera, canvas, 0.5, false);
+    var ec = new EditControl(mesh, camera, canvas, 0.5);
     ec.enableTranslation();
     ec.setRotSnapValue(3.14 / 18);
     ec.setTransSnapValue(0.5);
@@ -171,9 +170,8 @@ var setButtons = function (camera) {
     boundSButton.onclick = function () {
         if (boundSButton.checked) {
             commonEC.setScaleBounds(
-                // new BABYLON.Vector3(0.00000001,0.00000001,0.00000001),     // works
-                new BABYLON.Vector3(0, 0, 0), // causes bug
-                new BABYLON.Vector3(2, 2, 2) // max
+                new BABYLON.Vector3(0, 0, 0), // min (0,0,0 didn't work in old version of edit control. In new version if the min bound is set to zero actual value is set to a very small value like (0.00000001,0.00000001,0.00000001)).
+                new BABYLON.Vector3(2, 2, 2)  // max
             );
         } else {
             commonEC.removeScaleBounds();
@@ -195,18 +193,6 @@ var setButtons = function (camera) {
     var focusButton = document.getElementById("focus");
     focusButton.onclick = function () {
         camera.target.copyFrom(box.getAbsolutePosition());
-    };
-    var pRotButton = document.getElementById("pRot");
-    var eulerButton = document.getElementById("euler");
-    pRotButton.onclick = function () {
-        console.log(box.rotation);
-        console.log(box.rotationQuaternion);
-    };
-    var euler = false;
-    eulerButton.onclick = function () {
-        euler = !euler;
-        commonEC.returnEuler(euler);
-        console.log("enable euler : " + euler);
     };
     var selectBox1 = document.getElementById("selectBox1");
     var selectBox2 = document.getElementById("selectBox2");
